@@ -1,0 +1,121 @@
+import { Head, router, usePage } from '@inertiajs/react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { EmptyState } from '@/components/empty-state';
+import { Play, RefreshCw, Stethoscope, User } from 'lucide-react';
+import type { QueueEntry } from '@/types/visit';
+import { PermissionGuard } from '@/components/permission-guard';
+
+type PageProps = {
+    entries: QueueEntry[];
+};
+
+export default function ConsultationIndex() {
+    const { entries } = usePage<PageProps>().props;
+
+    const handleRefresh = () => {
+        router.reload();
+    };
+
+    const handleStartConsultation = (visitId: number) => {
+        router.post(`/consultations/visits/${visitId}/start`, {}, {
+            onSuccess: () => {
+                router.reload();
+            },
+        });
+    };
+
+    return (
+        <>
+            <Head title="Clinician Desk" />
+            <div className="flex h-full flex-1 flex-col gap-6 p-4 md:p-6">
+                {/* Header */}
+                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                    <div>
+                        <h1 className="text-3xl font-bold tracking-tight">Clinician Desk</h1>
+                        <p className="text-muted-foreground">
+                            Patients waiting for consultation
+                        </p>
+                    </div>
+                    <div className="flex gap-2">
+                        <Button variant="outline" onClick={handleRefresh}>
+                            <RefreshCw className="mr-2 h-4 w-4" />
+                            Refresh
+                        </Button>
+                        <Button variant="outline" asChild>
+                            <a href="/visits/queue">
+                                <Stethoscope className="mr-2 h-4 w-4" />
+                                Queue
+                            </a>
+                        </Button>
+                    </div>
+                </div>
+
+                {/* Queue List */}
+                {entries.length === 0 ? (
+                    <EmptyState
+                        icon={User}
+                        title="No patients waiting"
+                        description="There are no patients currently waiting for consultation."
+                    />
+                ) : (
+                    <div className="grid gap-4">
+                        {entries.map((entry) => (
+                            <QueueCard
+                                key={entry.id}
+                                entry={entry}
+                                onStartConsultation={handleStartConsultation}
+                            />
+                        ))}
+                    </div>
+                )}
+            </div>
+        </>
+    );
+}
+
+function QueueCard({ entry, onStartConsultation }: { entry: QueueEntry; onStartConsultation: (visitId: number) => void }) {
+    const patientName = entry.visit?.patient
+        ? [entry.visit.patient.first_name, entry.visit.patient.other_names, entry.visit.patient.last_name]
+            .filter(Boolean)
+            .join(' ')
+        : 'Unknown Patient';
+
+    const arrivalTime = new Date(entry.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    const hasVitals = entry.visit?.vitalSign !== null;
+
+    return (
+        <Card>
+            <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                            <span className="text-lg font-bold text-primary">{entry.position || '–'}</span>
+                        </div>
+                        <div>
+                            <h3 className="font-semibold">{patientName}</h3>
+                            <p className="text-sm text-muted-foreground">
+                                Visit #{entry.visit_id} • Arrived {arrivalTime}
+                            </p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                        {hasVitals && (
+                            <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                Vitals Captured
+                            </Badge>
+                        )}
+                        <PermissionGuard permission="consultations.create" fallback={null}>
+                            <Button onClick={() => onStartConsultation(entry.visit_id)}>
+                                <Play className="mr-2 h-4 w-4" />
+                                Start Consultation
+                            </Button>
+                        </PermissionGuard>
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+    );
+}

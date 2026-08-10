@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Exec(mkdir docs)",
+      "Exec(vendor/bin/pint)",
+      "Exec(php)",
+      "Exec(rm)",
+      "Exec(vendor\\bin\\pint)",
+      "Exec(npm run)",
+      "Exec(npm install)"
+    ]
+  }
+}

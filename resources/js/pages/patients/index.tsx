@@ -1,0 +1,122 @@
+import { Head, useForm, usePage } from '@inertiajs/react';
+import { Plus, Search, User } from 'lucide-react';
+import { EmptyState } from '@/components/empty-state';
+import { LoadingState } from '@/components/loading-state';
+import { PermissionGuard } from '@/components/permission-guard';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import type { Patient } from '@/types/patient';
+
+type PageProps = {
+    patients: Patient[];
+    search: string;
+};
+
+export default function PatientIndex() {
+    const { patients, search } = usePage<PageProps>().props;
+    const { data, setData, get, processing } = useForm({
+        search: search,
+    });
+
+    const handleSearch = (e: React.FormEvent) => {
+        e.preventDefault();
+        get('/patients', {
+            preserveState: true,
+            preserveScroll: true,
+        });
+    };
+
+    return (
+        <>
+            <Head title="Patients" />
+            <div className="flex h-full flex-1 flex-col gap-6 p-4 md:p-6">
+                {/* Header */}
+                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                    <div>
+                        <h1 className="text-3xl font-bold tracking-tight">Patients</h1>
+                        <p className="text-muted-foreground">
+                            Manage patient records and search for patients.
+                        </p>
+                    </div>
+                    <PermissionGuard permission="patients.create" fallback={null}>
+                        <Button asChild>
+                            <a href="/patients/create">
+                                <Plus className="mr-2 h-4 w-4" />
+                                Register Patient
+                            </a>
+                        </Button>
+                    </PermissionGuard>
+                </div>
+
+                {/* Search */}
+                <Card>
+                    <CardContent className="pt-6">
+                        <form onSubmit={handleSearch} className="flex gap-2">
+                            <div className="relative flex-1">
+                                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                <Input
+                                    placeholder="Search by name or phone..."
+                                    value={data.search}
+                                    onChange={(e) => setData('search', e.target.value)}
+                                    className="pl-9"
+                                />
+                            </div>
+                            <Button type="submit" disabled={processing}>
+                                Search
+                            </Button>
+                        </form>
+                    </CardContent>
+                </Card>
+
+                {/* Patient List */}
+                {processing ? (
+                    <LoadingState count={5} />
+                ) : patients.length === 0 ? (
+                    <EmptyState
+                        icon={User}
+                        title="No patients found"
+                        description={search ? 'Try adjusting your search terms.' : 'Get started by registering your first patient.'}
+                        action={!search ? {
+                            label: 'Register Patient',
+                            onClick: () => (window.location.href = '/patients/create'),
+                        } : undefined}
+                    />
+                ) : (
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                        {patients.map((patient) => (
+                            <PatientCard key={patient.id} patient={patient} />
+                        ))}
+                    </div>
+                )}
+            </div>
+        </>
+    );
+}
+
+function PatientCard({ patient }: { patient: Patient }) {
+    const fullName = [patient.first_name, patient.other_names, patient.last_name]
+        .filter(Boolean)
+        .join(' ');
+
+    return (
+        <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
+            <CardHeader>
+                <CardTitle className="text-lg">{fullName}</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <div className="space-y-1 text-sm">
+                    {patient.phone && (
+                        <p className="text-muted-foreground">{patient.phone}</p>
+                    )}
+                    {patient.email && (
+                        <p className="text-muted-foreground">{patient.email}</p>
+                    )}
+                    {patient.gender && (
+                        <p className="text-muted-foreground">{patient.gender.name}</p>
+                    )}
+                </div>
+            </CardContent>
+        </Card>
+    );
+}
