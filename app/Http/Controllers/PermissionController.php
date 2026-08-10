@@ -6,7 +6,7 @@ use App\Services\UserManagementService;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class PermissionWebController extends Controller
+class PermissionController extends Controller
 {
     protected UserManagementService $userManagementService;
 

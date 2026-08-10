@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class DashboardWebController extends Controller
+class DashboardController extends Controller
 {
     protected DashboardService $dashboardService;
 

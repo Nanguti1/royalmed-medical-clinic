@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class UserWebController extends Controller
+class UserController extends Controller
 {
     protected UserManagementService $userManagementService;
 

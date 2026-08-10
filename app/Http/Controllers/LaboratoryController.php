@@ -11,7 +11,7 @@ use App\Services\LabService;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class LaboratoryWebController extends Controller
+class LaboratoryController extends Controller
 {
     protected LabService $labService;
 

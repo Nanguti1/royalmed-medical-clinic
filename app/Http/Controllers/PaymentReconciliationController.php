@@ -7,7 +7,7 @@ use App\Services\PaymentReconciliationService;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class PaymentReconciliationWebController extends Controller
+class PaymentReconciliationController extends Controller
 {
     protected PaymentReconciliationService $reconciliationService;
 

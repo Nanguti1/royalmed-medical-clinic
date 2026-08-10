@@ -10,7 +10,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\Permission\Models\Role;
 
-class RoleWebController extends Controller
+class RoleController extends Controller
 {
     protected UserManagementService $userManagementService;
 

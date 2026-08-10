@@ -2,48 +2,58 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\DispensePrescriptionRequest;
-use App\Http\Requests\FinalizePrescriptionRequest;
-use App\Http\Requests\StorePrescriptionItemRequest;
-use App\Http\Requests\StorePrescriptionRequest;
+use App\Http\Requests\StorePrescriptionWithItemsRequest;
+use App\Models\DosageUnit;
+use App\Models\DurationUnit;
+use App\Models\Frequency;
+use App\Models\Medicine;
 use App\Models\Prescription;
+use App\Models\Route;
+use App\Models\Visit;
 use App\Services\PrescriptionService;
-use Illuminate\Http\JsonResponse;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class PrescriptionController extends Controller
 {
-    protected PrescriptionService $service;
+    protected PrescriptionService $prescriptionService;
 
-    public function __construct(PrescriptionService $service)
+    public function __construct(PrescriptionService $prescriptionService)
     {
-        $this->service = $service;
+        $this->prescriptionService = $prescriptionService;
+
+        $this->middleware('permission:consultations.create')->only(['create', 'store']);
+        $this->middleware('permission:consultations.view')->only(['show']);
     }
 
-    public function store(StorePrescriptionRequest $request): JsonResponse
+    public function create(Visit $visit): Response
     {
-        $prescription = $this->service->create($request->validated());
+        $visit->load(['patient', 'consultation']);
 
-        return response()->json($prescription, 201);
+        return Inertia::render('prescriptions/create', [
+            'visit' => $visit,
+            'medicines' => Medicine::all(),
+            'dosageUnits' => DosageUnit::all(),
+            'frequencies' => Frequency::all(),
+            'routes' => Route::all(),
+            'durationUnits' => DurationUnit::all(),
+        ]);
     }
 
-    public function addItem(StorePrescriptionItemRequest $request): JsonResponse
+    public function store(StorePrescriptionWithItemsRequest $request)
     {
-        $item = $this->service->addItem($request->validated());
+        $prescription = $this->prescriptionService->createWithItems($request->validated());
 
-        return response()->json($item, 201);
+        return redirect()->route('prescriptions.show', $prescription)
+            ->with('success', 'Prescription created successfully.');
     }
 
-    public function finalize(FinalizePrescriptionRequest $request, Prescription $prescription): JsonResponse
+    public function show(Prescription $prescription): Response
     {
-        $prescription = $this->service->finalize($prescription);
+        $prescription->load(['visit.patient', 'items.medicine', 'items.dosageUnit', 'items.frequency', 'items.route', 'items.durationUnit']);
 
-        return response()->json($prescription);
-    }
-
-    public function dispense(DispensePrescriptionRequest $request, Prescription $prescription): JsonResponse
-    {
-        $results = $this->service->dispense($prescription);
-
-        return response()->json($results);
+        return Inertia::render('prescriptions/show', [
+            'prescription' => $prescription,
+        ]);
     }
 }

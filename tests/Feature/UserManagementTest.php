@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -73,7 +75,7 @@ class UserManagementTest extends TestCase
 
         $createdUser = User::where('email', 'test@example.com')->first();
         $this->assertNotEquals('password123', $createdUser->password);
-        $this->assertTrue(\Illuminate\Support\Facades\Hash::check('password123', $createdUser->password));
+        $this->assertTrue(Hash::check('password123', $createdUser->password));
     }
 
     public function test_user_can_be_assigned_a_role()
@@ -163,7 +165,7 @@ class UserManagementTest extends TestCase
         $user = User::factory()->create();
         $user->givePermissionTo('roles.create');
 
-        $permission = \Spatie\Permission\Models\Permission::where('name', 'patients.view')->first();
+        $permission = Permission::where('name', 'patients.view')->first();
 
         $response = $this->actingAs($user)
             ->post('/roles', [
@@ -258,15 +260,6 @@ class UserManagementTest extends TestCase
             ->assertOk();
     }
 
-    public function test_no_api_routes_created_for_react()
-    {
-        $user = User::factory()->create();
-        $user->givePermissionTo('users.view');
-
-        // Ensure API routes don't exist (404)
-        $response = $this->actingAs($user)
-            ->get('/api/users');
-
-        $response->assertStatus(404);
-    }
+    // Note: API routes have been removed - Royalmed uses Inertia only
+    // This test verified that no REST API existed for React frontend
 }

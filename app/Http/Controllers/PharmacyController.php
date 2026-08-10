@@ -10,7 +10,7 @@ use App\Services\PrescriptionService;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class PharmacyWebController extends Controller
+class PharmacyController extends Controller
 {
     protected PrescriptionService $prescriptionService;
 

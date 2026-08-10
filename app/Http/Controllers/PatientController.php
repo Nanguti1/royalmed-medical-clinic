@@ -4,9 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StorePatientRequest;
 use App\Http\Requests\UpdatePatientRequest;
+use App\Models\Gender;
 use App\Models\Patient;
 use App\Services\PatientService;
-use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class PatientController extends Controller
 {
@@ -15,34 +18,70 @@ class PatientController extends Controller
     public function __construct(PatientService $service)
     {
         $this->service = $service;
+        $this->middleware('permission:patients.view')->only(['index', 'show']);
+        $this->middleware('permission:patients.create')->only(['create', 'store']);
+        $this->middleware('permission:patients.update')->only(['edit', 'update']);
+        $this->middleware('permission:patients.delete')->only(['destroy']);
     }
 
-    public function store(StorePatientRequest $request): JsonResponse
+    public function index(Request $request): Response
+    {
+        $query = $request->input('search');
+        $patients = $this->service->search($query ?? '');
+
+        return Inertia::render('patients/index', [
+            'patients' => $patients,
+            'search' => $query ?? '',
+        ]);
+    }
+
+    public function create(): Response
+    {
+        return Inertia::render('patients/create', [
+            'genders' => Gender::all(),
+        ]);
+    }
+
+    public function store(StorePatientRequest $request)
     {
         $patient = $this->service->register($request->validated());
 
-        return response()->json($patient, 201);
+        return redirect()->route('patients.show', $patient)
+            ->with('success', 'Patient registered successfully.');
     }
 
-    public function update(UpdatePatientRequest $request, Patient $patient): JsonResponse
+    public function show(Patient $patient): Response
+    {
+        $patient->load(['gender', 'county', 'sub_county']);
+
+        return Inertia::render('patients/show', [
+            'patient' => $patient,
+        ]);
+    }
+
+    public function edit(Patient $patient): Response
+    {
+        $patient->load(['gender', 'county', 'sub_county']);
+
+        return Inertia::render('patients/edit', [
+            'patient' => $patient,
+            'genders' => Gender::all(),
+        ]);
+    }
+
+    public function update(UpdatePatientRequest $request, Patient $patient)
     {
         $patient = $this->service->update($patient, $request->validated());
 
-        return response()->json($patient);
+        return redirect()->route('patients.show', $patient)
+            ->with('success', 'Patient updated successfully.');
     }
 
-    public function search()
-    {
-        $q = request('q');
-        $results = $this->service->search($q ?? '');
-
-        return response()->json($results);
-    }
-
-    public function destroy(Patient $patient): JsonResponse
+    public function destroy(Patient $patient)
     {
         $patient->delete();
 
-        return response()->json(null, 204);
+        return redirect()->route('patients.index')
+            ->with('success', 'Patient deleted successfully.');
     }
 }
