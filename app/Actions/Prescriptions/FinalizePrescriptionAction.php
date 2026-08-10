@@ -6,6 +6,7 @@ use App\Events\PrescriptionFinalized;
 use App\Exceptions\InvalidPrescriptionStatusException;
 use App\Models\Prescription;
 use App\Support\Generators\NumberGenerator;
+use Illuminate\Support\Facades\DB;
 
 class FinalizePrescriptionAction
 {
@@ -19,12 +20,14 @@ class FinalizePrescriptionAction
             throw InvalidPrescriptionStatusException::invalidStatus('draft', 'finalized');
         }
 
-        $prescription->prescription_number = NumberGenerator::generatePrescriptionNumber();
-        $prescription->finalized_at = now();
-        $prescription->save();
+        return DB::transaction(function () use ($prescription) {
+            $prescription->prescription_number = NumberGenerator::generatePrescriptionNumber();
+            $prescription->finalized_at = now();
+            $prescription->save();
 
-        event(new PrescriptionFinalized($prescription));
+            event(new PrescriptionFinalized($prescription));
 
-        return $prescription;
+            return $prescription;
+        });
     }
 }

@@ -2,10 +2,51 @@
 
 namespace App\Support\Generators;
 
+use App\Models\NumberSequence;
 use Illuminate\Support\Facades\DB;
 
 class NumberGenerator
 {
+    /**
+     * Generate a unique, concurrency-safe number using a sequence table.
+     *
+     * This method uses row-level locking to ensure atomicity under concurrent requests.
+     * Multiple requests for the same type and date will serialize, preventing duplicates.
+     *
+     * @param  string  $type  The type of number (prescription, invoice, receipt)
+     * @param  string  $prefix  The prefix for the number (P, I, R)
+     * @param  int  $padding  The zero-padding width for the sequence
+     * @return string The generated number
+     */
+    protected static function generateSequenceNumber(string $type, string $prefix, int $padding): string
+    {
+        $date = now()->format('Ymd');
+        $dateStr = now()->toDateString();
+
+        return DB::transaction(function () use ($type, $date, $dateStr, $prefix, $padding) {
+            // Lock the sequence row for this type and date
+            $sequence = NumberSequence::where('type', $type)
+                ->where('date', $dateStr)
+                ->lockForUpdate()
+                ->first();
+
+            if (! $sequence) {
+                // Create the sequence record (will be locked by the transaction)
+                $sequence = NumberSequence::create([
+                    'type' => $type,
+                    'date' => $dateStr,
+                    'sequence' => 0,
+                ]);
+            }
+
+            // Atomically increment and get the new sequence number
+            $sequence->increment('sequence');
+            $sequence->refresh();
+
+            return "{$prefix}-{$date}-".str_pad($sequence->sequence, $padding, '0', STR_PAD_LEFT);
+        });
+    }
+
     public static function generateVisitNumber(): string
     {
         $date = now()->format('Ymd');
@@ -16,25 +57,16 @@ class NumberGenerator
 
     public static function generateInvoiceNumber(): string
     {
-        $date = now()->format('Ymd');
-        $count = DB::table('invoices')->whereDate('created_at', now()->toDateString())->count() + 1;
-
-        return "I-{$date}-".str_pad($count, 5, '0', STR_PAD_LEFT);
+        return self::generateSequenceNumber('invoice', 'I', 5);
     }
 
     public static function generatePrescriptionNumber(): string
     {
-        $date = now()->format('Ymd');
-        $count = DB::table('prescriptions')->whereDate('created_at', now()->toDateString())->count() + 1;
-
-        return "P-{$date}-".str_pad($count, 4, '0', STR_PAD_LEFT);
+        return self::generateSequenceNumber('prescription', 'P', 4);
     }
 
     public static function generateReceiptNumber(): string
     {
-        $date = now()->format('Ymd');
-        $count = DB::table('payments')->whereDate('created_at', now()->toDateString())->count() + 1;
-
-        return "R-{$date}-".str_pad($count, 5, '0', STR_PAD_LEFT);
+        return self::generateSequenceNumber('receipt', 'R', 5);
     }
 }
