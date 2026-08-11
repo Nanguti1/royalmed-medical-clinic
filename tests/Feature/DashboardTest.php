@@ -5,14 +5,11 @@ namespace Tests\Feature;
 use App\Models\InventoryBatch;
 use App\Models\Invoice;
 use App\Models\InvoiceStatus;
-use App\Models\LabOrder;
-use App\Models\Medicine;
 use App\Models\Payment;
 use App\Models\PaymentMethod;
-use App\Models\Prescription;
 use App\Models\QueueEntry;
+use App\Models\User;
 use App\Models\Visit;
-use App\Models\VisitStatus;
 use App\Services\DashboardService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -222,13 +219,14 @@ class DashboardTest extends TestCase
 
     protected function createUserWithPermission(string $permission)
     {
-        $user = \App\Models\User::factory()->create();
+        $user = User::factory()->create();
         $user->givePermissionTo($permission);
+
         return $user;
     }
 
     protected function createUserWithoutPermission(string $permission)
     {
-        return \App\Models\User::factory()->create();
+        return User::factory()->create();
     }
 }

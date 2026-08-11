@@ -3,6 +3,7 @@
 namespace App\Actions\Prescriptions;
 
 use App\Events\StockDispensed;
+use App\Exceptions\InvalidDispenseQuantityException;
 use App\Exceptions\InvalidPrescriptionStatusException;
 use App\Models\Prescription;
 use App\Services\InventoryService;
@@ -39,24 +40,43 @@ class DispensePrescriptionAction
             $items = $prescription->items;
             $toDeduct = [];
             foreach ($items as $item) {
+                // Validate prescribed quantity
+                if ($item->quantity <= 0) {
+                    throw InvalidDispenseQuantityException::zeroQuantity();
+                }
+
+                // Validate that dispensed quantity doesn't exceed prescribed quantity
+                if (($item->dispensed_quantity ?? 0) > $item->quantity) {
+                    throw InvalidDispenseQuantityException::exceedsPrescribedQuantity($item->id);
+                }
+
                 $remaining = max(0, $item->quantity - ($item->dispensed_quantity ?? 0));
                 if ($remaining <= 0) {
                     continue;
                 }
+
                 $toDeduct[] = ['medicine_id' => $item->medicine_id, 'quantity' => $remaining, 'prescription_item_id' => $item->id];
             }
 
             // Call inventory service without its own transaction (we're already in one)
             $results = $this->inventory->deductMultipleWithoutTransaction($toDeduct);
 
-            // update dispensed quantities
+            // update dispensed quantities and set stock movement references
             foreach ($results as $r) {
                 if (! empty($r['prescription_item_id'])) {
                     $pi = $prescription->items()->find($r['prescription_item_id']);
                     if ($pi) {
-                        $pi->dispensed_quantity = ($pi->dispensed_quantity ?? 0) + array_sum(array_map(fn ($m) => $m->quantity, $r['movements']));
-                        $pi->dispensed_at = now();
+                        $pi->setAttribute('dispensed_quantity', ($pi->dispensed_quantity ?? 0) + array_sum(array_map(fn ($m) => $m->quantity, $r['movements'])));
+                        $pi->setAttribute('dispensed_at', now());
                         $pi->save();
+
+                        // Update stock movements to reference the prescription item
+                        foreach ($r['movements'] as $movement) {
+                            $movement->update([
+                                'reference_type' => 'prescription_item',
+                                'reference_id' => $pi->id,
+                            ]);
+                        }
                     }
                 }
             }

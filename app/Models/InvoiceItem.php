@@ -9,7 +9,7 @@ class InvoiceItem extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['invoice_id', 'description', 'quantity', 'unit_price', 'total_price', 'tax'];
+    protected $fillable = ['invoice_id', 'description', 'quantity', 'unit_price', 'tax', 'total_price'];
 
     protected $casts = [
         'quantity' => 'decimal:2',

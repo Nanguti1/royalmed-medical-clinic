@@ -64,6 +64,6 @@ class LabOrder extends Model
 
     public function canRecordResult(): bool
     {
-        return $this->isInProgress() || $this->isOrdered();
+        return $this->isInProgress();
     }
 }

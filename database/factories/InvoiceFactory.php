@@ -13,15 +13,27 @@ class InvoiceFactory extends Factory
 
     public function definition(): array
     {
-        $status = InvoiceStatus::firstOrCreate(['code' => 'unpaid'], ['name' => 'Unpaid']);
-
         return [
             'visit_id' => Visit::factory(),
-            'invoice_number' => 'INV-' . fake()->unique()->numerify('######'),
-            'status_id' => $status->id,
-            'total_amount' => fake()->randomFloat(2, 500, 10000),
-            'due_amount' => fake()->randomFloat(2, 500, 10000),
             'issued_at' => fake()->dateTime(),
         ];
+    }
+
+    public function configure()
+    {
+        return $this->afterCreating(function (Invoice $invoice) {
+            $status = InvoiceStatus::firstOrCreate(['code' => 'unpaid'], ['name' => 'Unpaid']);
+            $totalAmount = fake()->randomFloat(2, 500, 10000);
+
+            // Use DB::table to bypass fillable restriction for factory
+            \DB::table('invoices')
+                ->where('id', $invoice->id)
+                ->update([
+                    'invoice_number' => 'INV-'.fake()->unique()->numerify('######'),
+                    'status_id' => $status->id,
+                    'total_amount' => $totalAmount,
+                    'due_amount' => $totalAmount,
+                ]);
+        });
     }
 }

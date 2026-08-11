@@ -15,6 +15,11 @@ class InvoiceStatusResolver
      */
     public function refreshStatus(Invoice $invoice): Invoice
     {
+        // Cancelled invoices must never transition back to active payment statuses
+        if ($invoice->isCancelled()) {
+            return $invoice;
+        }
+
         $paid = $invoice->payments()->sum('amount');
         $due = max(0, $invoice->total_amount - $paid);
 

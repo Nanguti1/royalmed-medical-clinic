@@ -22,4 +22,18 @@ class InventoryBatchFactory extends Factory
             'received_at' => fake()->dateTime(),
         ];
     }
+
+    public function expired(): self
+    {
+        return $this->state(fn (array $attributes) => [
+            'expiry_date' => now()->subDays(10),
+        ]);
+    }
+
+    public function expiringSoon(): self
+    {
+        return $this->state(fn (array $attributes) => [
+            'expiry_date' => now()->addDays(15),
+        ]);
+    }
 }

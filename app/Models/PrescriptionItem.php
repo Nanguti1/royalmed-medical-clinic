@@ -9,7 +9,7 @@ class PrescriptionItem extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['prescription_id', 'medicine_id', 'dosage_unit_id', 'frequency_id', 'route_id', 'duration_unit_id', 'duration_quantity', 'quantity', 'instructions', 'dispensed_quantity', 'dispensed_at'];
+    protected $fillable = ['prescription_id', 'medicine_id', 'dosage_unit_id', 'frequency_id', 'route_id', 'duration_unit_id', 'duration_quantity', 'quantity', 'instructions'];
 
     protected $casts = [
         'quantity' => 'decimal:2',

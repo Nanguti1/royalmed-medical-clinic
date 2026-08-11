@@ -37,7 +37,7 @@ class PaymentReconciliationTest extends TestCase
 
     public function test_reconciliation_service_calculates_daily_summary()
     {
-        $service = new PaymentReconciliationService();
+        $service = new PaymentReconciliationService;
         $date = now()->toDateString();
 
         $cashMethod = PaymentMethod::where('name', 'cash')->first();
@@ -89,7 +89,7 @@ class PaymentReconciliationTest extends TestCase
 
     public function test_reconciliation_service_filters_by_date()
     {
-        $service = new PaymentReconciliationService();
+        $service = new PaymentReconciliationService;
         $cashMethod = PaymentMethod::where('name', 'cash')->first();
 
         // Create payment for today
@@ -119,7 +119,7 @@ class PaymentReconciliationTest extends TestCase
 
     public function test_reconciliation_service_separates_cash_and_mpesa_payments()
     {
-        $service = new PaymentReconciliationService();
+        $service = new PaymentReconciliationService;
         $date = now()->toDateString();
 
         $cashMethod = PaymentMethod::where('name', 'cash')->first();
@@ -154,7 +154,7 @@ class PaymentReconciliationTest extends TestCase
 
     public function test_reconciliation_service_calculates_staff_breakdown()
     {
-        $service = new PaymentReconciliationService();
+        $service = new PaymentReconciliationService;
         $date = now()->toDateString();
 
         $cashMethod = PaymentMethod::where('name', 'cash')->first();
@@ -215,7 +215,7 @@ class PaymentReconciliationTest extends TestCase
 
     public function test_reconciliation_data_includes_payment_relationships()
     {
-        $service = new PaymentReconciliationService();
+        $service = new PaymentReconciliationService;
         $date = now()->toDateString();
 
         $cashMethod = PaymentMethod::where('name', 'cash')->first();
@@ -257,7 +257,7 @@ class PaymentReconciliationTest extends TestCase
 
     public function test_reconciliation_service_handles_empty_data()
     {
-        $service = new PaymentReconciliationService();
+        $service = new PaymentReconciliationService;
         $date = now()->toDateString();
 
         $summary = $service->getDailySummary($date);
@@ -280,14 +280,24 @@ class PaymentReconciliationTest extends TestCase
         $visit = Visit::factory()->create();
         $unpaidStatus = InvoiceStatus::firstOrCreate(['code' => 'unpaid'], ['name' => 'Unpaid']);
 
-        return Invoice::create([
+        $invoice = Invoice::create([
             'visit_id' => $visit->id,
-            'invoice_number' => 'INV-'.rand(10000, 99999),
-            'status_id' => $unpaidStatus->id,
-            'total_amount' => 1000,
-            'due_amount' => 1000,
             'issued_at' => now(),
         ]);
+
+        // Use DB::table to bypass fillable for test helper
+        \DB::table('invoices')
+            ->where('id', $invoice->id)
+            ->update([
+                'invoice_number' => 'INV-'.rand(10000, 99999),
+                'status_id' => $unpaidStatus->id,
+                'total_amount' => 1000,
+                'due_amount' => 1000,
+            ]);
+
+        $invoice->refresh();
+
+        return $invoice;
     }
 
     protected function createUserWithPermission(string $permission)

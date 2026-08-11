@@ -475,6 +475,160 @@ class PaymentTest extends TestCase
         });
     }
 
+    public function test_payment_amount_cannot_be_modified_after_creation()
+    {
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Payment field \'amount\' cannot be modified after payment creation');
+
+        $payment = Payment::create([
+            'invoice_id' => $this->createInvoiceWithBalance(1000)->id,
+            'payment_method_id' => PaymentMethod::where('name', 'cash')->first()->id,
+            'amount' => 500,
+            'paid_at' => now(),
+            'received_by' => $this->createUserWithPermission('billing.create')->id,
+        ]);
+
+        $payment->amount = 1000;
+        $payment->save();
+    }
+
+    public function test_payment_invoice_id_cannot_be_modified_after_creation()
+    {
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Payment field \'invoice_id\' cannot be modified after payment creation');
+
+        $invoice1 = $this->createInvoiceWithBalance(1000);
+        $invoice2 = $this->createInvoiceWithBalance(1000);
+
+        $payment = Payment::create([
+            'invoice_id' => $invoice1->id,
+            'payment_method_id' => PaymentMethod::where('name', 'cash')->first()->id,
+            'amount' => 500,
+            'paid_at' => now(),
+            'received_by' => $this->createUserWithPermission('billing.create')->id,
+        ]);
+
+        $payment->invoice_id = $invoice2->id;
+        $payment->save();
+    }
+
+    public function test_payment_paid_at_cannot_be_modified_after_creation()
+    {
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Payment field \'paid_at\' cannot be modified after payment creation');
+
+        $payment = Payment::create([
+            'invoice_id' => $this->createInvoiceWithBalance(1000)->id,
+            'payment_method_id' => PaymentMethod::where('name', 'cash')->first()->id,
+            'amount' => 500,
+            'paid_at' => now(),
+            'received_by' => $this->createUserWithPermission('billing.create')->id,
+        ]);
+
+        $payment->paid_at = now()->addDay();
+        $payment->save();
+    }
+
+    public function test_payment_received_by_cannot_be_modified_after_creation()
+    {
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Payment field \'received_by\' cannot be modified after payment creation');
+
+        $user1 = $this->createUserWithPermission('billing.create');
+        $user2 = $this->createUserWithPermission('billing.create');
+
+        $payment = Payment::create([
+            'invoice_id' => $this->createInvoiceWithBalance(1000)->id,
+            'payment_method_id' => PaymentMethod::where('name', 'cash')->first()->id,
+            'amount' => 500,
+            'paid_at' => now(),
+            'received_by' => $user1->id,
+        ]);
+
+        $payment->received_by = $user2->id;
+        $payment->save();
+    }
+
+    public function test_payment_receipt_number_cannot_be_modified_after_creation()
+    {
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Payment field \'receipt_number\' cannot be modified after payment creation');
+
+        $payment = Payment::create([
+            'invoice_id' => $this->createInvoiceWithBalance(1000)->id,
+            'payment_method_id' => PaymentMethod::where('name', 'cash')->first()->id,
+            'amount' => 500,
+            'paid_at' => now(),
+            'received_by' => $this->createUserWithPermission('billing.create')->id,
+        ]);
+
+        $payment->receipt_number = 'R-FAKE-12345';
+        $payment->save();
+    }
+
+    public function test_payment_method_id_cannot_be_modified_after_creation()
+    {
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Payment field \'payment_method_id\' cannot be modified after payment creation');
+
+        $cashMethod = PaymentMethod::where('name', 'cash')->first();
+        $mpesaMethod = PaymentMethod::where('name', 'mpesa')->first();
+
+        $payment = Payment::create([
+            'invoice_id' => $this->createInvoiceWithBalance(1000)->id,
+            'payment_method_id' => $cashMethod->id,
+            'amount' => 500,
+            'paid_at' => now(),
+            'received_by' => $this->createUserWithPermission('billing.create')->id,
+        ]);
+
+        $payment->payment_method_id = $mpesaMethod->id;
+        $payment->save();
+    }
+
+    public function test_future_payment_date_is_rejected()
+    {
+        $user = $this->createUserWithPermission('billing.create');
+        $invoice = $this->createInvoiceWithBalance(1000);
+
+        $cashMethod = PaymentMethod::where('name', 'cash')->first();
+
+        $response = $this->actingAs($user)
+            ->post('/payments', [
+                'invoice_id' => $invoice->id,
+                'payment_method_id' => $cashMethod->id,
+                'amount' => 500,
+                'paid_at' => now()->addDay()->toDateString(),
+            ]);
+
+        $response->assertSessionHasErrors('paid_at');
+    }
+
+    public function test_mpesa_amount_must_match_payment_amount()
+    {
+        $user = $this->createUserWithPermission('billing.create');
+        $invoice = $this->createInvoiceWithBalance(1000);
+
+        $mpesaMethod = PaymentMethod::where('name', 'mpesa')->first();
+
+        $response = $this->actingAs($user)
+            ->post('/payments', [
+                'invoice_id' => $invoice->id,
+                'payment_method_id' => $mpesaMethod->id,
+                'amount' => 500,
+                'paid_at' => now()->toDateString(),
+                'mpesa' => [
+                    'transaction_id' => 'ABC123',
+                    'phone' => '0712345678',
+                    'amount' => 600, // Different from payment amount
+                    'status' => 'completed',
+                    'occurred_at' => now()->toDateString(),
+                ],
+            ]);
+
+        $response->assertSessionHasErrors('amount');
+    }
+
     protected function createInvoiceWithBalance(float $amount): Invoice
     {
         $visit = Visit::factory()->create();
@@ -483,12 +637,20 @@ class PaymentTest extends TestCase
 
         $invoice = Invoice::create([
             'visit_id' => $visit->id,
-            'invoice_number' => 'INV-'.rand(10000, 99999),
-            'status_id' => $unpaidStatus->id,
-            'total_amount' => $amount,
-            'due_amount' => $amount,
             'issued_at' => now(),
         ]);
+
+        // Use DB::table to bypass fillable for test helper
+        \DB::table('invoices')
+            ->where('id', $invoice->id)
+            ->update([
+                'invoice_number' => 'INV-'.rand(10000, 99999),
+                'status_id' => $unpaidStatus->id,
+                'total_amount' => $amount,
+                'due_amount' => $amount,
+            ]);
+
+        $invoice->refresh();
 
         return $invoice;
     }
@@ -501,12 +663,20 @@ class PaymentTest extends TestCase
 
         $invoice = Invoice::create([
             'visit_id' => $visit->id,
-            'invoice_number' => 'INV-'.rand(10000, 99999),
-            'status_id' => $cancelledStatus->id,
-            'total_amount' => 1000,
-            'due_amount' => 1000,
             'issued_at' => now(),
         ]);
+
+        // Use DB::table to bypass fillable for test helper
+        \DB::table('invoices')
+            ->where('id', $invoice->id)
+            ->update([
+                'invoice_number' => 'INV-'.rand(10000, 99999),
+                'status_id' => $cancelledStatus->id,
+                'total_amount' => 1000,
+                'due_amount' => 1000,
+            ]);
+
+        $invoice->refresh();
 
         return $invoice;
     }

@@ -17,6 +17,20 @@ class Payment extends Model
         'paid_at' => 'datetime',
     ];
 
+    protected static function booted()
+    {
+        static::updating(function ($payment) {
+            // Protect immutable financial fields - these can never be modified after creation
+            $protectedFields = ['invoice_id', 'payment_method_id', 'amount', 'paid_at', 'received_by', 'receipt_number'];
+
+            foreach ($protectedFields as $field) {
+                if ($payment->isDirty($field)) {
+                    throw new \RuntimeException("Payment field '{$field}' cannot be modified after payment creation. Financial records are immutable.");
+                }
+            }
+        });
+    }
+
     public function invoice(): BelongsTo
     {
         return $this->belongsTo(Invoice::class);

@@ -23,7 +23,7 @@ class StorePrescriptionWithItemsRequest extends FormRequest
             'items.*.frequency_id' => 'nullable|exists:frequencies,id',
             'items.*.route_id' => 'nullable|exists:routes,id',
             'items.*.duration_unit_id' => 'nullable|exists:duration_units,id',
-            'items.*.duration_quantity' => 'nullable|numeric',
+            'items.*.duration_quantity' => 'nullable|numeric|min:0',
             'items.*.quantity' => 'required|numeric|min:0.01',
             'items.*.instructions' => 'nullable|string',
         ];

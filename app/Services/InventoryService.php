@@ -8,6 +8,7 @@ use App\Exceptions\InsufficientStockException;
 use App\Exceptions\MedicineExpiredException;
 use App\Models\InventoryBatch;
 use App\Models\Medicine;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -34,6 +35,7 @@ class InventoryService
                 'movement_type' => 'in',
                 'reference_type' => 'purchase',
                 'reference_id' => $batch->id,
+                'user_id' => Auth::id(),
             ]);
             Log::info('Stock received', ['batch_id' => $batch->id]);
 
@@ -73,13 +75,14 @@ class InventoryService
             $movements = [];
 
             // Lock batches for concurrent deduction safety
+            // Use COALESCE to treat NULL expiry dates as far future (so they're used last)
             $batches = InventoryBatch::where('medicine_id', $medicine->id)
                 ->where('quantity', '>', 0)
                 ->where(function ($query) {
                     $query->whereNull('expiry_date')
                         ->orWhere('expiry_date', '>', now());
                 })
-                ->orderBy('expiry_date', 'asc')
+                ->orderByRaw('COALESCE(expiry_date, "9999-12-31") ASC')
                 ->lockForUpdate()
                 ->get();
 
@@ -112,6 +115,7 @@ class InventoryService
                     'movement_type' => 'out',
                     'reference_type' => 'dispense',
                     'reference_id' => null,
+                    'user_id' => Auth::id(),
                 ]);
 
                 $movements[] = $movement;

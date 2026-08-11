@@ -190,7 +190,7 @@ export default function LaboratoryShow() {
                                     ))}
                                 </div>
                             ) : (
-                                <p className="text-muted-foreground">No tests requested.</p>
+                                <p className="text-muted-foreground">No tests ordered.</p>
                             )}
                         </CardContent>
                     </Card>

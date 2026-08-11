@@ -9,7 +9,7 @@ class Invoice extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['visit_id', 'invoice_number', 'status_id', 'total_amount', 'due_amount', 'issued_at'];
+    protected $fillable = ['visit_id', 'issued_at'];
 
     protected $casts = [
         'total_amount' => 'decimal:2',

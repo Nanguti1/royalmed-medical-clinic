@@ -19,7 +19,7 @@ class StorePaymentRequest extends FormRequest
             'invoice_id' => 'nullable|exists:invoices,id',
             'payment_method_id' => 'nullable|exists:payment_methods,id',
             'amount' => 'required|numeric|min:0.01',
-            'paid_at' => 'nullable|date',
+            'paid_at' => 'nullable|date|before_or_equal:now',
             'reference' => 'nullable|string',
             'mpesa_transaction_id' => 'nullable|exists:mpesa_transactions,id',
             'mpesa' => 'nullable|array',
@@ -43,6 +43,16 @@ class StorePaymentRequest extends FormRequest
                 if ($paymentMethod && strtolower($paymentMethod->name) === 'mpesa') {
                     if (empty($this->input('mpesa.transaction_id'))) {
                         $validator->errors()->add('mpesa.transaction_id', 'M-Pesa transaction reference is required for M-Pesa payments.');
+                    }
+
+                    // Validate M-Pesa transaction amount matches payment amount
+                    $mpesaAmount = $this->input('mpesa.amount');
+                    $paymentAmount = $this->input('amount');
+
+                    if ($mpesaAmount !== null && $paymentAmount !== null) {
+                        if (abs((float) $mpesaAmount - (float) $paymentAmount) > 0.01) {
+                            $validator->errors()->add('amount', 'Payment amount must match M-Pesa transaction amount.');
+                        }
                     }
                 }
             }

@@ -30,9 +30,12 @@ class CalculateInvoiceTotalsAction
         $tax = round($subtotal * $taxRate, 2);
         $grand = round($subtotal + $tax, 2);
 
-        $invoice->update([
-            'total_amount' => $grand,
-        ]);
+        // Use server update flag to bypass immutability protection
+        Invoice::withServerUpdate(function () use ($invoice, $grand) {
+            $invoice->update([
+                'total_amount' => $grand,
+            ]);
+        });
 
         // Use centralized resolver for due_amount and status
         $this->statusResolver->refreshStatus($invoice);

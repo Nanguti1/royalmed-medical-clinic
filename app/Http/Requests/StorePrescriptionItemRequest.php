@@ -8,7 +8,7 @@ class StorePrescriptionItemRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->can('pharmacy.dispense');
+        return $this->user()->can('consultations.create');
     }
 
     public function rules(): array
@@ -20,7 +20,7 @@ class StorePrescriptionItemRequest extends FormRequest
             'frequency_id' => 'nullable|exists:frequencies,id',
             'route_id' => 'nullable|exists:routes,id',
             'duration_unit_id' => 'nullable|exists:duration_units,id',
-            'duration_quantity' => 'nullable|numeric',
+            'duration_quantity' => 'nullable|numeric|min:0',
             'quantity' => 'required|numeric|min:0.01',
             'instructions' => 'nullable|string',
         ];

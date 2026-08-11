@@ -238,12 +238,20 @@ class PaymentReceiptTest extends TestCase
 
         $invoice = Invoice::create([
             'visit_id' => $visit->id,
-            'invoice_number' => 'INV-'.rand(10000, 99999),
-            'status_id' => $unpaidStatus->id,
-            'total_amount' => 1000,
-            'due_amount' => 1000,
             'issued_at' => now(),
         ]);
+
+        // Use DB::table to bypass fillable for test helper
+        \DB::table('invoices')
+            ->where('id', $invoice->id)
+            ->update([
+                'invoice_number' => 'INV-'.rand(10000, 99999),
+                'status_id' => $unpaidStatus->id,
+                'total_amount' => 1000,
+                'due_amount' => 1000,
+            ]);
+
+        $invoice->refresh();
 
         $cashMethod = PaymentMethod::where('name', 'cash')->first();
         $user = $this->createUserWithPermission('billing.create');
