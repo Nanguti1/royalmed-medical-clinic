@@ -22,4 +22,16 @@ class PaymentFactory extends Factory
             'mpesa_transaction_id' => null,
         ];
     }
+
+    public function configure()
+    {
+        return $this->afterCreating(function (Payment $payment) {
+            // Use server update mode to set receipt_number
+            Payment::withServerUpdate(function () use ($payment) {
+                $payment->update([
+                    'receipt_number' => 'R-'.fake()->unique()->numerify('######'),
+                ]);
+            });
+        });
+    }
 }

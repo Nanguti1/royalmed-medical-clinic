@@ -28,11 +28,7 @@ class InvoiceItemFactory extends Factory
     {
         return $this->afterCreating(function (InvoiceItem $item) {
             $total = round($item->quantity * $item->unit_price, 2);
-
-            // Use DB::table to bypass fillable restriction for factory
-            \DB::table('invoice_items')
-                ->where('id', $item->id)
-                ->update(['total_price' => $total]);
+            $item->update(['total_price' => $total]);
         });
     }
 }

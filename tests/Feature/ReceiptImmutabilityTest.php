@@ -23,11 +23,17 @@ class ReceiptImmutabilityTest extends TestCase
         $invoice = Invoice::create([
             'visit_id' => $visit->id,
             'invoice_number' => 'INV-'.rand(10000, 99999),
-            'status_id' => $unpaidStatus->id,
-            'total_amount' => 1000,
-            'due_amount' => 1000,
             'issued_at' => now(),
         ]);
+
+        // Use server update mode to set protected fields
+        Invoice::withServerUpdate(function () use ($invoice, $unpaidStatus) {
+            $invoice->update([
+                'status_id' => $unpaidStatus->id,
+                'total_amount' => 1000,
+                'due_amount' => 1000,
+            ]);
+        });
 
         $cashMethod = PaymentMethod::where('name', 'cash')->first() ?? PaymentMethod::factory()->create(['name' => 'cash']);
 
@@ -59,7 +65,7 @@ class ReceiptImmutabilityTest extends TestCase
     public function test_receipt_number_cannot_be_modified_after_creation()
     {
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Receipt number cannot be modified after payment creation.');
+        $this->expectExceptionMessage('Payment field \'receipt_number\' cannot be modified after payment creation');
 
         $payment = $this->createPayment();
 
@@ -89,7 +95,7 @@ class ReceiptImmutabilityTest extends TestCase
 
         // But when we try to save, the immutability check should block it
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Receipt number cannot be modified after payment creation.');
+        $this->expectExceptionMessage('Payment field \'receipt_number\' cannot be modified after payment creation');
 
         $payment->save();
     }

@@ -16,6 +16,19 @@ class CalculateInvoiceTotalsAction
 
     public function execute(Invoice $invoice, float $taxRate = 0.16): Invoice
     {
+        // Ensure items are loaded from database
+        $invoice->load('items');
+
+        if ($invoice->items->isEmpty()) {
+            // If no items, set total to 0
+            Invoice::withServerUpdate(function () use ($invoice) {
+                $invoice->update(['total_amount' => 0]);
+            });
+            $this->statusResolver->refreshStatus($invoice);
+
+            return $invoice;
+        }
+
         $subtotal = 0;
         foreach ($invoice->items as $item) {
             // Server-side calculation: always recalculate from quantity * unit_price
@@ -36,6 +49,9 @@ class CalculateInvoiceTotalsAction
                 'total_amount' => $grand,
             ]);
         });
+
+        // Refresh to get the updated values
+        $invoice->refresh();
 
         // Use centralized resolver for due_amount and status
         $this->statusResolver->refreshStatus($invoice);

@@ -32,17 +32,22 @@ class BillingService
             if (! empty($data['items']) && is_array($data['items'])) {
                 foreach ($data['items'] as $item) {
                     // Server-side calculation: ignore client-supplied total_price
-                    if (isset($item['quantity']) && isset($item['unit_price'])) {
-                        $calculatedTotal = round($item['quantity'] * $item['unit_price'], 2);
-                        $item['total_price'] = $calculatedTotal;
-                    }
+                    // Don't set total_price here - let CalculateInvoiceTotalsAction handle it
+                    unset($item['total_price']);
                     $invoice->items()->create($item);
                 }
+
+                // Reload items from database to ensure they're visible in the transaction
+                $invoice->refresh();
+                $invoice->load('items');
             }
 
             // calculate totals via action
             $taxRate = config('clinic.tax_rate', 0.16);
             $this->calculateAction->execute($invoice, $taxRate);
+
+            // Refresh to get the updated totals and status
+            $invoice->refresh();
 
             Log::info('Invoice created', ['invoice_id' => $invoice->id]);
 

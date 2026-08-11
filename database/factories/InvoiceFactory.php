@@ -15,6 +15,7 @@ class InvoiceFactory extends Factory
     {
         return [
             'visit_id' => Visit::factory(),
+            'invoice_number' => 'INV-'.fake()->unique()->numerify('######'),
             'issued_at' => fake()->dateTime(),
         ];
     }
@@ -25,15 +26,14 @@ class InvoiceFactory extends Factory
             $status = InvoiceStatus::firstOrCreate(['code' => 'unpaid'], ['name' => 'Unpaid']);
             $totalAmount = fake()->randomFloat(2, 500, 10000);
 
-            // Use DB::table to bypass fillable restriction for factory
-            \DB::table('invoices')
-                ->where('id', $invoice->id)
-                ->update([
-                    'invoice_number' => 'INV-'.fake()->unique()->numerify('######'),
+            // Use server update mode to set protected fields
+            Invoice::withServerUpdate(function () use ($invoice, $status, $totalAmount) {
+                $invoice->update([
                     'status_id' => $status->id,
                     'total_amount' => $totalAmount,
                     'due_amount' => $totalAmount,
                 ]);
+            });
         });
     }
 }

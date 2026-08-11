@@ -17,9 +17,16 @@ class Payment extends Model
         'paid_at' => 'datetime',
     ];
 
+    protected static $serverUpdateMode = false;
+
     protected static function booted()
     {
         static::updating(function ($payment) {
+            // Skip protection when in server update mode
+            if (self::$serverUpdateMode) {
+                return;
+            }
+
             // Protect immutable financial fields - these can never be modified after creation
             $protectedFields = ['invoice_id', 'payment_method_id', 'amount', 'paid_at', 'received_by', 'receipt_number'];
 
@@ -29,6 +36,22 @@ class Payment extends Model
                 }
             }
         });
+    }
+
+    /**
+     * Execute a callback with server update mode enabled.
+     * This allows legitimate server-side operations to update protected fields.
+     */
+    public static function withServerUpdate(callable $callback)
+    {
+        $previousMode = self::$serverUpdateMode;
+        self::$serverUpdateMode = true;
+
+        try {
+            return $callback();
+        } finally {
+            self::$serverUpdateMode = $previousMode;
+        }
     }
 
     public function invoice(): BelongsTo

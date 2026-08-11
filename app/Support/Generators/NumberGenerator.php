@@ -32,11 +32,20 @@ class NumberGenerator
 
             if (! $sequence) {
                 // Create the sequence record (will be locked by the transaction)
-                $sequence = NumberSequence::create([
+                // Use insert to avoid unique constraint issues
+                DB::table('number_sequences')->insert([
                     'type' => $type,
                     'date' => $dateStr,
                     'sequence' => 0,
+                    'created_at' => now(),
+                    'updated_at' => now(),
                 ]);
+
+                // Fetch the newly created record with lock
+                $sequence = NumberSequence::where('type', $type)
+                    ->where('date', $dateStr)
+                    ->lockForUpdate()
+                    ->first();
             }
 
             // Atomically increment and get the new sequence number

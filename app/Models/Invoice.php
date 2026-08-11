@@ -9,13 +9,50 @@ class Invoice extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['visit_id', 'issued_at'];
+    protected $fillable = ['visit_id', 'issued_at', 'invoice_number'];
 
     protected $casts = [
         'total_amount' => 'decimal:2',
         'due_amount' => 'decimal:2',
         'issued_at' => 'datetime',
     ];
+
+    protected static $serverUpdateMode = false;
+
+    protected static function booted()
+    {
+        static::updating(function ($invoice) {
+            // Skip protection when in server update mode
+            if (self::$serverUpdateMode) {
+                return;
+            }
+
+            // Protect immutable financial fields after initial creation
+            $protectedFields = ['invoice_number', 'total_amount'];
+
+            foreach ($protectedFields as $field) {
+                if ($invoice->isDirty($field)) {
+                    throw new \RuntimeException("Invoice field '{$field}' cannot be modified after invoice creation. Financial records are immutable.");
+                }
+            }
+        });
+    }
+
+    /**
+     * Execute a callback with server update mode enabled.
+     * This allows legitimate server-side operations to update protected fields.
+     */
+    public static function withServerUpdate(callable $callback)
+    {
+        $previousMode = self::$serverUpdateMode;
+        self::$serverUpdateMode = true;
+
+        try {
+            return $callback();
+        } finally {
+            self::$serverUpdateMode = $previousMode;
+        }
+    }
 
     public function visit()
     {

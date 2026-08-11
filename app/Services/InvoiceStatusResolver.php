@@ -23,11 +23,17 @@ class InvoiceStatusResolver
         $paid = $invoice->payments()->sum('amount');
         $due = max(0, $invoice->total_amount - $paid);
 
-        $invoice->update(['due_amount' => $due]);
+        // Use server update mode to allow updating protected fields
+        Invoice::withServerUpdate(function () use ($invoice, $due) {
+            $invoice->update(['due_amount' => $due]);
+        });
 
         $statusCode = $this->determineStatusCode($paid, $due);
         $status = InvoiceStatus::firstOrCreate(['code' => $statusCode], ['name' => ucfirst($statusCode)]);
-        $invoice->update(['status_id' => $status->id]);
+
+        Invoice::withServerUpdate(function () use ($invoice, $status) {
+            $invoice->update(['status_id' => $status->id]);
+        });
 
         return $invoice;
     }
