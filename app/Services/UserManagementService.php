@@ -125,6 +125,11 @@ class UserManagementService
 
     public function deleteRole(Role $role): void
     {
+        // Prevent deleting Super Admin role
+        if ($role->name === 'Super Admin') {
+            throw new \RuntimeException('Cannot delete the Super Admin role.');
+        }
+
         $role->delete();
     }
 

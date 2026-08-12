@@ -82,15 +82,14 @@ class RoleController extends Controller
 
     public function destroy(Request $request, Role $role)
     {
-        // Prevent deleting Super Admin role
-        if ($role->name === 'Super Admin') {
-            return back()->with('error', 'Cannot delete the Super Admin role.');
+        try {
+            $this->userManagementService->deleteRole($role);
+
+            return redirect()
+                ->route('roles.index')
+                ->with('success', 'Role deleted successfully.');
+        } catch (\RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
         }
-
-        $this->userManagementService->deleteRole($role);
-
-        return redirect()
-            ->route('roles.index')
-            ->with('success', 'Role deleted successfully.');
     }
 }

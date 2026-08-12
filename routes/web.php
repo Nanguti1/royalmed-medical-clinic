@@ -26,81 +26,135 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('can:patients.view');
 
     Route::prefix('patients')->group(function () {
-        Route::get('/', [PatientController::class, 'index'])->name('patients.index');
-        Route::get('/create', [PatientController::class, 'create'])->name('patients.create');
-        Route::post('/', [PatientController::class, 'store'])->name('patients.store');
-        Route::get('/{patient}', [PatientController::class, 'show'])->name('patients.show');
-        Route::get('/{patient}/edit', [PatientController::class, 'edit'])->name('patients.edit');
-        Route::put('/{patient}', [PatientController::class, 'update'])->name('patients.update');
-        Route::delete('/{patient}', [PatientController::class, 'destroy'])->name('patients.destroy');
+        Route::get('/', [PatientController::class, 'index'])->name('patients.index')
+            ->middleware('can:patients.view');
+        Route::get('/create', [PatientController::class, 'create'])->name('patients.create')
+            ->middleware('can:patients.create');
+        Route::post('/', [PatientController::class, 'store'])->name('patients.store')
+            ->middleware('can:patients.create');
+        Route::get('/{patient}', [PatientController::class, 'show'])->name('patients.show')
+            ->middleware('can:patients.view');
+        Route::get('/{patient}/edit', [PatientController::class, 'edit'])->name('patients.edit')
+            ->middleware('can:patients.update');
+        Route::put('/{patient}', [PatientController::class, 'update'])->name('patients.update')
+            ->middleware('can:patients.update');
+        Route::delete('/{patient}', [PatientController::class, 'destroy'])->name('patients.destroy')
+            ->middleware('can:patients.delete');
     });
 
     Route::prefix('visits')->group(function () {
-        Route::get('/', [VisitController::class, 'index'])->name('visits.index');
-        Route::get('/create', [VisitController::class, 'create'])->name('visits.create');
-        Route::post('/', [VisitController::class, 'store'])->name('visits.store');
-        Route::get('/{visit}', [VisitController::class, 'show'])->name('visits.show');
-        Route::get('/{visit}/triage', [VisitController::class, 'triage'])->name('visits.triage');
-        Route::post('/{visit}/vitals', [VisitController::class, 'captureVitals'])->name('visits.captureVitals');
-        Route::get('/queue', [VisitController::class, 'queue'])->name('visits.queue');
-        Route::post('/{visit}/queue', [VisitController::class, 'addToQueue'])->name('visits.addToQueue');
-        Route::delete('/queue/{entry}', [VisitController::class, 'removeFromQueue'])->name('visits.removeFromQueue');
-        Route::post('/{visit}/start', [VisitController::class, 'start'])->name('visits.start');
-        Route::post('/{visit}/complete', [VisitController::class, 'complete'])->name('visits.complete');
-        Route::post('/{visit}/cancel', [VisitController::class, 'cancel'])->name('visits.cancel');
+        Route::get('/', [VisitController::class, 'index'])->name('visits.index')
+            ->middleware('can:visits.view');
+        Route::get('/create', [VisitController::class, 'create'])->name('visits.create')
+            ->middleware('can:visits.create');
+        Route::post('/', [VisitController::class, 'store'])->name('visits.store')
+            ->middleware('can:visits.create');
+        Route::get('/{visit}', [VisitController::class, 'show'])->name('visits.show')
+            ->middleware('can:visits.view');
+        Route::get('/{visit}/triage', [VisitController::class, 'triage'])->name('visits.triage')
+            ->middleware('can:visits.update');
+        Route::post('/{visit}/vitals', [VisitController::class, 'captureVitals'])->name('visits.captureVitals')
+            ->middleware('can:visits.update');
+        Route::get('/queue', [VisitController::class, 'queue'])->name('visits.queue')
+            ->middleware('can:visits.view');
+        Route::post('/{visit}/queue', [VisitController::class, 'addToQueue'])->name('visits.addToQueue')
+            ->middleware('can:visits.update');
+        Route::delete('/queue/{entry}', [VisitController::class, 'removeFromQueue'])->name('visits.removeFromQueue')
+            ->middleware('can:visits.update');
+        Route::post('/{visit}/start', [VisitController::class, 'start'])->name('visits.start')
+            ->middleware('can:visits.update');
+        Route::post('/{visit}/complete', [VisitController::class, 'complete'])->name('visits.complete')
+            ->middleware('can:visits.update');
+        Route::post('/{visit}/cancel', [VisitController::class, 'cancel'])->name('visits.cancel')
+            ->middleware('can:visits.update');
     });
 
     Route::prefix('consultations')->group(function () {
-        Route::get('/', [ConsultationController::class, 'index'])->name('consultations.index');
-        Route::get('/create/{visit}', [ConsultationController::class, 'create'])->name('consultations.create');
-        Route::post('/', [ConsultationController::class, 'store'])->name('consultations.store');
-        Route::get('/{consultation}', [ConsultationController::class, 'show'])->name('consultations.show');
-        Route::get('/{consultation}/edit', [ConsultationController::class, 'edit'])->name('consultations.edit');
-        Route::put('/{consultation}', [ConsultationController::class, 'update'])->name('consultations.update');
-        Route::post('/visits/{visit}/start', [ConsultationController::class, 'startConsultation'])->name('consultations.startConsultation');
-        Route::post('/visits/{visit}/complete', [ConsultationController::class, 'completeVisit'])->name('consultations.completeVisit');
+        Route::get('/', [ConsultationController::class, 'index'])->name('consultations.index')
+            ->middleware('can:consultations.view');
+        Route::get('/create/{visit}', [ConsultationController::class, 'create'])->name('consultations.create')
+            ->middleware('can:consultations.create');
+        Route::post('/', [ConsultationController::class, 'store'])->name('consultations.store')
+            ->middleware('can:consultations.create');
+        Route::get('/{consultation}', [ConsultationController::class, 'show'])->name('consultations.show')
+            ->middleware('can:consultations.view');
+        Route::get('/{consultation}/edit', [ConsultationController::class, 'edit'])->name('consultations.edit')
+            ->middleware('can:consultations.update');
+        Route::put('/{consultation}', [ConsultationController::class, 'update'])->name('consultations.update')
+            ->middleware('can:consultations.update');
+        Route::post('/visits/{visit}/start', [ConsultationController::class, 'startConsultation'])->name('consultations.startConsultation')
+            ->middleware('can:visits.update');
+        Route::post('/visits/{visit}/complete', [ConsultationController::class, 'completeVisit'])->name('consultations.completeVisit')
+            ->middleware('can:visits.update');
     });
 
     Route::prefix('prescriptions')->group(function () {
-        Route::get('/create/{visit}', [PrescriptionController::class, 'create'])->name('prescriptions.create');
-        Route::post('/', [PrescriptionController::class, 'store'])->name('prescriptions.store');
-        Route::get('/{prescription}', [PrescriptionController::class, 'show'])->name('prescriptions.show');
+        Route::get('/create/{visit}', [PrescriptionController::class, 'create'])->name('prescriptions.create')
+            ->middleware('can:consultations.create');
+        Route::post('/', [PrescriptionController::class, 'store'])->name('prescriptions.store')
+            ->middleware('can:consultations.create');
+        Route::get('/{prescription}', [PrescriptionController::class, 'show'])->name('prescriptions.show')
+            ->middleware('can:consultations.view');
     });
 
     Route::prefix('pharmacy')->group(function () {
-        Route::get('/', [PharmacyController::class, 'index'])->name('pharmacy.index');
-        Route::get('/dispense/{prescription}', [PharmacyController::class, 'dispense'])->name('pharmacy.dispense');
-        Route::post('/dispense/{prescription}', [PharmacyController::class, 'storeDispense'])->name('pharmacy.storeDispense');
-        Route::get('/inventory', [PharmacyController::class, 'inventory'])->name('pharmacy.inventory');
-        Route::get('/receive', [PharmacyController::class, 'receive'])->name('pharmacy.receive');
-        Route::post('/receive', [PharmacyController::class, 'storeReceive'])->name('pharmacy.storeReceive');
+        Route::get('/', [PharmacyController::class, 'index'])->name('pharmacy.index')
+            ->middleware('can:pharmacy.view');
+        Route::get('/dispense/{prescription}', [PharmacyController::class, 'dispense'])->name('pharmacy.dispense')
+            ->middleware('can:pharmacy.view');
+        Route::post('/dispense/{prescription}', [PharmacyController::class, 'storeDispense'])->name('pharmacy.storeDispense')
+            ->middleware('can:pharmacy.dispense');
+        Route::get('/inventory', [PharmacyController::class, 'inventory'])->name('pharmacy.inventory')
+            ->middleware('can:inventory.view');
+        Route::get('/receive', [PharmacyController::class, 'receive'])->name('pharmacy.receive')
+            ->middleware('can:inventory.manage');
+        Route::post('/receive', [PharmacyController::class, 'storeReceive'])->name('pharmacy.storeReceive')
+            ->middleware('can:inventory.manage');
     });
 
     Route::prefix('laboratory')->group(function () {
-        Route::get('/', [LaboratoryController::class, 'index'])->name('laboratory.index');
-        Route::get('/create/{visit}', [LaboratoryController::class, 'create'])->name('laboratory.create');
-        Route::post('/', [LaboratoryController::class, 'store'])->name('laboratory.store');
-        Route::get('/{labOrder}', [LaboratoryController::class, 'show'])->name('laboratory.show');
-        Route::post('/{labOrder}/start', [LaboratoryController::class, 'start'])->name('laboratory.start');
-        Route::post('/{labOrder}/complete', [LaboratoryController::class, 'complete'])->name('laboratory.complete');
-        Route::get('/{labOrder}/results', [LaboratoryController::class, 'recordResult'])->name('laboratory.recordResult');
-        Route::post('/{labOrder}/results', [LaboratoryController::class, 'storeResult'])->name('laboratory.storeResult');
+        Route::get('/', [LaboratoryController::class, 'index'])->name('laboratory.index')
+            ->middleware('can:laboratory.view');
+        Route::get('/create/{visit}', [LaboratoryController::class, 'create'])->name('laboratory.create')
+            ->middleware('can:laboratory.order');
+        Route::post('/', [LaboratoryController::class, 'store'])->name('laboratory.store')
+            ->middleware('can:laboratory.order');
+        Route::get('/{labOrder}', [LaboratoryController::class, 'show'])->name('laboratory.show')
+            ->middleware('can:laboratory.view');
+        Route::post('/{labOrder}/start', [LaboratoryController::class, 'start'])->name('laboratory.start')
+            ->middleware('can:laboratory.order');
+        Route::post('/{labOrder}/complete', [LaboratoryController::class, 'complete'])->name('laboratory.complete')
+            ->middleware('can:laboratory.order');
+        Route::get('/{labOrder}/results', [LaboratoryController::class, 'recordResult'])->name('laboratory.recordResult')
+            ->middleware('can:laboratory.result');
+        Route::post('/{labOrder}/results', [LaboratoryController::class, 'storeResult'])->name('laboratory.storeResult')
+            ->middleware('can:laboratory.result');
     });
 
     Route::prefix('billing')->group(function () {
-        Route::get('/', [BillingController::class, 'index'])->name('billing.index');
-        Route::get('/create/{visit}', [BillingController::class, 'create'])->name('billing.create');
-        Route::post('/', [BillingController::class, 'store'])->name('billing.store');
-        Route::get('/{invoice}', [BillingController::class, 'show'])->name('billing.show');
+        Route::get('/', [BillingController::class, 'index'])->name('billing.index')
+            ->middleware('can:billing.view');
+        Route::get('/create/{visit}', [BillingController::class, 'create'])->name('billing.create')
+            ->middleware('can:billing.create');
+        Route::post('/', [BillingController::class, 'store'])->name('billing.store')
+            ->middleware('can:billing.create');
+        Route::get('/{invoice}', [BillingController::class, 'show'])->name('billing.show')
+            ->middleware('can:billing.view');
     });
 
     Route::prefix('payments')->group(function () {
-        Route::get('/', [PaymentController::class, 'index'])->name('payments.index');
-        Route::get('/reconciliation', [PaymentReconciliationController::class, 'index'])->name('payments.reconciliation');
-        Route::get('/create/{invoice}', [PaymentController::class, 'create'])->name('payments.create');
-        Route::post('/', [PaymentController::class, 'store'])->name('payments.store');
-        Route::get('/receipt/{payment}', [PaymentController::class, 'receipt'])->name('payments.receipt');
-        Route::get('/{payment}', [PaymentController::class, 'show'])->name('payments.show');
+        Route::get('/', [PaymentController::class, 'index'])->name('payments.index')
+            ->middleware('can:billing.view');
+        Route::get('/reconciliation', [PaymentReconciliationController::class, 'index'])->name('payments.reconciliation')
+            ->middleware('can:billing.view');
+        Route::get('/create/{invoice}', [PaymentController::class, 'create'])->name('payments.create')
+            ->middleware('can:billing.create');
+        Route::post('/', [PaymentController::class, 'store'])->name('payments.store')
+            ->middleware('can:billing.create');
+        Route::get('/receipt/{payment}', [PaymentController::class, 'receipt'])->name('payments.receipt')
+            ->middleware('can:billing.view');
+        Route::get('/{payment}', [PaymentController::class, 'show'])->name('payments.show')
+            ->middleware('can:billing.view');
     });
 
     Route::prefix('users')->group(function () {

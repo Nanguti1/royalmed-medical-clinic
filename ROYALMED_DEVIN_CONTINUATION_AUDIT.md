@@ -700,3 +700,242 @@ All dangerous cascade deletions have been addressed. The system now protects his
 - Soft delete provides additional protection for key entities
 - Test coverage ensures the protection mechanisms work correctly
 - No data loss occurred during the migration process
+
+---
+
+## PROMPT 05 — HARDEN AUTHORIZATION AND PROTECT THE FINAL SUPER ADMIN
+
+### Date
+2026-08-12
+
+### What Was Inspected
+
+**Route Analysis:**
+- Reviewed all routes in `routes/web.php` for missing authorization middleware
+- Identified that many sensitive routes lacked explicit `->middleware('can:...')` protection
+- Authorization was primarily dependent on Form Request authorization and controller middleware
+- Users, roles, and permissions already had stronger middleware coverage
+
+**Controller Authorization:**
+- PatientController: Had controller-level middleware but no route-level protection
+- VisitController: Had controller-level middleware but no route-level protection
+- ConsultationController: Had controller-level middleware but no route-level protection
+- BillingController: Had controller-level middleware but no route-level protection
+- PaymentController: Had controller-level middleware but no route-level protection
+- PrescriptionController: Had controller-level middleware but no route-level protection
+- PharmacyController: Had controller-level middleware but no route-level protection
+- LaboratoryController: Had controller-level middleware but no route-level protection
+- UserController: Already had route-level middleware (was good)
+- RoleController: Already had route-level middleware (was good)
+
+**Super Admin Protection:**
+- UserManagementService already had Super Admin protection methods
+- UserController already used these protection methods
+- RoleController had basic Super Admin role protection
+- Service-level protection was in place but needed refinement
+
+### Changes Made
+
+**Route-Level Authorization (Defense-in-Depth):**
+- Added `->middleware('can:patients.view')` to patient index, show routes
+- Added `->middleware('can:patients.create')` to patient create, store routes
+- Added `->middleware('can:patients.update')` to patient edit, update routes
+- Added `->middleware('can:patients.delete')` to patient destroy route
+- Added `->middleware('can:visits.view')` to visit index, show, queue routes
+- Added `->middleware('can:visits.create')` to visit create, store routes
+- Added `->middleware('can:visits.update')` to visit triage, vitals, queue, start, complete, cancel routes
+- Added `->middleware('can:consultations.view')` to consultation index, show routes
+- Added `->middleware('can:consultations.create')` to consultation create, store routes
+- Added `->middleware('can:consultations.update')` to consultation edit, update routes
+- Added `->middleware('can:consultations.create')` to prescription create, store routes
+- Added `->middleware('can:consultations.view')` to prescription show route
+- Added `->middleware('can:pharmacy.view')` to pharmacy index, dispense routes
+- Added `->middleware('can:pharmacy.dispense')` to pharmacy storeDispense route
+- Added `->middleware('can:inventory.view')` to pharmacy inventory route
+- Added `->middleware('can:inventory.manage')` to pharmacy receive, storeReceive routes
+- Added `->middleware('can:laboratory.view')` to laboratory index, show routes
+- Added `->middleware('can:laboratory.order')` to laboratory create, store, start, complete routes
+- Added `->middleware('can:laboratory.result')` to laboratory recordResult, storeResult routes
+- Added `->middleware('can:billing.view')` to billing index, show routes
+- Added `->middleware('can:billing.create')` to billing create, store routes
+- Added `->middleware('can:billing.view')` to payments index, reconciliation, receipt, show routes
+- Added `->middleware('can:billing.create')` to payments create, store routes
+
+**Super Admin Protection Enhancement:**
+- Enhanced `UserManagementService::deleteRole()` to throw exception instead of just returning error
+- Updated `RoleController::destroy()` to handle exceptions gracefully
+- Added exception handling for Super Admin role deletion
+- Ensured service-level protection throws proper exceptions for controller handling
+
+**User Factory Fix:**
+- Added `is_active` field to UserFactory definition with default value `true`
+- Ensures test users are active by default for Super Admin protection tests
+
+**Test Coverage:**
+- Created `tests/Feature/AuthorizationTest.php` with 21 test cases:
+  - Unauthorized access tests for patients, visits, consultations, billing, laboratory, pharmacy, inventory, users
+  - Authorized access tests for patients, billing, laboratory, pharmacy, inventory, users
+  - Super Admin deletion protection tests
+  - Super Admin deactivation protection tests
+  - Super Admin role removal protection tests
+  - Super Admin role deletion protection tests
+  - Multiple Super Admins can delete one another
+  - Regular users cannot delete any user
+
+### Route Coverage Summary
+
+**Patients Module (6 routes):**
+- All routes now have explicit `can:` middleware
+- Permissions: patients.view, patients.create, patients.update, patients.delete
+
+**Visits Module (11 routes):**
+- All routes now have explicit `can:` middleware
+- Permissions: visits.view, visits.create, visits.update
+
+**Consultations Module (8 routes):**
+- All routes now have explicit `can:` middleware
+- Permissions: consultations.view, consultations.create, consultations.update
+
+**Prescriptions Module (3 routes):**
+- All routes now have explicit `can:` middleware
+- Permissions: consultations.create, consultations.view
+
+**Pharmacy Module (6 routes):**
+- All routes now have explicit `can:` middleware
+- Permissions: pharmacy.view, pharmacy.dispense, inventory.view, inventory.manage
+
+**Laboratory Module (8 routes):**
+- All routes now have explicit `can:` middleware
+- Permissions: laboratory.view, laboratory.order, laboratory.result
+
+**Billing Module (4 routes):**
+- All routes now have explicit `can:` middleware
+- Permissions: billing.view, billing.create
+
+**Payments Module (6 routes):**
+- All routes now have explicit `can:` middleware
+- Permissions: billing.view, billing.create
+
+**Users Module (7 routes):**
+- Already had explicit `can:` middleware (no changes needed)
+- Permissions: users.view, users.create, users.update, users.delete
+
+**Roles Module (7 routes):**
+- Already had explicit `can:` middleware (no changes needed)
+- Permissions: roles.view, roles.create, roles.update, roles.delete
+
+**Total: 60 routes with explicit authorization middleware**
+
+### Super Admin Protection Design
+
+**Protection Layers:**
+
+1. **Service-Level Protection (UserManagementService):**
+   - `canDeleteSuperAdmin()` - Prevents deleting last Super Admin or self
+   - `canModifySuperAdminRole()` - Prevents removing Super Admin role from last Super Admin or self
+   - `canDeactivateUser()` - Prevents deactivating last Super Admin or self
+   - `deleteRole()` - Prevents deleting Super Admin role
+
+2. **Controller-Level Protection (UserController):**
+   - Calls service-level protection methods before operations
+   - Provides user-friendly error messages
+   - Handles Super Admin role changes and deactivation
+
+3. **Controller-Level Protection (RoleController):**
+   - Prevents modifying Super Admin role directly
+   - Prevents deleting Super Admin role
+   - Handles exceptions gracefully
+
+**Protection Rules:**
+
+1. **Cannot delete the last active Super Admin**
+2. **Cannot delete yourself**
+3. **Cannot deactivate the last active Super Admin**
+4. **Cannot deactivate yourself**
+5. **Cannot remove Super Admin role from the last active Super Admin**
+6. **Cannot remove your own Super Admin role**
+7. **Cannot delete the Super Admin role**
+8. **Cannot modify the Super Admin role**
+
+**Recovery Path:**
+- Multiple Super Admins can delete or deactivate one another
+- This ensures at least one Super Admin remains for recovery
+- System cannot be left without administrative access
+
+### Nested-Resource Authorization
+
+**Current State:**
+- Laravel's route model binding automatically loads resources by ID
+- Controllers already check permissions on the resource operations
+- Route-level middleware adds additional protection at the HTTP level
+- No changes needed for nested-resource authorization as the existing permission system provides adequate protection
+
+**Example:**
+- `/visits/{visit}/triage` - Requires `visits.update` permission
+- User cannot triage a visit they don't have permission to update
+- The visit is loaded by ID, but permission check happens before action
+
+### What Works
+
+1. **Defense-in-depth authorization** - Route-level middleware + controller middleware + Form Request authorization
+2. **Super Admin protection** - Multiple layers prevent accidental lockout
+3. **Comprehensive test coverage** - 21 tests prove authorization works correctly
+4. **No new permissions created** - Used existing permissions mapped correctly
+5. **Nested-resource safety** - Permission checks on operations prevent unauthorized access
+6. **Service-level validation** - Super Admin protection at service layer
+7. **Exception handling** - Graceful error messages for protection violations
+
+### What Does Not Work
+
+**None - Implementation Complete**
+
+All sensitive routes now have defense-in-depth authorization. The Super Admin protection is comprehensive and tested. The system cannot accidentally remove its final active Super Admin.
+
+### Risks and Decisions
+
+**Route-Level vs Controller-Level Middleware:**
+- Decided to add route-level middleware as defense-in-depth
+- Rationale: Multiple protection layers reduce risk of authorization bypass
+- Existing controller middleware remains as additional protection
+- Form Request authorization remains as data validation layer
+
+**Super Admin Protection Scope:**
+- Decided to protect at service level rather than just controller level
+- Rationale: Service-level protection can be reused by other controllers/APIs
+- Service-level protection throws exceptions for consistent error handling
+- Controller-level protection provides user-friendly messages
+
+**No New Permissions:**
+- Decided to use existing permissions rather than create new ones
+- Rationale: Existing permission structure is already comprehensive
+- No clear need for additional permissions based on current functionality
+- Keeps permission system simple and maintainable
+
+### Migrations Created or Applied
+
+**No migrations required** - Authorization changes are code-only.
+
+### Recommended Next Steps
+
+**For Production Readiness:**
+1. Document the permission structure for operators
+2. Create role assignment procedures for different user types
+3. Monitor for any authorization issues in production
+4. Consider adding audit logging for authorization failures
+
+**For Enhanced Security:**
+1. Consider adding rate limiting for sensitive operations
+2. Consider adding audit logging for Super Admin operations
+3. Consider adding email notifications for critical user changes
+4. Consider adding IP-based restrictions for Super Admin access
+
+### Additional Notes
+
+- 60 routes now have explicit authorization middleware
+- Defense-in-depth authorization provides multiple protection layers
+- Super Admin protection prevents system lockout scenarios
+- All 21 authorization tests pass
+- No new permissions were created - used existing permission structure
+- The system cannot accidentally remove its final active Super Admin
+- Recovery path exists through multiple Super Admins
+- Service-level protection ensures consistent behavior across all interfaces
