@@ -11,7 +11,7 @@ class Patient extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'first_name', 'last_name', 'other_names', 'gender_id', 'date_of_birth', 'phone', 'email', 'address', 'county_id', 'sub_county_id', 'notes',
+        'first_name', 'last_name', 'other_names', 'gender_id', 'date_of_birth', 'phone', 'email', 'address', 'county_id', 'sub_county_id', 'notes', 'created_by', 'updated_by',
     ];
 
     protected $casts = [
@@ -46,5 +46,15 @@ class Patient extends Model
     public function sub_county()
     {
         return $this->belongsTo(SubCounty::class, 'sub_county_id');
+    }
+
+    public function createdBy()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function updatedBy()
+    {
+        return $this->belongsTo(User::class, 'updated_by');
     }
 }

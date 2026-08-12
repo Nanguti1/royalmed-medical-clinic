@@ -4,6 +4,7 @@ namespace App\Actions\Billing;
 
 use App\Models\Invoice;
 use App\Support\Generators\NumberGenerator;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class GenerateInvoiceAction
@@ -14,6 +15,8 @@ class GenerateInvoiceAction
             if (empty($data['invoice_number'])) {
                 $data['invoice_number'] = NumberGenerator::generateInvoiceNumber();
             }
+
+            $data['created_by'] = Auth::id();
 
             // Use server update mode to set protected fields including invoice_number
             return Invoice::withServerUpdate(function () use ($data) {

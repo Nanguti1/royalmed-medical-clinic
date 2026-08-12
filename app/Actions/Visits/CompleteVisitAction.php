@@ -6,6 +6,7 @@ use App\Events\VisitCompleted;
 use App\Exceptions\InvalidVisitStatusTransitionException;
 use App\Models\Visit;
 use App\Services\VisitCompletionValidator;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
 class CompleteVisitAction
@@ -34,7 +35,10 @@ class CompleteVisitAction
         // Validate completion prerequisites
         $this->completionValidator->validate($visit);
 
-        $visit->update(['completed_at' => now()]);
+        $visit->update([
+            'completed_at' => now(),
+            'completed_by' => Auth::id(),
+        ]);
         Log::info('Visit completed', ['visit_id' => $visit->id]);
 
         event(new VisitCompleted($visit));

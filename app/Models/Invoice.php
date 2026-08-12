@@ -9,7 +9,7 @@ class Invoice extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['visit_id', 'issued_at', 'invoice_number'];
+    protected $fillable = ['visit_id', 'issued_at', 'invoice_number', 'created_by'];
 
     protected $casts = [
         'total_amount' => 'decimal:2',
@@ -72,6 +72,11 @@ class Invoice extends Model
     public function status()
     {
         return $this->belongsTo(InvoiceStatus::class, 'status_id');
+    }
+
+    public function createdBy()
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 
     public function getOutstandingBalanceAttribute(): float

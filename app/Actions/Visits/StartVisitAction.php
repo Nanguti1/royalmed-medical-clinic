@@ -4,6 +4,7 @@ namespace App\Actions\Visits;
 
 use App\Exceptions\InvalidVisitStatusTransitionException;
 use App\Models\Visit;
+use Illuminate\Support\Facades\Auth;
 
 class StartVisitAction
 {
@@ -21,7 +22,10 @@ class StartVisitAction
             throw InvalidVisitStatusTransitionException::alreadyStarted();
         }
 
-        $visit->update(['started_at' => now()]);
+        $visit->update([
+            'started_at' => now(),
+            'started_by' => Auth::id(),
+        ]);
 
         return $visit;
     }

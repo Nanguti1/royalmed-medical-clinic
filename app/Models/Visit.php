@@ -9,7 +9,7 @@ class Visit extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['patient_id', 'visit_date', 'visit_status_id', 'notes', 'receptionist_id', 'visit_number', 'started_at', 'completed_at', 'cancelled_at'];
+    protected $fillable = ['patient_id', 'visit_date', 'visit_status_id', 'notes', 'receptionist_id', 'visit_number', 'started_at', 'completed_at', 'cancelled_at', 'started_by', 'completed_by', 'cancelled_by'];
 
     protected $casts = [
         'visit_date' => 'datetime',
@@ -56,6 +56,26 @@ class Visit extends Model
     public function queueEntry()
     {
         return $this->hasOne(QueueEntry::class);
+    }
+
+    public function receptionist()
+    {
+        return $this->belongsTo(User::class, 'receptionist_id');
+    }
+
+    public function startedBy()
+    {
+        return $this->belongsTo(User::class, 'started_by');
+    }
+
+    public function completedBy()
+    {
+        return $this->belongsTo(User::class, 'completed_by');
+    }
+
+    public function cancelledBy()
+    {
+        return $this->belongsTo(User::class, 'cancelled_by');
     }
 
     public function isStarted(): bool
