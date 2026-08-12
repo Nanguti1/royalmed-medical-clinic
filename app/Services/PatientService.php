@@ -51,4 +51,14 @@ class PatientService
 
         return $query->limit(50)->get();
     }
+
+    public function delete(Patient $patient): bool
+    {
+        // Check if patient has visits (which would cascade to clinical/financial records)
+        if ($patient->visits()->exists()) {
+            throw new \RuntimeException('Cannot delete patient with associated visits. Use soft delete instead.');
+        }
+
+        return $patient->delete();
+    }
 }

@@ -79,9 +79,14 @@ class PatientController extends Controller
 
     public function destroy(Patient $patient)
     {
-        $patient->delete();
+        try {
+            $this->service->delete($patient);
 
-        return redirect()->route('patients.index')
-            ->with('success', 'Patient deleted successfully.');
+            return redirect()->route('patients.index')
+                ->with('success', 'Patient deleted successfully.');
+        } catch (\RuntimeException $e) {
+            return redirect()->route('patients.index')
+                ->with('error', $e->getMessage());
+        }
     }
 }
