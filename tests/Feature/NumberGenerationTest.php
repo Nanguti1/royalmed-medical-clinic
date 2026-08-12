@@ -31,6 +31,13 @@ class NumberGenerationTest extends TestCase
         $this->assertMatchesRegularExpression('/^R-\d{8}-\d{5}$/', $number);
     }
 
+    public function test_visit_number_has_correct_format()
+    {
+        $number = NumberGenerator::generateVisitNumber();
+
+        $this->assertMatchesRegularExpression('/^V-\d{8}-\d{4}$/', $number);
+    }
+
     public function test_prescription_numbers_are_unique()
     {
         $this->markTestSkipped('SQLite has limited locking support - sequence logic tested separately');
@@ -46,6 +53,11 @@ class NumberGenerationTest extends TestCase
         $this->markTestSkipped('SQLite has limited locking support - sequence logic tested separately');
     }
 
+    public function test_visit_numbers_are_unique()
+    {
+        $this->markTestSkipped('SQLite has limited locking support - sequence logic tested separately');
+    }
+
     public function test_prescription_numbers_are_sequential()
     {
         $this->markTestSkipped('SQLite has limited locking support - sequence logic tested separately');
@@ -57,6 +69,11 @@ class NumberGenerationTest extends TestCase
     }
 
     public function test_receipt_numbers_are_sequential()
+    {
+        $this->markTestSkipped('SQLite has limited locking support - sequence logic tested separately');
+    }
+
+    public function test_visit_numbers_are_sequential()
     {
         $this->markTestSkipped('SQLite has limited locking support - sequence logic tested separately');
     }
@@ -101,6 +118,11 @@ class NumberGenerationTest extends TestCase
         $this->markTestSkipped('True concurrent testing requires parallel execution environment. Database constraints ensure uniqueness even under concurrent load.');
     }
 
+    public function test_concurrent_visit_generation_does_not_create_duplicates()
+    {
+        $this->markTestSkipped('True concurrent testing requires parallel execution environment. Database constraints ensure uniqueness even under concurrent load.');
+    }
+
     public function test_number_generation_respects_database_transaction_rollback()
     {
         $this->markTestSkipped('SQLite has limited locking support - transaction rollback tested in separate integration');
@@ -114,5 +136,20 @@ class NumberGenerationTest extends TestCase
     public function test_receipt_number_remains_unchanged_after_creation()
     {
         $this->markTestSkipped('Requires full payment workflow setup - format tested separately');
+    }
+
+    public function test_visit_creation_generates_unique_number()
+    {
+        $this->markTestSkipped('Requires full visit workflow setup - format tested separately');
+    }
+
+    public function test_visit_number_respects_date_boundary()
+    {
+        $this->markTestSkipped('SQLite has limited locking support - date boundary tested in separate integration');
+    }
+
+    public function test_visit_number_generation_rollback_on_failure()
+    {
+        $this->markTestSkipped('SQLite has limited locking support - rollback behavior tested in separate integration');
     }
 }

@@ -23,6 +23,7 @@ class InvoiceWorkflowTest extends TestCase
 
         $this->artisan('db:seed', ['--class' => 'Database\\Seeders\\PaymentMethodSeeder']);
         $this->artisan('db:seed', ['--class' => 'Database\\Seeders\\AuthorizationSeeder']);
+        $this->artisan('db:seed', ['--class' => 'Database\\Seeders\\InvoiceStatusSeeder']);
     }
 
     public function test_invoice_creation_generates_server_side_number()
@@ -86,6 +87,12 @@ class InvoiceWorkflowTest extends TestCase
                 ['description' => 'Item 2', 'quantity' => 3, 'unit_price' => 50],
             ],
         ]);
+
+        // Refresh to ensure we have the latest data
+        $invoice->refresh();
+
+        // Debug: check if items were created
+        $this->assertCount(2, $invoice->items, 'Invoice should have 2 items');
 
         // Subtotal: (2 * 100) + (3 * 50) = 200 + 150 = 350
         // Tax (16%): 350 * 0.16 = 56
@@ -251,21 +258,20 @@ class InvoiceWorkflowTest extends TestCase
 
         $cancelledStatus = InvoiceStatus::firstOrCreate(['code' => 'cancelled'], ['name' => 'Cancelled']);
 
-        $invoice = Invoice::create([
-            'visit_id' => $visit->id,
-            'invoice_number' => 'INV-'.rand(10000, 99999),
-            'issued_at' => now(),
-        ]);
-
-        // Use server update mode to set protected fields for test helper
-        Invoice::withServerUpdate(function () use ($invoice, $cancelledStatus) {
-            $invoice->update([
+        // Use server update mode to set protected fields including invoice_number
+        $invoice = Invoice::withServerUpdate(function () use ($visit, $cancelledStatus) {
+            return Invoice::create([
+                'visit_id' => $visit->id,
+                'invoice_number' => 'INV-'.rand(10000, 99999),
                 'status_id' => $cancelledStatus->id,
                 'total_amount' => 1000,
                 'due_amount' => 1000,
+                'issued_at' => now(),
             ]);
         });
 
+        // Load the status relationship to avoid null reference errors
+        $invoice->load('status');
         $invoice->refresh();
 
         $cashMethod = PaymentMethod::where('name', 'cash')->first();
@@ -288,21 +294,20 @@ class InvoiceWorkflowTest extends TestCase
 
         $cancelledStatus = InvoiceStatus::firstOrCreate(['code' => 'cancelled'], ['name' => 'Cancelled']);
 
-        $invoice = Invoice::create([
-            'visit_id' => $visit->id,
-            'invoice_number' => 'INV-'.rand(10000, 99999),
-            'issued_at' => now(),
-        ]);
-
-        // Use server update mode to set protected fields for test helper
-        Invoice::withServerUpdate(function () use ($invoice, $cancelledStatus) {
-            $invoice->update([
+        // Use server update mode to set protected fields including invoice_number
+        $invoice = Invoice::withServerUpdate(function () use ($visit, $cancelledStatus) {
+            return Invoice::create([
+                'visit_id' => $visit->id,
+                'invoice_number' => 'INV-'.rand(10000, 99999),
                 'status_id' => $cancelledStatus->id,
                 'total_amount' => 1000,
                 'due_amount' => 1000,
+                'issued_at' => now(),
             ]);
         });
 
+        // Load the status relationship to avoid null reference errors
+        $invoice->load('status');
         $invoice->refresh();
 
         $cashMethod = PaymentMethod::where('name', 'cash')->first();
@@ -353,21 +358,20 @@ class InvoiceWorkflowTest extends TestCase
 
         $visit = Visit::factory()->create();
 
-        $invoice = Invoice::create([
-            'visit_id' => $visit->id,
-            'invoice_number' => 'INV-12345',
-            'issued_at' => now(),
-        ]);
-
-        // Use server update mode to set protected fields for test setup
-        Invoice::withServerUpdate(function () use ($invoice) {
-            $invoice->update([
+        // Use server update mode to set protected fields including invoice_number
+        $invoice = Invoice::withServerUpdate(function () use ($visit) {
+            return Invoice::create([
+                'visit_id' => $visit->id,
+                'invoice_number' => 'INV-12345',
                 'status_id' => InvoiceStatus::firstOrCreate(['code' => 'unpaid'], ['name' => 'Unpaid'])->id,
                 'total_amount' => 1000,
                 'due_amount' => 1000,
+                'issued_at' => now(),
             ]);
         });
 
+        // Load the status relationship to avoid null reference errors
+        $invoice->load('status');
         $invoice->refresh();
 
         // Try to modify invoice_number
@@ -379,21 +383,20 @@ class InvoiceWorkflowTest extends TestCase
     {
         $visit = Visit::factory()->create();
 
-        $invoice = Invoice::create([
-            'visit_id' => $visit->id,
-            'invoice_number' => 'INV-12345',
-            'issued_at' => now(),
-        ]);
-
-        // Use server update mode to set protected fields for test setup
-        Invoice::withServerUpdate(function () use ($invoice) {
-            $invoice->update([
+        // Use server update mode to set protected fields including invoice_number
+        $invoice = Invoice::withServerUpdate(function () use ($visit) {
+            return Invoice::create([
+                'visit_id' => $visit->id,
+                'invoice_number' => 'INV-12345',
                 'status_id' => InvoiceStatus::firstOrCreate(['code' => 'unpaid'], ['name' => 'Unpaid'])->id,
                 'total_amount' => 1000,
                 'due_amount' => 1000,
+                'issued_at' => now(),
             ]);
         });
 
+        // Load the status relationship to avoid null reference errors
+        $invoice->load('status');
         $invoice->refresh();
 
         $item = InvoiceItem::create([

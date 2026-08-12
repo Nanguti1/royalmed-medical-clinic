@@ -58,10 +58,7 @@ class NumberGenerator
 
     public static function generateVisitNumber(): string
     {
-        $date = now()->format('Ymd');
-        $count = DB::table('visits')->whereDate('visit_date', now()->toDateString())->count() + 1;
-
-        return "V-{$date}-".str_pad($count, 4, '0', STR_PAD_LEFT);
+        return self::generateSequenceNumber('visit', 'V', 4);
     }
 
     public static function generateInvoiceNumber(): string

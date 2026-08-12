@@ -24,6 +24,7 @@ class PaymentReceiptTest extends TestCase
 
         $this->artisan('db:seed', ['--class' => 'Database\\Seeders\\PaymentMethodSeeder']);
         $this->artisan('db:seed', ['--class' => 'Database\\Seeders\\AuthorizationSeeder']);
+        $this->artisan('db:seed', ['--class' => 'Database\\Seeders\\InvoiceStatusSeeder']);
     }
 
     public function test_receipt_displays_correct_payment()
@@ -236,22 +237,20 @@ class PaymentReceiptTest extends TestCase
         $visit = Visit::factory()->create();
         $unpaidStatus = InvoiceStatus::firstOrCreate(['code' => 'unpaid'], ['name' => 'Unpaid']);
 
-        $invoice = Invoice::create([
-            'visit_id' => $visit->id,
-            'issued_at' => now(),
-        ]);
-
-        // Use DB::table to bypass fillable for test helper
-        \DB::table('invoices')
-            ->where('id', $invoice->id)
-            ->update([
+        // Use server update mode to set protected fields including invoice_number
+        $invoice = Invoice::withServerUpdate(function () use ($visit, $unpaidStatus) {
+            return Invoice::create([
+                'visit_id' => $visit->id,
                 'invoice_number' => 'INV-'.rand(10000, 99999),
                 'status_id' => $unpaidStatus->id,
                 'total_amount' => 1000,
                 'due_amount' => 1000,
+                'issued_at' => now(),
             ]);
+        });
 
-        $invoice->refresh();
+        // Load the status relationship to avoid null reference errors
+        $invoice->load('status');
 
         $cashMethod = PaymentMethod::where('name', 'cash')->first();
         $user = $this->createUserWithPermission('billing.create');

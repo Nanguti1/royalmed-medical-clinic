@@ -15,7 +15,10 @@ class GenerateInvoiceAction
                 $data['invoice_number'] = NumberGenerator::generateInvoiceNumber();
             }
 
-            return Invoice::create($data);
+            // Use server update mode to set protected fields including invoice_number
+            return Invoice::withServerUpdate(function () use ($data) {
+                return Invoice::create($data);
+            });
         });
     }
 }

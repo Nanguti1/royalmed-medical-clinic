@@ -22,6 +22,7 @@ class PaymentTest extends TestCase
         // Seed payment methods and authorization
         $this->artisan('db:seed', ['--class' => 'Database\\Seeders\\PaymentMethodSeeder']);
         $this->artisan('db:seed', ['--class' => 'Database\\Seeders\\AuthorizationSeeder']);
+        $this->artisan('db:seed', ['--class' => 'Database\\Seeders\\InvoiceStatusSeeder']);
     }
 
     public function test_cash_payment_records_successfully()
@@ -635,22 +636,20 @@ class PaymentTest extends TestCase
 
         $unpaidStatus = InvoiceStatus::firstOrCreate(['code' => 'unpaid'], ['name' => 'Unpaid']);
 
-        $invoice = Invoice::create([
-            'visit_id' => $visit->id,
-            'issued_at' => now(),
-        ]);
-
-        // Use DB::table to bypass fillable for test helper
-        \DB::table('invoices')
-            ->where('id', $invoice->id)
-            ->update([
+        // Use server update mode to set protected fields including invoice_number
+        $invoice = Invoice::withServerUpdate(function () use ($visit, $unpaidStatus, $amount) {
+            return Invoice::create([
+                'visit_id' => $visit->id,
                 'invoice_number' => 'INV-'.rand(10000, 99999),
                 'status_id' => $unpaidStatus->id,
                 'total_amount' => $amount,
                 'due_amount' => $amount,
+                'issued_at' => now(),
             ]);
+        });
 
-        $invoice->refresh();
+        // Load the status relationship to avoid null reference errors
+        $invoice->load('status');
 
         return $invoice;
     }
@@ -661,22 +660,20 @@ class PaymentTest extends TestCase
 
         $cancelledStatus = InvoiceStatus::firstOrCreate(['code' => 'cancelled'], ['name' => 'Cancelled']);
 
-        $invoice = Invoice::create([
-            'visit_id' => $visit->id,
-            'issued_at' => now(),
-        ]);
-
-        // Use DB::table to bypass fillable for test helper
-        \DB::table('invoices')
-            ->where('id', $invoice->id)
-            ->update([
+        // Use server update mode to set protected fields including invoice_number
+        $invoice = Invoice::withServerUpdate(function () use ($visit, $cancelledStatus) {
+            return Invoice::create([
+                'visit_id' => $visit->id,
                 'invoice_number' => 'INV-'.rand(10000, 99999),
                 'status_id' => $cancelledStatus->id,
                 'total_amount' => 1000,
                 'due_amount' => 1000,
+                'issued_at' => now(),
             ]);
+        });
 
-        $invoice->refresh();
+        // Load the status relationship to avoid null reference errors
+        $invoice->load('status');
 
         return $invoice;
     }
