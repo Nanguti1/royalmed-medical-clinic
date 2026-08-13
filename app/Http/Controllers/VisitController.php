@@ -63,6 +63,7 @@ class VisitController extends Controller
 
         return Inertia::render('visits/create', [
             'patient' => $patient,
+            'patients' => Patient::orderBy('last_name')->get(),
         ]);
     }
 

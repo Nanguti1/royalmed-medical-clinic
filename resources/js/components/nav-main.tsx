@@ -11,11 +11,39 @@ import {
 } from '@/components/ui/sidebar';
 import { useCan } from '@/hooks/use-permissions';
 import { useCurrentUrl } from '@/hooks/use-current-url';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, ChevronDown } from 'lucide-react';
 import type { NavItem } from '@/types';
+import { useState } from 'react';
 
 export function NavMain({ items = [] }: { items: NavItem[] }) {
     const { isCurrentUrl } = useCurrentUrl();
+    const [openMenus, setOpenMenus] = useState<Set<string>>(() => {
+        // Initialize with menus that have active child routes
+        const initialOpenMenus = new Set<string>();
+        items.forEach((item) => {
+            if (item.items && item.items.length > 0) {
+                const hasActiveChild = item.items.some(
+                    (subItem) => isCurrentUrl(subItem.href)
+                );
+                if (hasActiveChild) {
+                    initialOpenMenus.add(item.title);
+                }
+            }
+        });
+        return initialOpenMenus;
+    });
+
+    const toggleMenu = (title: string) => {
+        setOpenMenus((prev) => {
+            const newSet = new Set(prev);
+            if (newSet.has(title)) {
+                newSet.delete(title);
+            } else {
+                newSet.add(title);
+            }
+            return newSet;
+        });
+    };
 
     return (
         <SidebarGroup className="px-2 py-0">
@@ -32,30 +60,41 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
                             return null;
                         }
 
+                        const isOpen = openMenus.has(item.title);
+
                         return (
                             <SidebarMenuItem key={item.title}>
-                                <SidebarMenuButton tooltip={{ children: item.title }}>
+                                <SidebarMenuButton
+                                    onClick={() => toggleMenu(item.title)}
+                                    tooltip={{ children: item.title }}
+                                >
                                     {item.icon && <item.icon />}
                                     <span>{item.title}</span>
-                                    <ChevronRight className="ml-auto" />
+                                    {isOpen ? (
+                                        <ChevronDown className="ml-auto" />
+                                    ) : (
+                                        <ChevronRight className="ml-auto" />
+                                    )}
                                 </SidebarMenuButton>
-                                <SidebarMenuSub>
-                                    {item.items
-                                        .filter((subItem) => !subItem.permission || useCan(subItem.permission))
-                                        .map((subItem) => (
-                                            <SidebarMenuSubItem key={subItem.title}>
-                                                <SidebarMenuSubButton
-                                                    asChild
-                                                    isActive={isCurrentUrl(subItem.href)}
-                                                >
-                                                    <Link href={subItem.href} prefetch>
-                                                        {subItem.icon && <subItem.icon />}
-                                                        <span>{subItem.title}</span>
-                                                    </Link>
-                                                </SidebarMenuSubButton>
-                                            </SidebarMenuSubItem>
-                                        ))}
-                                </SidebarMenuSub>
+                                {isOpen && (
+                                    <SidebarMenuSub>
+                                        {item.items
+                                            .filter((subItem) => !subItem.permission || useCan(subItem.permission))
+                                            .map((subItem) => (
+                                                <SidebarMenuSubItem key={subItem.title}>
+                                                    <SidebarMenuSubButton
+                                                        asChild
+                                                        isActive={isCurrentUrl(subItem.href)}
+                                                    >
+                                                        <Link href={subItem.href} prefetch>
+                                                            {subItem.icon && <subItem.icon />}
+                                                            <span>{subItem.title}</span>
+                                                        </Link>
+                                                    </SidebarMenuSubButton>
+                                                </SidebarMenuSubItem>
+                                            ))}
+                                    </SidebarMenuSub>
+                                )}
                             </SidebarMenuItem>
                         );
                     }

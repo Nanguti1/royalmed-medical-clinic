@@ -4,7 +4,10 @@ use App\Http\Controllers\BillingController;
 use App\Http\Controllers\ConsultationController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HealthController;
+use App\Http\Controllers\LabCategoryController;
 use App\Http\Controllers\LaboratoryController;
+use App\Http\Controllers\LabTestController;
+use App\Http\Controllers\MedicineController;
 use App\Http\Controllers\PatientController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PaymentReconciliationController;
@@ -49,14 +52,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->middleware('can:visits.create');
         Route::post('/', [VisitController::class, 'store'])->name('visits.store')
             ->middleware('can:visits.create');
+        Route::get('/queue', [VisitController::class, 'queue'])->name('visits.queue')
+            ->middleware('can:visits.view');
         Route::get('/{visit}', [VisitController::class, 'show'])->name('visits.show')
             ->middleware('can:visits.view');
         Route::get('/{visit}/triage', [VisitController::class, 'triage'])->name('visits.triage')
             ->middleware('can:visits.update');
         Route::post('/{visit}/vitals', [VisitController::class, 'captureVitals'])->name('visits.captureVitals')
             ->middleware('can:visits.update');
-        Route::get('/queue', [VisitController::class, 'queue'])->name('visits.queue')
-            ->middleware('can:visits.view');
         Route::post('/{visit}/queue', [VisitController::class, 'addToQueue'])->name('visits.addToQueue')
             ->middleware('can:visits.update');
         Route::delete('/queue/{entry}', [VisitController::class, 'removeFromQueue'])->name('visits.removeFromQueue')
@@ -89,6 +92,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     Route::prefix('prescriptions')->group(function () {
+        Route::get('/', [PrescriptionController::class, 'index'])->name('prescriptions.index')
+            ->middleware('can:consultations.view');
         Route::get('/create/{visit}', [PrescriptionController::class, 'create'])->name('prescriptions.create')
             ->middleware('can:consultations.create');
         Route::post('/', [PrescriptionController::class, 'store'])->name('prescriptions.store')
@@ -112,6 +117,63 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->middleware('can:inventory.manage');
     });
 
+    Route::prefix('medicines')->group(function () {
+        Route::get('/', [MedicineController::class, 'index'])->name('medicines.index')
+            ->middleware('can:inventory.manage');
+        Route::get('/create', [MedicineController::class, 'create'])->name('medicines.create')
+            ->middleware('can:inventory.manage');
+        Route::post('/', [MedicineController::class, 'store'])->name('medicines.store')
+            ->middleware('can:inventory.manage');
+        Route::get('/{medicine}', [MedicineController::class, 'show'])->name('medicines.show')
+            ->middleware('can:inventory.manage');
+        Route::get('/{medicine}/edit', [MedicineController::class, 'edit'])->name('medicines.edit')
+            ->middleware('can:inventory.manage');
+        Route::put('/{medicine}', [MedicineController::class, 'update'])->name('medicines.update')
+            ->middleware('can:inventory.manage');
+        Route::delete('/{medicine}', [MedicineController::class, 'destroy'])->name('medicines.destroy')
+            ->middleware('can:inventory.manage');
+    });
+
+    Route::prefix('lab-categories')->group(function () {
+        Route::get('/', [LabCategoryController::class, 'index'])->name('lab-categories.index')
+            ->middleware('can:laboratory.manage');
+        Route::get('/create', [LabCategoryController::class, 'create'])->name('lab-categories.create')
+            ->middleware('can:laboratory.manage');
+        Route::post('/', [LabCategoryController::class, 'store'])->name('lab-categories.store')
+            ->middleware('can:laboratory.manage');
+        Route::get('/{labCategory}', [LabCategoryController::class, 'show'])->name('lab-categories.show')
+            ->middleware('can:laboratory.manage');
+        Route::get('/{labCategory}/edit', [LabCategoryController::class, 'edit'])->name('lab-categories.edit')
+            ->middleware('can:laboratory.manage');
+        Route::put('/{labCategory}', [LabCategoryController::class, 'update'])->name('lab-categories.update')
+            ->middleware('can:laboratory.manage');
+        Route::delete('/{labCategory}', [LabCategoryController::class, 'destroy'])->name('lab-categories.destroy')
+            ->middleware('can:laboratory.manage');
+    });
+
+    Route::prefix('lab-tests')->group(function () {
+        Route::get('/', [LabTestController::class, 'index'])->name('lab-tests.index')
+            ->middleware('can:laboratory.manage');
+        Route::get('/create', [LabTestController::class, 'create'])->name('lab-tests.create')
+            ->middleware('can:laboratory.manage');
+        Route::post('/', [LabTestController::class, 'store'])->name('lab-tests.store')
+            ->middleware('can:laboratory.manage');
+        Route::get('/{labTest}', [LabTestController::class, 'show'])->name('lab-tests.show')
+            ->middleware('can:laboratory.manage');
+        Route::get('/{labTest}/edit', [LabTestController::class, 'edit'])->name('lab-tests.edit')
+            ->middleware('can:laboratory.manage');
+        Route::put('/{labTest}', [LabTestController::class, 'update'])->name('lab-tests.update')
+            ->middleware('can:laboratory.manage');
+        Route::delete('/{labTest}', [LabTestController::class, 'destroy'])->name('lab-tests.destroy')
+            ->middleware('can:laboratory.manage');
+        Route::post('/{labTest}/reference-ranges', [LabTestController::class, 'storeReferenceRange'])->name('lab-tests.storeReferenceRange')
+            ->middleware('can:laboratory.manage');
+        Route::put('/{labTest}/reference-ranges/{referenceRange}', [LabTestController::class, 'updateReferenceRange'])->name('lab-tests.updateReferenceRange')
+            ->middleware('can:laboratory.manage');
+        Route::delete('/{labTest}/reference-ranges/{referenceRange}', [LabTestController::class, 'destroyReferenceRange'])->name('lab-tests.destroyReferenceRange')
+            ->middleware('can:laboratory.manage');
+    });
+
     Route::prefix('laboratory')->group(function () {
         Route::get('/', [LaboratoryController::class, 'index'])->name('laboratory.index')
             ->middleware('can:laboratory.view');
@@ -125,9 +187,23 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->middleware('can:laboratory.order');
         Route::post('/{labOrder}/complete', [LaboratoryController::class, 'complete'])->name('laboratory.complete')
             ->middleware('can:laboratory.order');
+        Route::post('/{labOrder}/collect-sample', [LaboratoryController::class, 'collectSample'])->name('laboratory.collectSample')
+            ->middleware('can:laboratory.order');
+        Route::post('/{labOrder}/items/{labOrderItem}/collect', [LaboratoryController::class, 'collectSampleItem'])->name('laboratory.collectSampleItem')
+            ->middleware('can:laboratory.order');
+        Route::post('/{labOrder}/items/{labOrderItem}/receive', [LaboratoryController::class, 'receiveSampleItem'])->name('laboratory.receiveSampleItem')
+            ->middleware('can:laboratory.order');
+        Route::post('/{labOrder}/items/{labOrderItem}/process', [LaboratoryController::class, 'processSampleItem'])->name('laboratory.processSampleItem')
+            ->middleware('can:laboratory.order');
+        Route::post('/{labOrder}/items/{labOrderItem}/complete', [LaboratoryController::class, 'completeSampleItem'])->name('laboratory.completeSampleItem')
+            ->middleware('can:laboratory.order');
         Route::get('/{labOrder}/results', [LaboratoryController::class, 'recordResult'])->name('laboratory.recordResult')
             ->middleware('can:laboratory.result');
         Route::post('/{labOrder}/results', [LaboratoryController::class, 'storeResult'])->name('laboratory.storeResult')
+            ->middleware('can:laboratory.result');
+        Route::post('/{labOrder}/results/{labResult}/verify', [LaboratoryController::class, 'verifyResult'])->name('laboratory.verifyResult')
+            ->middleware('can:laboratory.result');
+        Route::post('/{labOrder}/results/{labResult}/reject', [LaboratoryController::class, 'rejectResult'])->name('laboratory.rejectResult')
             ->middleware('can:laboratory.result');
     });
 

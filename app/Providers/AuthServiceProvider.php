@@ -23,9 +23,13 @@ class AuthServiceProvider extends ServiceProvider
     {
         $this->registerPolicies();
 
-        // Super Admin bypass: users with the 'Super Admin' role bypass all checks
+        // Super Admin bypass: users with the 'Super Admin' role bypass all permission checks
         Gate::before(function ($user, string $ability) {
-            return $user->hasRole('Super Admin') ? true : null;
+            if ($user->hasRole('Super Admin')) {
+                return true;
+            }
+
+            return null;
         });
     }
 }

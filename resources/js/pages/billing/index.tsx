@@ -8,7 +8,11 @@ import type { Invoice } from '@/types/visit';
 import { PermissionGuard } from '@/components/permission-guard';
 
 type PageProps = {
-    invoices: Invoice[];
+    invoices: {
+        data: Invoice[];
+        links: any;
+        meta: any;
+    };
     search: string;
     status: string;
 };
@@ -82,18 +86,37 @@ export default function BillingIndex() {
                 </Card>
 
                 {/* Invoices List */}
-                {invoices.length === 0 ? (
+                {invoices.data.length === 0 ? (
                     <EmptyState
                         icon={FileText}
                         title="No invoices found"
                         description="There are no invoices matching your search criteria."
                     />
                 ) : (
-                    <div className="grid gap-4">
-                        {invoices.map((invoice) => (
-                            <InvoiceCard key={invoice.id} invoice={invoice} getStatusBadge={getStatusBadge} />
-                        ))}
-                    </div>
+                    <>
+                        <div className="grid gap-4">
+                            {invoices.data.map((invoice) => (
+                                <InvoiceCard key={invoice.id} invoice={invoice} getStatusBadge={getStatusBadge} />
+                            ))}
+                        </div>
+                        {/* Pagination */}
+                        {invoices.links && invoices.links.length > 3 && (
+                            <div className="flex justify-center gap-2 mt-4">
+                                {invoices.links.map((link: any, index: number) => (
+                                    <a
+                                        key={index}
+                                        href={link.url || '#'}
+                                        className={`px-4 py-2 rounded ${
+                                            link.active
+                                                ? 'bg-primary text-primary-foreground'
+                                                : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                                        } ${!link.url ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        dangerouslySetInnerHTML={{ __html: link.label }}
+                                    />
+                                ))}
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
         </>

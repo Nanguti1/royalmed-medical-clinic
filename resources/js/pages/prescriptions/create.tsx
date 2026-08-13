@@ -1,10 +1,11 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import InputError from '@/components/input-error';
 import AlertError from '@/components/alert-error';
-import { ArrowLeft, Pill, Plus, Trash2, User } from 'lucide-react';
+import { ArrowLeft, Pill, Plus, Trash2, User, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
 import type { Visit, Medicine, DosageUnit, Frequency, Route, DurationUnit } from '@/types/visit';
 import { PermissionGuard } from '@/components/permission-guard';
 
@@ -182,11 +183,28 @@ export default function PrescriptionCreate() {
                                                             >
                                                                 <option value={0}>Select medicine</option>
                                                                 {medicines.map((med) => (
-                                                                    <option key={med.id} value={med.id}>
-                                                                        {med.name}
+                                                                    <option 
+                                                                        key={med.id} 
+                                                                        value={med.id}
+                                                                        disabled={!med.is_available}
+                                                                        className={!med.is_available ? 'text-muted-foreground' : ''}
+                                                                    >
+                                                                        {med.name} {!med.is_available && '(Unavailable)'} - Stock: {med.total_stock || 0}
                                                                     </option>
                                                                 ))}
                                                             </select>
+                                                            {item.medicine_id && medicines.find(m => m.id === item.medicine_id)?.has_expired && (
+                                                                <p className="text-sm text-red-600 flex items-center gap-1">
+                                                                    <AlertTriangle className="h-3 w-3" />
+                                                                    This medicine has expired stock
+                                                                </p>
+                                                            )}
+                                                            {item.medicine_id && medicines.find(m => m.id === item.medicine_id)?.is_low_stock && (
+                                                                <p className="text-sm text-yellow-600 flex items-center gap-1">
+                                                                    <AlertTriangle className="h-3 w-3" />
+                                                                    Low stock level
+                                                                </p>
+                                                            )}
                                                         </div>
                                                         <div className="space-y-2">
                                                             <Label>Quantity *</Label>

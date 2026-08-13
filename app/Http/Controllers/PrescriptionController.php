@@ -23,16 +23,42 @@ class PrescriptionController extends Controller
         $this->prescriptionService = $prescriptionService;
 
         $this->middleware('permission:consultations.create')->only(['create', 'store']);
-        $this->middleware('permission:consultations.view')->only(['show']);
+        $this->middleware('permission:consultations.view')->only(['index', 'show']);
+    }
+
+    public function index(): Response
+    {
+        $prescriptions = Prescription::with(['visit.patient'])->orderBy('created_at', 'desc')->paginate(20);
+
+        return Inertia::render('prescriptions/index', [
+            'prescriptions' => $prescriptions,
+        ]);
     }
 
     public function create(Visit $visit): Response
     {
         $visit->load(['patient', 'consultation']);
 
+        $medicines = Medicine::with(['batches'])->get();
+        $medicines = $medicines->map(function ($medicine) {
+            $totalStock = $medicine->batches->sum('quantity');
+            $isLowStock = $totalStock < ($medicine->reorder_level ?? 0);
+            $hasExpired = $medicine->batches->contains(fn ($batch) => $batch->isExpired());
+            $expiringSoon = $medicine->batches->contains(fn ($batch) => ! $batch->isExpired() && $batch->expiry_date && $batch->expiry_date->diffInDays(now()) <= 30);
+
+            return [
+                ...$medicine->toArray(),
+                'total_stock' => $totalStock,
+                'is_low_stock' => $isLowStock,
+                'has_expired' => $hasExpired,
+                'expiring_soon' => $expiringSoon,
+                'is_available' => $totalStock > 0 && ! $hasExpired,
+            ];
+        });
+
         return Inertia::render('prescriptions/create', [
             'visit' => $visit,
-            'medicines' => Medicine::all(),
+            'medicines' => $medicines,
             'dosageUnits' => DosageUnit::all(),
             'frequencies' => Frequency::all(),
             'routes' => Route::all(),

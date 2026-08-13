@@ -7,32 +7,36 @@ import { DollarSign, Smartphone, Search, Calendar, ArrowLeft } from 'lucide-reac
 import { PermissionGuard } from '@/components/permission-guard';
 
 type PageProps = {
-    payments: Array<{
-        id: number;
-        amount: number;
-        paid_at: string;
-        reference: string | null;
-        invoice: {
+    payments: {
+        data: Array<{
             id: number;
-            invoice_number: string;
-            visit: {
-                patient: {
-                    first_name: string;
-                    other_names: string | null;
-                    last_name: string;
+            amount: number;
+            paid_at: string;
+            reference: string | null;
+            invoice: {
+                id: number;
+                invoice_number: string;
+                visit: {
+                    patient: {
+                        first_name: string;
+                        other_names: string | null;
+                        last_name: string;
+                    };
                 };
             };
-        };
-        method: {
-            id: number;
-            name: string;
-            provider: string | null;
-        } | null;
-        mpesaTransaction: {
-            transaction_id: string;
-            phone: string | null;
-        } | null;
-    }>;
+            method: {
+                id: number;
+                name: string;
+                provider: string | null;
+            } | null;
+            mpesaTransaction: {
+                transaction_id: string;
+                phone: string | null;
+            } | null;
+        }>;
+        links: any;
+        meta: any;
+    };
     search: string;
     date: string;
     dailyTotals: {
@@ -196,52 +200,71 @@ export default function PaymentsIndex() {
                         <CardTitle>Payment History</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        {payments.length === 0 ? (
+                        {payments.data.length === 0 ? (
                             <p className="text-muted-foreground text-center py-8">
                                 No payments found for this date.
                             </p>
                         ) : (
-                            <div className="overflow-x-auto">
-                                <table className="w-full">
-                                    <thead>
-                                        <tr className="border-b">
-                                            <th className="text-left p-3">Date</th>
-                                            <th className="text-left p-3">Invoice</th>
-                                            <th className="text-left p-3">Patient</th>
-                                            <th className="text-right p-3">Amount</th>
-                                            <th className="text-left p-3">Method</th>
-                                            <th className="text-left p-3">Reference</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {payments.map((payment) => (
-                                            <tr key={payment.id} className="border-b hover:bg-muted/50">
-                                                <td className="p-3">
-                                                    {new Date(payment.paid_at).toLocaleDateString()}
-                                                </td>
-                                                <td className="p-3">
-                                                    <a
-                                                        href={`/billing/${payment.invoice.id}`}
-                                                        className="text-primary hover:underline"
-                                                    >
-                                                        {payment.invoice.invoice_number}
-                                                    </a>
-                                                </td>
-                                                <td className="p-3">{getPatientName(payment)}</td>
-                                                <td className="p-3 text-right font-medium">
-                                                    {Number(payment.amount).toFixed(2)}
-                                                </td>
-                                                <td className="p-3">
-                                                    {getMethodBadge(payment.method?.name || null)}
-                                                </td>
-                                                <td className="p-3">
-                                                    {payment.mpesaTransaction?.transaction_id || payment.reference || '—'}
-                                                </td>
+                            <>
+                                <div className="overflow-x-auto">
+                                    <table className="w-full">
+                                        <thead>
+                                            <tr className="border-b">
+                                                <th className="text-left p-3">Date</th>
+                                                <th className="text-left p-3">Invoice</th>
+                                                <th className="text-left p-3">Patient</th>
+                                                <th className="text-right p-3">Amount</th>
+                                                <th className="text-left p-3">Method</th>
+                                                <th className="text-left p-3">Reference</th>
                                             </tr>
+                                        </thead>
+                                        <tbody>
+                                            {payments.data.map((payment) => (
+                                                <tr key={payment.id} className="border-b hover:bg-muted/50">
+                                                    <td className="p-3">
+                                                        {new Date(payment.paid_at).toLocaleDateString()}
+                                                    </td>
+                                                    <td className="p-3">
+                                                        <a
+                                                            href={`/billing/${payment.invoice.id}`}
+                                                            className="text-primary hover:underline"
+                                                        >
+                                                            {payment.invoice.invoice_number}
+                                                        </a>
+                                                    </td>
+                                                    <td className="p-3">{getPatientName(payment)}</td>
+                                                    <td className="p-3 text-right font-medium">
+                                                        {Number(payment.amount).toFixed(2)}
+                                                    </td>
+                                                    <td className="p-3">
+                                                        {getMethodBadge(payment.method?.name || null)}
+                                                    </td>
+                                                    <td className="p-3">
+                                                        {payment.mpesaTransaction?.transaction_id || payment.reference || '—'}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                {/* Pagination */}
+                                {payments.links && payments.links.length > 3 && (
+                                    <div className="flex justify-center gap-2 mt-4">
+                                        {payments.links.map((link: any, index: number) => (
+                                            <a
+                                                key={index}
+                                                href={link.url || '#'}
+                                                className={`px-4 py-2 rounded ${
+                                                    link.active
+                                                        ? 'bg-primary text-primary-foreground'
+                                                        : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                                                } ${!link.url ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                dangerouslySetInnerHTML={{ __html: link.label }}
+                                            />
                                         ))}
-                                    </tbody>
-                                </table>
-                            </div>
+                                    </div>
+                                )}
+                            </>
                         )}
                     </CardContent>
                 </Card>

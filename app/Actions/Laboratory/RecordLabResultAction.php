@@ -44,6 +44,16 @@ class RecordLabResultAction
 
         $data['recorded_at'] = now();
 
-        return LabResult::create($data);
+        $result = LabResult::create($data);
+
+        // Auto-detect abnormal and critical values
+        $result->load(['test', 'orderItem.order.visit.patient']);
+        if ($result->test && $result->orderItem?->order?->visit?->patient) {
+            $result->autoDetectAbnormal($result->orderItem->order->visit->patient);
+            $result->autoDetectCritical();
+            $result->save();
+        }
+
+        return $result;
     }
 }

@@ -58,8 +58,8 @@ export default function VisitShow() {
     const isStarted = visit.started_at !== null;
     const isCompleted = visit.completed_at !== null;
     const isCancelled = visit.cancelled_at !== null;
-    const hasVitals = visit.vitalSign !== null;
-    const inQueue = visit.queueEntry !== null;
+    const hasVitals = visit.vital_sign !== null;
+    const inQueue = visit.queue_entry !== null;
 
     return (
         <>
@@ -251,31 +251,31 @@ export default function VisitShow() {
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            {visit.vitalSign ? (
+                            {visit.vital_sign ? (
                                 <>
                                     <div>
                                         <p className="text-sm text-muted-foreground">Temperature</p>
-                                        <p className="font-medium">{visit.vitalSign.temperature_c || 'N/A'} °C</p>
+                                        <p className="font-medium">{visit.vital_sign.temperature_c || 'N/A'} °C</p>
                                     </div>
                                     <div>
                                         <p className="text-sm text-muted-foreground">Blood Pressure</p>
-                                        <p className="font-medium">{visit.vitalSign.blood_pressure || 'N/A'}</p>
+                                        <p className="font-medium">{visit.vital_sign.blood_pressure || 'N/A'}</p>
                                     </div>
                                     <div>
                                         <p className="text-sm text-muted-foreground">Pulse</p>
-                                        <p className="font-medium">{visit.vitalSign.pulse || 'N/A'} bpm</p>
+                                        <p className="font-medium">{visit.vital_sign.pulse || 'N/A'} bpm</p>
                                     </div>
                                     <div>
                                         <p className="text-sm text-muted-foreground">Respiratory Rate</p>
-                                        <p className="font-medium">{visit.vitalSign.respiratory_rate || 'N/A'} /min</p>
+                                        <p className="font-medium">{visit.vital_sign.respiratory_rate || 'N/A'} /min</p>
                                     </div>
                                     <div>
                                         <p className="text-sm text-muted-foreground">Weight</p>
-                                        <p className="font-medium">{visit.vitalSign.weight_kg || 'N/A'} kg</p>
+                                        <p className="font-medium">{visit.vital_sign.weight_kg || 'N/A'} kg</p>
                                     </div>
                                     <div>
                                         <p className="text-sm text-muted-foreground">Height</p>
-                                        <p className="font-medium">{visit.vitalSign.height_cm || 'N/A'} cm</p>
+                                        <p className="font-medium">{visit.vital_sign.height_cm || 'N/A'} cm</p>
                                     </div>
                                 </>
                             ) : (
@@ -293,20 +293,20 @@ export default function VisitShow() {
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            {visit.queueEntry ? (
+                            {visit.queue_entry ? (
                                 <>
                                     <div>
                                         <p className="text-sm text-muted-foreground">Queue Position</p>
-                                        <p className="font-medium">{visit.queueEntry.position || 'N/A'}</p>
+                                        <p className="font-medium">{visit.queue_entry.position || 'N/A'}</p>
                                     </div>
                                     <div>
                                         <p className="text-sm text-muted-foreground">Status</p>
-                                        <p className="font-medium capitalize">{visit.queueEntry.status}</p>
+                                        <p className="font-medium capitalize">{visit.queue_entry.status}</p>
                                     </div>
-                                    {visit.queueEntry.called_at && (
+                                    {visit.queue_entry.called_at && (
                                         <div>
                                             <p className="text-sm text-muted-foreground">Called At</p>
-                                            <p className="font-medium">{new Date(visit.queueEntry.called_at).toLocaleString()}</p>
+                                            <p className="font-medium">{new Date(visit.queue_entry.called_at).toLocaleString()}</p>
                                         </div>
                                     )}
                                 </>

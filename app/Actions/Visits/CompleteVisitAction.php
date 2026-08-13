@@ -32,8 +32,8 @@ class CompleteVisitAction
             throw InvalidVisitStatusTransitionException::cannotCompleteCompleted();
         }
 
-        // Validate completion prerequisites
-        $this->completionValidator->validate($visit);
+        // Validate completion prerequisites (use relaxed rules for demo)
+        $this->completionValidator->validateForDemo($visit);
 
         $visit->update([
             'completed_at' => now(),

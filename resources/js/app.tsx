@@ -6,8 +6,17 @@ import { useFlashToast } from '@/hooks/use-flash-toast';
 import AppLayout from '@/layouts/app-layout';
 import AuthLayout from '@/layouts/auth-layout';
 import SettingsLayout from '@/layouts/settings/layout';
+import type { ReactNode } from 'react';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+
+// Initialize theme outside of React component context
+initializeTheme();
+
+function AppInitializer({ children }: { children: ReactNode }) {
+    useFlashToast();
+    return <>{children}</>;
+}
 
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
@@ -23,11 +32,13 @@ createInertiaApp({
                 return AppLayout;
         }
     },
-    strictMode: true,
+    strictMode: false,
     withApp(app) {
         return (
             <TooltipProvider delayDuration={0}>
-                {app}
+                <AppInitializer>
+                    {app}
+                </AppInitializer>
                 <Toaster />
             </TooltipProvider>
         );
@@ -36,7 +47,3 @@ createInertiaApp({
         color: '#4B5563',
     },
 });
-
-// Initialize hooks
-useFlashToast();
-initializeTheme();

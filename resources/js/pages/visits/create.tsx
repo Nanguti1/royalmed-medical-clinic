@@ -10,10 +10,11 @@ import type { Patient } from '@/types/patient';
 
 type PageProps = {
     patient?: Patient;
+    patients: Patient[];
 };
 
 export default function VisitCreate() {
-    const { patient } = usePage<PageProps>().props;
+    const { patient, patients } = usePage<PageProps>().props;
 
     const { data, setData, post, processing, errors } = useForm({
         patient_id: patient?.id || '',
@@ -73,18 +74,25 @@ export default function VisitCreate() {
                                     </div>
                                 ) : (
                                     <div className="space-y-2">
-                                        <Label htmlFor="patient_id">Patient ID *</Label>
-                                        <Input
+                                        <Label htmlFor="patient_id">Patient *</Label>
+                                        <select
                                             id="patient_id"
-                                            type="number"
                                             value={data.patient_id}
                                             onChange={(e) => setData('patient_id', e.target.value)}
-                                        />
+                                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                        >
+                                            <option value="">Select patient</option>
+                                            {patients.map((patient) => (
+                                                <option key={patient.id} value={patient.id}>
+                                                    {patient.first_name} {patient.other_names} {patient.last_name} - {patient.phone || 'No phone'}
+                                                </option>
+                                            ))}
+                                        </select>
                                         <InputError message={errors.patient_id} />
                                         <p className="text-sm text-muted-foreground">
-                                            Enter the patient ID or{' '}
-                                            <a href="/patients" className="text-primary hover:underline">
-                                                search for a patient
+                                            Don't see the patient?{' '}
+                                            <a href="/patients/create" className="text-primary hover:underline">
+                                                Register new patient
                                             </a>
                                         </p>
                                     </div>

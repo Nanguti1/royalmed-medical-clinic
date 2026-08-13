@@ -47,7 +47,7 @@ class BillingController extends Controller
             });
         }
 
-        $invoices = $invoicesQuery->orderBy('created_at', 'desc')->get();
+        $invoices = $invoicesQuery->orderBy('created_at', 'desc')->paginate(20);
 
         return Inertia::render('billing/index', [
             'invoices' => $invoices,

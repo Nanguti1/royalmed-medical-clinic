@@ -299,11 +299,43 @@ export type ReceiveStockFormData = {
 
 export type LabTest = {
     id: number;
-    code: string;
+    code: string | null;
     name: string;
     description: string | null;
     standard_units: string | null;
     price: number | null;
+    lab_category_id: number | null;
+    sample_type: string | null;
+    sample_requirements: string | null;
+    is_critical: boolean;
+    turnaround_time_hours: number | null;
+    category?: LabCategory;
+    referenceRanges?: LabTestReferenceRange[];
+    created_at: string;
+    updated_at: string;
+};
+
+export type LabCategory = {
+    id: number;
+    code: string;
+    name: string;
+    description: string | null;
+    created_at: string;
+    updated_at: string;
+};
+
+export type LabTestReferenceRange = {
+    id: number;
+    lab_test_id: number;
+    age_group: string | null;
+    sex: string | null;
+    min_value: number | null;
+    max_value: number | null;
+    min_operator: string;
+    max_operator: string;
+    text_range: string | null;
+    created_at: string;
+    updated_at: string;
 };
 
 export type LabOrder = {
@@ -315,6 +347,9 @@ export type LabOrder = {
     notes: string | null;
     in_progress_at: string | null;
     completed_at: string | null;
+    priority: 'routine' | 'urgent' | 'stat';
+    sample_collected_at: string | null;
+    sample_collected_by: number | null;
     visit?: {
         id: number;
         patient?: {
@@ -334,6 +369,10 @@ export type LabOrderItem = {
     lab_order_id: number;
     lab_test_id: number;
     status: string;
+    sample_type: string | null;
+    sample_collected_at: string | null;
+    sample_collected_by: number | null;
+    sample_status: 'pending' | 'collected' | 'received' | 'processing' | 'completed';
     test?: LabTest;
     result?: LabResult;
     created_at: string;
@@ -350,6 +389,11 @@ export type LabResult = {
     notes: string | null;
     recorded_by: number | null;
     recorded_at: string;
+    is_abnormal: boolean;
+    is_critical: boolean;
+    verified_by: number | null;
+    verified_at: string | null;
+    verification_status: 'pending' | 'verified' | 'rejected';
     test?: LabTest;
     orderItem?: LabOrderItem;
     created_at: string;

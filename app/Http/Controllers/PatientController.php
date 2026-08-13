@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StorePatientRequest;
 use App\Http\Requests\UpdatePatientRequest;
+use App\Models\County;
 use App\Models\Gender;
 use App\Models\Patient;
 use App\Services\PatientService;
@@ -27,7 +28,17 @@ class PatientController extends Controller
     public function index(Request $request): Response
     {
         $query = $request->input('search');
-        $patients = $this->service->search($query ?? '');
+        $patients = Patient::with(['gender', 'county', 'sub_county'])
+            ->where(function ($q) use ($query) {
+                if ($query) {
+                    $q->where('first_name', 'like', "%{$query}%")
+                        ->orWhere('last_name', 'like', "%{$query}%")
+                        ->orWhere('phone', 'like', "%{$query}%")
+                        ->orWhere('email', 'like', "%{$query}%");
+                }
+            })
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
 
         return Inertia::render('patients/index', [
             'patients' => $patients,
@@ -39,6 +50,7 @@ class PatientController extends Controller
     {
         return Inertia::render('patients/create', [
             'genders' => Gender::all(),
+            'counties' => County::with('sub_counties')->get(),
         ]);
     }
 
@@ -66,6 +78,7 @@ class PatientController extends Controller
         return Inertia::render('patients/edit', [
             'patient' => $patient,
             'genders' => Gender::all(),
+            'counties' => County::with('sub_counties')->get(),
         ]);
     }
 

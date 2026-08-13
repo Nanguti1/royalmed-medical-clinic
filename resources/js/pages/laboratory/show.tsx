@@ -42,6 +42,36 @@ export default function LaboratoryShow() {
         }
     };
 
+    const handleCollectSample = () => {
+        router.post(`/laboratory/${order.id}/collect-sample`);
+    };
+
+    const handleCollectSampleItem = (itemId: number) => {
+        router.post(`/laboratory/${order.id}/items/${itemId}/collect`);
+    };
+
+    const handleReceiveSampleItem = (itemId: number) => {
+        router.post(`/laboratory/${order.id}/items/${itemId}/receive`);
+    };
+
+    const handleProcessSampleItem = (itemId: number) => {
+        router.post(`/laboratory/${order.id}/items/${itemId}/process`);
+    };
+
+    const handleCompleteSampleItem = (itemId: number) => {
+        router.post(`/laboratory/${order.id}/items/${itemId}/complete`);
+    };
+
+    const handleVerifyResult = (resultId: number) => {
+        router.post(`/laboratory/${order.id}/results/${resultId}/verify`);
+    };
+
+    const handleRejectResult = (resultId: number) => {
+        if (confirm('Are you sure you want to reject this result?')) {
+            router.post(`/laboratory/${order.id}/results/${resultId}/reject`);
+        }
+    };
+
     return (
         <>
             <Head title={`Laboratory Order #${order.id}`} />
@@ -63,7 +93,21 @@ export default function LaboratoryShow() {
                     </div>
                     <div className="flex gap-2">
                         {getStatusBadge(order.status)}
-                        {order.status === 'ordered' && (
+                        {order.priority === 'stat' && (
+                            <Badge className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">STAT</Badge>
+                        )}
+                        {order.priority === 'urgent' && (
+                            <Badge className="bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">URGENT</Badge>
+                        )}
+                        {order.status === 'ordered' && !order.sample_collected_at && (
+                            <PermissionGuard permission="laboratory.order" fallback={null}>
+                                <Button onClick={handleCollectSample}>
+                                    <Play className="mr-2 h-4 w-4" />
+                                    Collect Sample
+                                </Button>
+                            </PermissionGuard>
+                        )}
+                        {order.status === 'ordered' && order.sample_collected_at && (
                             <PermissionGuard permission="laboratory.order" fallback={null}>
                                 <Button onClick={handleStart}>
                                     <Play className="mr-2 h-4 w-4" />
@@ -140,21 +184,60 @@ export default function LaboratoryShow() {
                                                         </p>
                                                     )}
                                                 </div>
-                                                {item.result ? (
-                                                    <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                                                        Result Entered
-                                                    </Badge>
-                                                ) : (
-                                                    <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
-                                                        Pending
-                                                    </Badge>
-                                                )}
+                                                <div className="flex gap-2">
+                                                    {item.sample_status === 'pending' && (
+                                                        <Badge className="bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200">
+                                                            Sample Pending
+                                                        </Badge>
+                                                    )}
+                                                    {item.sample_status === 'collected' && (
+                                                        <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                                                            Sample Collected
+                                                        </Badge>
+                                                    )}
+                                                    {item.sample_status === 'received' && (
+                                                        <Badge className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
+                                                            Sample Received
+                                                        </Badge>
+                                                    )}
+                                                    {item.sample_status === 'processing' && (
+                                                        <Badge className="bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
+                                                            Processing
+                                                        </Badge>
+                                                    )}
+                                                    {item.sample_status === 'completed' && (
+                                                        <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                                            Sample Completed
+                                                        </Badge>
+                                                    )}
+                                                    {item.result ? (
+                                                        <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                                            Result Entered
+                                                        </Badge>
+                                                    ) : (
+                                                        <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+                                                            Result Pending
+                                                        </Badge>
+                                                    )}
+                                                </div>
                                             </div>
                                             {item.result && (
                                                 <div className="space-y-2 text-sm">
-                                                    <div>
+                                                    <div className="flex items-center gap-2">
                                                         <span className="text-muted-foreground">Result: </span>
-                                                        {item.result.result_value}
+                                                        <span className={item.result.is_abnormal ? 'text-red-600 font-medium' : ''}>
+                                                            {item.result.result_value}
+                                                        </span>
+                                                        {item.result.is_abnormal && (
+                                                            <Badge className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
+                                                                Abnormal
+                                                            </Badge>
+                                                        )}
+                                                        {item.result.is_critical && (
+                                                            <Badge className="bg-red-600 text-white">
+                                                                Critical
+                                                            </Badge>
+                                                        )}
                                                     </div>
                                                     {item.result.units && (
                                                         <div>
@@ -174,6 +257,36 @@ export default function LaboratoryShow() {
                                                             {item.result.notes}
                                                         </div>
                                                     )}
+                                                    <div className="flex items-center gap-2 pt-2">
+                                                        <span className="text-muted-foreground">Status: </span>
+                                                        {item.result.verification_status === 'verified' && (
+                                                            <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                                                Verified
+                                                            </Badge>
+                                                        )}
+                                                        {item.result.verification_status === 'rejected' && (
+                                                            <Badge className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
+                                                                Rejected
+                                                            </Badge>
+                                                        )}
+                                                        {item.result.verification_status === 'pending' && (
+                                                            <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+                                                                Pending Verification
+                                                            </Badge>
+                                                        )}
+                                                    </div>
+                                                    {item.result.verification_status === 'pending' && (
+                                                        <div className="flex gap-2 pt-2">
+                                                            <PermissionGuard permission="laboratory.result" fallback={null}>
+                                                                <Button variant="outline" size="sm" onClick={() => handleVerifyResult(item.result.id)}>
+                                                                    Verify
+                                                                </Button>
+                                                                <Button variant="outline" size="sm" onClick={() => handleRejectResult(item.result.id)}>
+                                                                    Reject
+                                                                </Button>
+                                                            </PermissionGuard>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             )}
                                             {!item.result && order.status === 'in_progress' && (
@@ -183,6 +296,34 @@ export default function LaboratoryShow() {
                                                             <Edit className="mr-2 h-4 w-4" />
                                                             Enter Result
                                                         </a>
+                                                    </Button>
+                                                </PermissionGuard>
+                                            )}
+                                            {item.sample_status === 'pending' && order.status === 'ordered' && (
+                                                <PermissionGuard permission="laboratory.order" fallback={null}>
+                                                    <Button variant="outline" size="sm" onClick={() => handleCollectSampleItem(item.id)}>
+                                                        Collect Sample
+                                                    </Button>
+                                                </PermissionGuard>
+                                            )}
+                                            {item.sample_status === 'collected' && (
+                                                <PermissionGuard permission="laboratory.order" fallback={null}>
+                                                    <Button variant="outline" size="sm" onClick={() => handleReceiveSampleItem(item.id)}>
+                                                        Receive Sample
+                                                    </Button>
+                                                </PermissionGuard>
+                                            )}
+                                            {item.sample_status === 'received' && (
+                                                <PermissionGuard permission="laboratory.order" fallback={null}>
+                                                    <Button variant="outline" size="sm" onClick={() => handleProcessSampleItem(item.id)}>
+                                                        Start Processing
+                                                    </Button>
+                                                </PermissionGuard>
+                                            )}
+                                            {item.sample_status === 'processing' && (
+                                                <PermissionGuard permission="laboratory.order" fallback={null}>
+                                                    <Button variant="outline" size="sm" onClick={() => handleCompleteSampleItem(item.id)}>
+                                                        Complete Processing
                                                     </Button>
                                                 </PermissionGuard>
                                             )}

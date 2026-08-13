@@ -35,7 +35,7 @@ class PharmacyController extends Controller
             ->whereNull('dispensed_at')
             ->with(['visit.patient', 'items.medicine'])
             ->orderBy('created_at', 'asc')
-            ->get();
+            ->paginate(20);
 
         return Inertia::render('pharmacy/index', [
             'prescriptions' => $prescriptions,
@@ -100,6 +100,7 @@ class PharmacyController extends Controller
 
         return Inertia::render('pharmacy/receive', [
             'medicines' => $medicines,
+            'has_medicines' => $medicines->count() > 0,
         ]);
     }
 

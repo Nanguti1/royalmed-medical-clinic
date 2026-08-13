@@ -9,7 +9,11 @@ import { Input } from '@/components/ui/input';
 import type { Patient } from '@/types/patient';
 
 type PageProps = {
-    patients: Patient[];
+    patients: {
+        data: Patient[];
+        links: any;
+        meta: any;
+    };
     search: string;
 };
 
@@ -72,7 +76,7 @@ export default function PatientIndex() {
                 {/* Patient List */}
                 {processing ? (
                     <LoadingState count={5} />
-                ) : patients.length === 0 ? (
+                ) : patients.data.length === 0 ? (
                     <EmptyState
                         icon={User}
                         title="No patients found"
@@ -83,11 +87,30 @@ export default function PatientIndex() {
                         } : undefined}
                     />
                 ) : (
-                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                        {patients.map((patient) => (
-                            <PatientCard key={patient.id} patient={patient} />
-                        ))}
-                    </div>
+                    <>
+                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                            {patients.data.map((patient) => (
+                                <PatientCard key={patient.id} patient={patient} />
+                            ))}
+                        </div>
+                        {/* Pagination */}
+                        {patients.links && patients.links.length > 3 && (
+                            <div className="flex justify-center gap-2 mt-4">
+                                {patients.links.map((link: any, index: number) => (
+                                    <a
+                                        key={index}
+                                        href={link.url || '#'}
+                                        className={`px-4 py-2 rounded ${
+                                            link.active
+                                                ? 'bg-primary text-primary-foreground'
+                                                : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                                        } ${!link.url ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        dangerouslySetInnerHTML={{ __html: link.label }}
+                                    />
+                                ))}
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
         </>
@@ -100,7 +123,7 @@ function PatientCard({ patient }: { patient: Patient }) {
         .join(' ');
 
     return (
-        <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
+        <Card className="hover:bg-accent/50 transition-colors cursor-pointer" onClick={() => (window.location.href = `/patients/${patient.id}`)}>
             <CardHeader>
                 <CardTitle className="text-lg">{fullName}</CardTitle>
             </CardHeader>

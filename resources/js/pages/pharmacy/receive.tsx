@@ -9,10 +9,11 @@ import type { Medicine } from '@/types/visit';
 
 type PageProps = {
     medicines: Medicine[];
+    has_medicines: boolean;
 };
 
 export default function PharmacyReceive() {
-    const { medicines } = usePage<PageProps>().props;
+    const { medicines, has_medicines } = usePage<PageProps>().props;
 
     const { data, setData, post, processing, errors } = useForm({
         medicine_id: 0,
@@ -56,27 +57,41 @@ export default function PharmacyReceive() {
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <form onSubmit={handleSubmit} className="space-y-6">
-                            <AlertError errors={errors} />
+                        {!has_medicines ? (
+                            <div className="flex flex-col items-center justify-center py-12 text-center">
+                                <Pill className="h-12 w-12 text-muted-foreground mb-4" />
+                                <h3 className="text-lg font-semibold mb-2">No medicines in catalog</h3>
+                                <p className="text-muted-foreground mb-4">
+                                    You need to add medicines to the catalog before receiving stock.
+                                    In a typical clinical workflow, this would be managed by pharmacy administrators
+                                    or procurement teams who maintain the drug formulary.
+                                </p>
+                                <Button asChild>
+                                    <a href="/pharmacy/inventory">View Inventory</a>
+                                </Button>
+                            </div>
+                        ) : (
+                            <form onSubmit={handleSubmit} className="space-y-6">
+                                <AlertError errors={errors} />
 
-                            <div className="grid gap-4 md:grid-cols-2">
-                                <div className="space-y-2">
-                                    <Label htmlFor="medicine_id">Medicine *</Label>
-                                    <select
-                                        id="medicine_id"
-                                        value={data.medicine_id}
-                                        onChange={(e) => setData('medicine_id', parseInt(e.target.value))}
-                                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                                    >
-                                        <option value={0}>Select medicine</option>
-                                        {medicines.map((med) => (
-                                            <option key={med.id} value={med.id}>
-                                                {med.name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <InputError message={errors.medicine_id} />
-                                </div>
+                                <div className="grid gap-4 md:grid-cols-2">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="medicine_id">Medicine *</Label>
+                                        <select
+                                            id="medicine_id"
+                                            value={data.medicine_id}
+                                            onChange={(e) => setData('medicine_id', parseInt(e.target.value))}
+                                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                                        >
+                                            <option value={0}>Select medicine</option>
+                                            {medicines.map((med) => (
+                                                <option key={med.id} value={med.id}>
+                                                    {med.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <InputError message={errors.medicine_id} />
+                                    </div>
 
                                 <div className="space-y-2">
                                     <Label htmlFor="batch_number">Batch Number *</Label>
@@ -154,6 +169,7 @@ export default function PharmacyReceive() {
                                 </Button>
                             </div>
                         </form>
+                        )}
                     </CardContent>
                 </Card>
             </div>

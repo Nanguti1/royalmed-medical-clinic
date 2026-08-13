@@ -12,6 +12,10 @@ export default function AlertError({
         ? errors
         : Object.values(errors).flat();
 
+    if (errorMessages.length === 0) {
+        return null;
+    }
+
     return (
         <Alert variant="destructive">
             <AlertCircleIcon />

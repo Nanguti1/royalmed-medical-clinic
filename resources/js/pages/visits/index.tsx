@@ -2,6 +2,7 @@ import { Head, useForm, usePage } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/empty-state';
 import { LoadingState } from '@/components/loading-state';
 import { Plus, Search, Stethoscope } from 'lucide-react';
@@ -97,11 +98,30 @@ export default function VisitIndex() {
                         }
                     />
                 ) : (
-                    <div className="grid gap-4">
-                        {visits.data.map((visit) => (
-                            <VisitCard key={visit.id} visit={visit} />
-                        ))}
-                    </div>
+                    <>
+                        <div className="grid gap-4">
+                            {visits.data.map((visit) => (
+                                <VisitCard key={visit.id} visit={visit} />
+                            ))}
+                        </div>
+                        {/* Pagination */}
+                        {visits.links && visits.links.length > 3 && (
+                            <div className="flex justify-center gap-2 mt-4">
+                                {visits.links.map((link: any, index: number) => (
+                                    <a
+                                        key={index}
+                                        href={link.url || '#'}
+                                        className={`px-4 py-2 rounded ${
+                                            link.active
+                                                ? 'bg-primary text-primary-foreground'
+                                                : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                                        } ${!link.url ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        dangerouslySetInnerHTML={{ __html: link.label }}
+                                    />
+                                ))}
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
         </>
@@ -132,7 +152,7 @@ function VisitCard({ visit }: { visit: Visit }) {
     };
 
     return (
-        <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
+        <Card className="hover:bg-accent/50 transition-colors cursor-pointer" onClick={() => (window.location.href = `/visits/${visit.id}`)}>
             <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">

@@ -9,9 +9,9 @@ class County extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name'];
+    protected $fillable = ['name', 'code', 'headquarters'];
 
-    public function subCounties()
+    public function sub_counties()
     {
         return $this->hasMany(SubCounty::class);
     }

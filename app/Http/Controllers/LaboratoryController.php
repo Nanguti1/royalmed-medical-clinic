@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Requests\CreateLabOrderRequest;
 use App\Http\Requests\RecordLabResultRequest;
 use App\Models\LabOrder;
+use App\Models\LabOrderItem;
+use App\Models\LabResult;
 use App\Models\LabTest;
 use App\Models\Visit;
 use App\Services\LabService;
@@ -27,8 +29,9 @@ class LaboratoryController extends Controller
     public function index(): Response
     {
         $orders = LabOrder::with(['visit.patient', 'items.test'])
+            ->orderByRaw("FIELD(priority, 'stat', 'urgent', 'routine')")
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate(20);
 
         return Inertia::render('laboratory/index', [
             'orders' => $orders,
@@ -105,5 +108,74 @@ class LaboratoryController extends Controller
 
         return redirect()->route('laboratory.show', ['labOrder' => $labOrder])
             ->with('success', 'Result recorded successfully.');
+    }
+
+    public function collectSample(LabOrder $labOrder)
+    {
+        $labOrder->update([
+            'sample_collected_at' => now(),
+            'sample_collected_by' => auth()->id(),
+        ]);
+
+        return redirect()->route('laboratory.show', ['labOrder' => $labOrder])
+            ->with('success', 'Sample collected successfully.');
+    }
+
+    public function collectSampleItem(LabOrder $labOrder, LabOrderItem $labOrderItem)
+    {
+        $labOrderItem->update([
+            'sample_collected_at' => now(),
+            'sample_collected_by' => auth()->id(),
+            'sample_status' => 'collected',
+        ]);
+
+        return redirect()->route('laboratory.show', ['labOrder' => $labOrder])
+            ->with('success', 'Sample collected successfully.');
+    }
+
+    public function receiveSampleItem(LabOrder $labOrder, LabOrderItem $labOrderItem)
+    {
+        $labOrderItem->update([
+            'sample_status' => 'received',
+        ]);
+
+        return redirect()->route('laboratory.show', ['labOrder' => $labOrder])
+            ->with('success', 'Sample received successfully.');
+    }
+
+    public function processSampleItem(LabOrder $labOrder, LabOrderItem $labOrderItem)
+    {
+        $labOrderItem->update([
+            'sample_status' => 'processing',
+        ]);
+
+        return redirect()->route('laboratory.show', ['labOrder' => $labOrder])
+            ->with('success', 'Sample processing started.');
+    }
+
+    public function completeSampleItem(LabOrder $labOrder, LabOrderItem $labOrderItem)
+    {
+        $labOrderItem->update([
+            'sample_status' => 'completed',
+        ]);
+
+        return redirect()->route('laboratory.show', ['labOrder' => $labOrder])
+            ->with('success', 'Sample processing completed.');
+    }
+
+    public function verifyResult(LabOrder $labOrder, LabResult $labResult)
+    {
+        $labResult->markAsVerified(auth()->id());
+
+        return redirect()->route('laboratory.show', ['labOrder' => $labOrder])
+            ->with('success', 'Result verified successfully.');
+    }
+
+    public function rejectResult(LabOrder $labOrder, LabResult $labResult)
+    {
+        $labResult->markAsRejected(auth()->id());
+
+        return redirect()->route('laboratory.show', ['labOrder' => $labOrder])
+            ->with('success', 'Result rejected successfully.');
     }
 }

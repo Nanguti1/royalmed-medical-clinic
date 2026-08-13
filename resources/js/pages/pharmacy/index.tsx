@@ -8,7 +8,11 @@ import type { Prescription } from '@/types/visit';
 import { PermissionGuard } from '@/components/permission-guard';
 
 type PageProps = {
-    prescriptions: Prescription[];
+    prescriptions: {
+        data: Prescription[];
+        links: any;
+        meta: any;
+    };
 };
 
 export default function PharmacyIndex() {
@@ -47,18 +51,37 @@ export default function PharmacyIndex() {
                 </div>
 
                 {/* Prescriptions List */}
-                {prescriptions.length === 0 ? (
+                {prescriptions.data.length === 0 ? (
                     <EmptyState
                         icon={Pill}
                         title="No pending prescriptions"
                         description="There are no prescriptions waiting to be dispensed."
                     />
                 ) : (
-                    <div className="grid gap-4">
-                        {prescriptions.map((prescription) => (
-                            <PrescriptionCard key={prescription.id} prescription={prescription} />
-                        ))}
-                    </div>
+                    <>
+                        <div className="grid gap-4">
+                            {prescriptions.data.map((prescription) => (
+                                <PrescriptionCard key={prescription.id} prescription={prescription} />
+                            ))}
+                        </div>
+                        {/* Pagination */}
+                        {prescriptions.links && prescriptions.links.length > 3 && (
+                            <div className="flex justify-center gap-2 mt-4">
+                                {prescriptions.links.map((link: any, index: number) => (
+                                    <a
+                                        key={index}
+                                        href={link.url || '#'}
+                                        className={`px-4 py-2 rounded ${
+                                            link.active
+                                                ? 'bg-primary text-primary-foreground'
+                                                : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                                        } ${!link.url ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        dangerouslySetInnerHTML={{ __html: link.label }}
+                                    />
+                                ))}
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
         </>

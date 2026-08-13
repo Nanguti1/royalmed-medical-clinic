@@ -7,13 +7,25 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { Gender } from '@/types/patient';
+import { useState } from 'react';
 
 type PageProps = {
     genders: Gender[];
+    counties: Array<{
+        id: number;
+        name: string;
+        code: number;
+        headquarters: string;
+        sub_counties: Array<{
+            id: number;
+            name: string;
+        }>;
+    }>;
 };
 
 export default function PatientCreate() {
-    const { genders } = usePage<PageProps>().props;
+    const { genders, counties } = usePage<PageProps>().props;
+    const [selectedCounty, setSelectedCounty] = useState<number | ''>('');
 
     const { data, setData, post, processing, errors } = useForm({
         first_name: '',
@@ -28,6 +40,12 @@ export default function PatientCreate() {
         sub_county_id: '',
         notes: '',
     });
+
+    const handleCountyChange = (countyId: string) => {
+        setData('county_id', countyId);
+        setData('sub_county_id', '');
+        setSelectedCounty(Number(countyId));
+    };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -174,22 +192,42 @@ export default function PatientCreate() {
                                     </div>
                                     <div className="space-y-2">
                                         <Label htmlFor="county_id">County</Label>
-                                        <Input
+                                        <select
                                             id="county_id"
-                                            type="number"
                                             value={data.county_id}
-                                            onChange={(e) => setData('county_id', e.target.value)}
-                                        />
+                                            onChange={(e) => handleCountyChange(e.target.value)}
+                                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                        >
+                                            <option value="">Select county</option>
+                                            {counties.map((county) => (
+                                                <option key={county.id} value={county.id}>
+                                                    {county.name}
+                                                </option>
+                                            ))}
+                                        </select>
                                         <InputError message={errors.county_id} />
                                     </div>
                                     <div className="space-y-2">
                                         <Label htmlFor="sub_county_id">Sub County</Label>
-                                        <Input
+                                        <select
                                             id="sub_county_id"
-                                            type="number"
                                             value={data.sub_county_id}
                                             onChange={(e) => setData('sub_county_id', e.target.value)}
-                                        />
+                                            disabled={!selectedCounty}
+                                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                        >
+                                            <option value="">Select sub-county</option>
+                                            {(() => {
+                                                const county = counties.find((c) => c.id === selectedCounty);
+                                                return county && county.sub_counties
+                                                    ? county.sub_counties.map((subCounty) => (
+                                                        <option key={subCounty.id} value={subCounty.id}>
+                                                            {subCounty.name}
+                                                        </option>
+                                                    ))
+                                                    : null;
+                                            })()}
+                                        </select>
                                         <InputError message={errors.sub_county_id} />
                                     </div>
                                 </div>

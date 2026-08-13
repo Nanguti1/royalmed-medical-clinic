@@ -12,6 +12,8 @@ class AuthorizationSeeder extends Seeder
     {
         // Permission list following module.permission convention
         $permissions = [
+            // Super Admin wildcard - grants all permissions
+            '*',
             // Patients
             'patients.view', 'patients.create', 'patients.update', 'patients.delete',
             // Visits
@@ -42,7 +44,7 @@ class AuthorizationSeeder extends Seeder
         }
 
         $roles = [
-            'Super Admin' => $permissions, // full access
+            'Super Admin' => ['*'], // wildcard grants all permissions
             'Administrator' => [
                 'patients.view', 'patients.create', 'patients.update',
                 'visits.view', 'visits.create', 'visits.update',

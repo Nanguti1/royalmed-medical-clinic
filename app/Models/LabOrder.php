@@ -9,17 +9,28 @@ class LabOrder extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['visit_id', 'ordered_by', 'order_date', 'status', 'notes', 'in_progress_at', 'completed_at'];
+    protected $fillable = ['visit_id', 'ordered_by', 'order_date', 'status', 'notes', 'in_progress_at', 'completed_at', 'priority', 'sample_collected_at', 'sample_collected_by'];
 
     protected $casts = [
         'order_date' => 'datetime',
         'in_progress_at' => 'datetime',
         'completed_at' => 'datetime',
+        'sample_collected_at' => 'datetime',
     ];
 
     public function visit()
     {
         return $this->belongsTo(Visit::class);
+    }
+
+    public function orderedBy()
+    {
+        return $this->belongsTo(User::class, 'ordered_by');
+    }
+
+    public function sampleCollectedBy()
+    {
+        return $this->belongsTo(User::class, 'sample_collected_by');
     }
 
     public function items()
@@ -47,6 +58,26 @@ class LabOrder extends Model
         return $this->status === 'completed';
     }
 
+    public function isPriority(): bool
+    {
+        return in_array($this->priority, ['urgent', 'stat']);
+    }
+
+    public function isStat(): bool
+    {
+        return $this->priority === 'stat';
+    }
+
+    public function isUrgent(): bool
+    {
+        return $this->priority === 'urgent';
+    }
+
+    public function isSampleCollected(): bool
+    {
+        return $this->sample_collected_at !== null;
+    }
+
     public function canAddTest(): bool
     {
         return $this->isOrdered();
@@ -65,5 +96,10 @@ class LabOrder extends Model
     public function canRecordResult(): bool
     {
         return $this->isInProgress();
+    }
+
+    public function canCollectSample(): bool
+    {
+        return $this->isOrdered() && ! $this->isSampleCollected();
     }
 }

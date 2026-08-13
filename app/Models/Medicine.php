@@ -10,7 +10,7 @@ class Medicine extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable = ['name', 'generic_name', 'medicine_category_id', 'medicine_form_id', 'strength_id', 'unit_price', 'reorder_level'];
+    protected $fillable = ['name', 'generic_name', 'medicine_category_id', 'medicine_form_id', 'medicine_strength_id', 'unit_price', 'reorder_level'];
 
     protected $casts = [
         'unit_price' => 'decimal:2',
@@ -20,6 +20,16 @@ class Medicine extends Model
     public function category()
     {
         return $this->belongsTo(MedicineCategory::class, 'medicine_category_id');
+    }
+
+    public function form()
+    {
+        return $this->belongsTo(MedicineForm::class, 'medicine_form_id');
+    }
+
+    public function strength()
+    {
+        return $this->belongsTo(MedicineStrength::class, 'medicine_strength_id');
     }
 
     public function batches()

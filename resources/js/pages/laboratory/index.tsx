@@ -8,7 +8,11 @@ import type { LabOrder } from '@/types/visit';
 import { PermissionGuard } from '@/components/permission-guard';
 
 type PageProps = {
-    orders: LabOrder[];
+    orders: {
+        data: LabOrder[];
+        links: any;
+        meta: any;
+    };
 };
 
 export default function LaboratoryIndex() {
@@ -27,6 +31,18 @@ export default function LaboratoryIndex() {
         }
     };
 
+    const getPriorityBadge = (priority: string) => {
+        switch (priority) {
+            case 'stat':
+                return <Badge className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">STAT</Badge>;
+            case 'urgent':
+                return <Badge className="bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">URGENT</Badge>;
+            case 'routine':
+            default:
+                return null;
+        }
+    };
+
     return (
         <>
             <Head title="Laboratory" />
@@ -42,18 +58,37 @@ export default function LaboratoryIndex() {
                 </div>
 
                 {/* Orders List */}
-                {orders.length === 0 ? (
+                {orders.data.length === 0 ? (
                     <EmptyState
                         icon={FlaskConical}
                         title="No laboratory orders"
                         description="There are no laboratory orders to process."
                     />
                 ) : (
-                    <div className="grid gap-4">
-                        {orders.map((order) => (
-                            <LabOrderCard key={order.id} order={order} getStatusBadge={getStatusBadge} />
-                        ))}
-                    </div>
+                    <>
+                        <div className="grid gap-4">
+                            {orders.data.map((order) => (
+                                <LabOrderCard key={order.id} order={order} getStatusBadge={getStatusBadge} />
+                            ))}
+                        </div>
+                        {/* Pagination */}
+                        {orders.links && orders.links.length > 3 && (
+                            <div className="flex justify-center gap-2 mt-4">
+                                {orders.links.map((link: any, index: number) => (
+                                    <a
+                                        key={index}
+                                        href={link.url || '#'}
+                                        className={`px-4 py-2 rounded ${
+                                            link.active
+                                                ? 'bg-primary text-primary-foreground'
+                                                : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                                        } ${!link.url ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        dangerouslySetInnerHTML={{ __html: link.label }}
+                                    />
+                                ))}
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
         </>
@@ -86,6 +121,7 @@ function LabOrderCard({ order, getStatusBadge }: { order: LabOrder; getStatusBad
                         </div>
                     </div>
                     <div className="flex items-center gap-4">
+                        {getPriorityBadge(order.priority)}
                         {getStatusBadge(order.status)}
                         <Button variant="outline" size="sm" asChild>
                             <a href={`/laboratory/${order.id}`}>

@@ -19,7 +19,7 @@ export default function ConsultationShow() {
             .join(' ')
         : 'Unknown Patient';
 
-    const hasVitals = consultation.visit?.vitalSign !== null;
+    const hasVitals = consultation.visit?.vital_sign !== null;
     const hasPrescriptions = consultation.prescriptions && consultation.prescriptions.length > 0;
 
     const handleCompleteVisit = () => {
@@ -112,23 +112,23 @@ export default function ConsultationShow() {
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            {hasVitals && consultation.visit?.vitalSign ? (
+                            {hasVitals && consultation.visit?.vital_sign ? (
                                 <>
                                     <div>
                                         <p className="text-sm text-muted-foreground">Temperature</p>
-                                        <p className="font-medium">{consultation.visit.vitalSign.temperature_c || 'N/A'} °C</p>
+                                        <p className="font-medium">{consultation.visit.vital_sign.temperature_c || 'N/A'} °C</p>
                                     </div>
                                     <div>
                                         <p className="text-sm text-muted-foreground">Blood Pressure</p>
-                                        <p className="font-medium">{consultation.visit.vitalSign.blood_pressure || 'N/A'}</p>
+                                        <p className="font-medium">{consultation.visit.vital_sign.blood_pressure || 'N/A'}</p>
                                     </div>
                                     <div>
                                         <p className="text-sm text-muted-foreground">Pulse</p>
-                                        <p className="font-medium">{consultation.visit.vitalSign.pulse || 'N/A'} bpm</p>
+                                        <p className="font-medium">{consultation.visit.vital_sign.pulse || 'N/A'} bpm</p>
                                     </div>
                                     <div>
                                         <p className="text-sm text-muted-foreground">Weight</p>
-                                        <p className="font-medium">{consultation.visit.vitalSign.weight_kg || 'N/A'} kg</p>
+                                        <p className="font-medium">{consultation.visit.vital_sign.weight_kg || 'N/A'} kg</p>
                                     </div>
                                 </>
                             ) : (
@@ -239,7 +239,7 @@ export default function ConsultationShow() {
                                         <Button variant="outline" asChild>
                                             <a href={`/prescriptions/create/${consultation.visit_id}`}>
                                                 <Pill className="mr-2 h-4 w-4" />
-                                                Add Prescription
+                                                Create Prescription
                                             </a>
                                         </Button>
                                     </PermissionGuard>

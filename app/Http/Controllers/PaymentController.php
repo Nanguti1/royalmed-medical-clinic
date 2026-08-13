@@ -52,7 +52,7 @@ class PaymentController extends Controller
             });
         }
 
-        $payments = $paymentsQuery->orderBy('paid_at', 'desc')->get();
+        $payments = $paymentsQuery->orderBy('paid_at', 'desc')->paginate(20);
 
         // Calculate daily totals using application timezone
         $dailyTotals = Payment::whereDate('paid_at', $date)
