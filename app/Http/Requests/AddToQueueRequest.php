@@ -15,7 +15,10 @@ class AddToQueueRequest extends FormRequest
     {
         return [
             'visit_id' => 'required|exists:visits,id',
+            'department' => 'nullable|string|in:triage,consultation,laboratory,pharmacy,dental',
+            'queue_number' => 'nullable|string|max:255',
             'position' => 'nullable|integer',
+            'priority' => 'nullable|string|in:normal,urgent,emergency',
         ];
     }
 }

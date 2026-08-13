@@ -11,7 +11,7 @@ class Patient extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'first_name', 'last_name', 'other_names', 'gender_id', 'date_of_birth', 'phone', 'email', 'address', 'county_id', 'sub_county_id', 'notes', 'created_by', 'updated_by',
+        'hospital_number', 'first_name', 'last_name', 'other_names', 'gender_id', 'date_of_birth', 'phone', 'email', 'photo_path', 'occupation', 'employer', 'marital_status', 'preferred_language', 'religion', 'blood_group', 'address', 'county_id', 'sub_county_id', 'notes', 'created_by', 'updated_by',
     ];
 
     protected $casts = [
@@ -31,6 +31,52 @@ class Patient extends Model
     public function identifiers()
     {
         return $this->hasMany(PatientIdentifier::class);
+    }
+
+
+    public function contacts()
+    {
+        return $this->hasMany(PatientContact::class);
+    }
+
+    public function addresses()
+    {
+        return $this->hasMany(PatientAddress::class);
+    }
+
+    public function allergies()
+    {
+        return $this->hasMany(PatientAllergy::class);
+    }
+
+    public function chronicConditions()
+    {
+        return $this->hasMany(PatientChronicCondition::class);
+    }
+
+    public function alerts()
+    {
+        return $this->hasMany(PatientAlert::class);
+    }
+
+    public function relationships()
+    {
+        return $this->hasMany(PatientRelationship::class);
+    }
+
+    public function relatedRelationships()
+    {
+        return $this->hasMany(PatientRelationship::class, 'related_patient_id');
+    }
+
+    public function sourceMergeRecords()
+    {
+        return $this->hasMany(PatientMergeRecord::class, 'source_patient_id');
+    }
+
+    public function targetMergeRecords()
+    {
+        return $this->hasMany(PatientMergeRecord::class, 'target_patient_id');
     }
 
     public function gender()

@@ -9,11 +9,13 @@ class QueueEntry extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['visit_id', 'position', 'status', 'called_at', 'served_at'];
+    protected $fillable = ['visit_id', 'department', 'queue_number', 'position', 'priority', 'status', 'called_at', 'started_at', 'served_at', 'completed_at', 'waiting_minutes'];
 
     protected $casts = [
         'called_at' => 'datetime',
+        'started_at' => 'datetime',
         'served_at' => 'datetime',
+        'completed_at' => 'datetime',
     ];
 
     public function visit()
@@ -38,7 +40,7 @@ class QueueEntry extends Model
 
     public function isServed(): bool
     {
-        return $this->status === 'completed' || ! is_null($this->served_at);
+        return $this->status === 'completed' || ! is_null($this->served_at) || ! is_null($this->completed_at);
     }
 
     public function canCall(): bool

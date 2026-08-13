@@ -56,6 +56,16 @@ class NumberGenerator
         });
     }
 
+    public static function generateHospitalNumber(): string
+    {
+        return self::generateSequenceNumber('patient', 'H', 5);
+    }
+
+    public static function generateQueueNumber(string $department): string
+    {
+        return self::generateSequenceNumber('queue_'.$department, strtoupper(substr($department, 0, 1)).'Q', 3);
+    }
+
     public static function generateVisitNumber(): string
     {
         return self::generateSequenceNumber('visit', 'V', 4);

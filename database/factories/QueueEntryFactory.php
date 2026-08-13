@@ -14,7 +14,10 @@ class QueueEntryFactory extends Factory
     {
         return [
             'visit_id' => Visit::factory(),
+            'department' => 'consultation',
+            'queue_number' => fake()->unique()->bothify('CQ-####'),
             'position' => fake()->numberBetween(1, 50),
+            'priority' => 'normal',
             'status' => 'waiting',
             'called_at' => null,
             'served_at' => null,

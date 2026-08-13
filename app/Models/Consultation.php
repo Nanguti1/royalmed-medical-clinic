@@ -25,4 +25,9 @@ class Consultation extends Model
     {
         return $this->hasMany(Prescription::class);
     }
+
+    public function attachments()
+    {
+        return $this->hasMany(ClinicalAttachment::class);
+    }
 }
