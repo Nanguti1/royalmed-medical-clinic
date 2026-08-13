@@ -24,6 +24,7 @@ class CallQueueEntryAction
         $entry->update([
             'status' => 'called',
             'called_at' => now(),
+            'waiting_minutes' => $entry->created_at?->diffInMinutes(now()),
         ]);
 
         return $entry;

@@ -1,12 +1,21 @@
-# Royalmed Clinic Level 2 HIS Implementation Prompts
+# **Royalmed Clinic Level 2 HIS Implementation Prompts**
 
-Use these prompts sequentially. Each prompt builds on the previous one and must preserve the Laravel + Inertia monolith architecture. Do **not** introduce REST APIs, GraphQL, microservices, mobile apps, API gateways, or a separate frontend/backend split. Before starting each prompt, re-read `docs/royalmed-level-2-hospital-system-audit.md`, inspect the current implementation, and update the prompt scope if the codebase has changed.
+Use these prompts sequentially. Each prompt builds on the previous one and must preserve the Laravel + Inertia monolith architecture. Do **not** introduce REST APIs, GraphQL, microservices, mobile applications, API versioning, API gateways, or a separate frontend/backend split. Before starting each prompt, re-read `docs/royalmed-level-2-hospital-system-audit.md`, inspect the current implementation, and update the prompt scope if the codebase has changed.
 
-## Prompt 01 — Database and Architecture Foundation Patches
+## **Prompt sequencing contract**
+
+Follow the prompts in this order because later prompts depend on earlier schema and architecture decisions:
+
+1. **Database and architecture patches first** — add missing fields, normalize relationships, protect retention/audit requirements, and preserve existing workflows.
+2. **Backend business logic second** — implement patient, triage, EMR, laboratory, pharmacy, billing, compliance, appointment, dental, reporting, and automation workflows on top of the patched schema.
+3. **Frontend/Inertia workflows third** — expose completed backend workflows using existing React 19 + Inertia conventions.
+4. **UI/accessibility polish last** — improve productivity, responsiveness, print layouts, keyboard usage, loading/empty states, and accessibility after the workflows exist.
+
+## **Prompt 01 — Database and Architecture Foundation Patches**
 
 You are a Senior Laravel 13 healthcare systems architect. Fix the core database design and architecture gaps identified in the Royalmed Level 2 HIS audit before adding business workflows.
 
-### Current evidence to preserve
+### **Current evidence to preserve**
 
 - `patients` currently has `first_name`, `last_name`, `other_names`, `gender_id`, `date_of_birth`, one `phone`, one `email`, one `address`, `county_id`, `sub_county_id`, `notes`, soft deletes, `created_by`, and `updated_by`.
 - `patient_identifiers` currently has `patient_id`, `identifier_type`, `identifier_value`, `is_primary`, and a unique `identifier_type` + `identifier_value` constraint.
@@ -21,7 +30,7 @@ You are a Senior Laravel 13 healthcare systems architect. Fix the core database 
 - `invoices`, `invoice_items`, `payment_methods`, `payments`, and `mpesa_transactions` already support billing, payments, receipts, M-Pesa transaction storage, and reconciliation.
 - Spatie permissions, Fortify auth, two-factor/passkey readiness, activity logs, services, actions, Form Requests, factories, seeders, and PHPUnit tests already exist.
 
-### Required database changes
+### **Required database changes**
 
 1. Patch the patient master index without breaking existing patient records:
    - Add `hospital_number` as a unique, indexed patient identifier or primary patient column, using existing number-generation conventions where possible.
@@ -43,7 +52,7 @@ You are a Senior Laravel 13 healthcare systems architect. Fix the core database 
    - Add missing soft deletes or immutable audit records for clinical, lab, billing, payment, and document-adjacent records.
 5. Add indexes and constraints for patient search, identifiers, visit lookup, queue worklists, lab status filters, inventory alerts, billing reports, and audit lookups.
 
-### Required architecture changes
+### **Required architecture changes**
 
 - Use Laravel migrations, models, factories, seeders, and Form Requests following existing conventions.
 - Use explicit relationships in models for each new table.
@@ -51,7 +60,7 @@ You are a Senior Laravel 13 healthcare systems architect. Fix the core database 
 - Add or update PHPUnit feature tests for every schema-backed workflow change.
 - Run the smallest affected test set and `vendor/bin/pint --dirty --format agent` if PHP files are modified.
 
-### Acceptance criteria
+### **Acceptance criteria**
 
 - Existing tests still pass or failures are explained with environment limitations.
 - New migrations are reversible.

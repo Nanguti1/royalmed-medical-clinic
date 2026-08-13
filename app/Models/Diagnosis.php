@@ -9,7 +9,7 @@ class Diagnosis extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['consultation_id', 'code', 'description', 'is_primary'];
+    protected $fillable = ['consultation_id', 'code', 'coding_system', 'description', 'diagnosis_type', 'certainty', 'rank', 'is_primary'];
 
     protected $casts = [
         'is_primary' => 'boolean',

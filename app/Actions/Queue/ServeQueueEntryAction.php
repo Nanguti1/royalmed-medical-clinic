@@ -24,6 +24,8 @@ class ServeQueueEntryAction
         $entry->update([
             'status' => 'completed',
             'served_at' => now(),
+            'completed_at' => now(),
+            'waiting_minutes' => $entry->created_at?->diffInMinutes(now()),
         ]);
 
         return $entry;
