@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Database\Factories\PatientFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -9,6 +10,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Patient extends Model
 {
     use HasFactory, SoftDeletes;
+
+    protected static $factory = PatientFactory::class;
 
     protected $fillable = [
         'hospital_number', 'first_name', 'last_name', 'other_names', 'gender_id', 'date_of_birth', 'phone', 'email', 'photo_path', 'occupation', 'employer', 'marital_status', 'preferred_language', 'religion', 'blood_group', 'address', 'county_id', 'sub_county_id', 'notes', 'created_by', 'updated_by',
@@ -86,6 +89,21 @@ class Patient extends Model
     public function paymentPlans()
     {
         return $this->hasMany(PaymentPlan::class);
+    }
+
+    public function documents()
+    {
+        return $this->hasMany(Document::class);
+    }
+
+    public function consents()
+    {
+        return $this->hasMany(PatientConsent::class);
+    }
+
+    public function activeConsents()
+    {
+        return $this->consents()->active();
     }
 
     public function activeCoverages()
