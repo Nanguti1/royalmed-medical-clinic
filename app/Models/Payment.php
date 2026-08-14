@@ -10,11 +10,13 @@ class Payment extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['invoice_id', 'payment_method_id', 'amount', 'paid_at', 'reference', 'mpesa_transaction_id', 'received_by', 'receipt_number'];
+    protected $fillable = ['invoice_id', 'payment_method_id', 'amount', 'paid_at', 'reference', 'mpesa_transaction_id', 'received_by', 'receipt_number', 'card_last_four', 'card_type', 'transaction_id', 'is_deposit', 'deposit_payment_id', 'refund_amount'];
 
     protected $casts = [
         'amount' => 'decimal:2',
         'paid_at' => 'datetime',
+        'is_deposit' => 'boolean',
+        'refund_amount' => 'decimal:2',
     ];
 
     protected static $serverUpdateMode = false;
@@ -72,5 +74,35 @@ class Payment extends Model
     public function receivedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'received_by');
+    }
+
+    public function depositPayment(): BelongsTo
+    {
+        return $this->belongsTo(Payment::class, 'deposit_payment_id');
+    }
+
+    public function childPayments()
+    {
+        return $this->hasMany(Payment::class, 'deposit_payment_id');
+    }
+
+    public function deposit()
+    {
+        return $this->hasOne(Deposit::class);
+    }
+
+    public function depositAllocations()
+    {
+        return $this->hasMany(DepositAllocation::class);
+    }
+
+    public function refunds()
+    {
+        return $this->hasMany(Refund::class);
+    }
+
+    public function creditNote()
+    {
+        return $this->hasOne(CreditNote::class);
     }
 }

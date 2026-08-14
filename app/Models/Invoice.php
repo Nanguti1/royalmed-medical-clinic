@@ -9,12 +9,15 @@ class Invoice extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['visit_id', 'issued_at', 'invoice_number', 'created_by'];
+    protected $fillable = ['visit_id', 'issued_at', 'invoice_number', 'created_by', 'discount_amount', 'tax_amount', 'discount_id', 'patient_coverage_id', 'insurance_claim_id', 'is_insurance_claim', 'notes'];
 
     protected $casts = [
         'total_amount' => 'decimal:2',
         'due_amount' => 'decimal:2',
+        'discount_amount' => 'decimal:2',
+        'tax_amount' => 'decimal:2',
         'issued_at' => 'datetime',
+        'is_insurance_claim' => 'boolean',
     ];
 
     protected static $serverUpdateMode = false;
@@ -79,6 +82,21 @@ class Invoice extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    public function discount()
+    {
+        return $this->belongsTo(Discount::class);
+    }
+
+    public function patientCoverage()
+    {
+        return $this->belongsTo(PatientCoverage::class);
+    }
+
+    public function insuranceClaim()
+    {
+        return $this->belongsTo(InsuranceClaim::class);
+    }
+
     public function getOutstandingBalanceAttribute(): float
     {
         $paid = $this->payments()->sum('amount');
@@ -94,5 +112,63 @@ class Invoice extends Model
     public function isCancelled(): bool
     {
         return $this->status && $this->status->code === 'cancelled';
+    }
+
+    public function canHaveInsuranceClaim(): bool
+    {
+        return $this->patientCoverage !== null && ! $this->isCancelled();
+    }
+
+    public function createInsuranceClaim(array $data): InsuranceClaim
+    {
+        if (! $this->canHaveInsuranceClaim()) {
+            throw new \RuntimeException('Invoice cannot have insurance claim');
+        }
+
+        $claim = InsuranceClaim::create([
+            'claim_number' => $data['claim_number'] ?? null,
+            'patient_id' => $this->visit->patient_id,
+            'insurer_id' => $this->patientCoverage->insurer_id,
+            'insurance_scheme_id' => $this->patientCoverage->insurance_scheme_id,
+            'patient_coverage_id' => $this->patientCoverage->id,
+            'invoice_id' => $this->id,
+            'status' => 'draft',
+            'claimed_amount' => $this->total_amount - $this->discount_amount,
+            'service_date_from' => $this->visit->visit_date,
+            'service_date_to' => $this->visit->visit_date,
+            'created_by' => $data['created_by'] ?? auth()->id(),
+        ]);
+
+        $this->insurance_claim_id = $claim->id;
+        $this->is_insurance_claim = true;
+        $this->save();
+
+        return $claim;
+    }
+
+    public function createPaymentPlan(array $data): PaymentPlan
+    {
+        if ($this->isCancelled()) {
+            throw new \RuntimeException('Cannot create payment plan for cancelled invoice');
+        }
+
+        $plan = PaymentPlan::create([
+            'invoice_id' => $this->id,
+            'patient_id' => $this->visit->patient_id,
+            'status' => 'active',
+            'total_amount' => $this->outstanding_balance,
+            'paid_amount' => 0,
+            'remaining_amount' => $this->outstanding_balance,
+            'installment_count' => $data['installment_count'] ?? 1,
+            'completed_installments' => 0,
+            'frequency' => $data['frequency'] ?? 'monthly',
+            'start_date' => $data['start_date'] ?? now(),
+            'next_payment_date' => $data['start_date'] ?? now(),
+            'installment_amount' => $this->outstanding_balance / ($data['installment_count'] ?? 1),
+            'notes' => $data['notes'] ?? null,
+            'created_by' => $data['created_by'] ?? auth()->id(),
+        ]);
+
+        return $plan;
     }
 }

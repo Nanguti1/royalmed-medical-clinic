@@ -9,7 +9,7 @@ class LabResult extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['lab_test_id', 'lab_order_item_id', 'result_value', 'units', 'reference_range', 'notes', 'recorded_by', 'recorded_at', 'is_abnormal', 'is_critical', 'verified_by', 'verified_at', 'verification_status'];
+    protected $fillable = ['lab_test_id', 'lab_order_item_id', 'result_value', 'units', 'reference_range', 'notes', 'recorded_by', 'recorded_at', 'is_abnormal', 'is_critical', 'verified_by', 'verified_at', 'verification_status', 'rejection_reason'];
 
     protected $casts = [
         'recorded_at' => 'datetime',
@@ -66,11 +66,12 @@ class LabResult extends Model
         $this->save();
     }
 
-    public function markAsRejected($userId): void
+    public function markAsRejected($userId, ?string $reason = null): void
     {
         $this->verification_status = 'rejected';
         $this->verified_by = $userId;
         $this->verified_at = now();
+        $this->rejection_reason = $reason;
         $this->save();
     }
 
@@ -84,7 +85,7 @@ class LabResult extends Model
     public function autoDetectCritical(): void
     {
         if ($this->test) {
-            $this->is_critical = $this->test->is_critical && $this->is_abnormal;
+            $this->is_critical = (bool) ($this->is_critical || ($this->test->is_critical && $this->is_abnormal));
         }
     }
 }

@@ -85,4 +85,26 @@ class NumberGenerator
     {
         return self::generateSequenceNumber('receipt', 'R', 5);
     }
+
+    public static function generateAccessionNumber(): string
+    {
+        return self::generateSequenceNumber('accession', 'ACC', 5);
+    }
+
+    public static function generateSpecimenLabel(string $sampleType = 'SPEC'): string
+    {
+        $prefix = strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $sampleType), 0, 4)) ?: 'SPEC';
+
+        return self::generateSequenceNumber('specimen_'.strtolower($prefix), $prefix, 4);
+    }
+
+    public static function generatePurchaseOrderNumber(): string
+    {
+        return self::generateSequenceNumber('purchase_order', 'PO', 5);
+    }
+
+    public static function generateGoodsReceivedNoteNumber(): string
+    {
+        return self::generateSequenceNumber('goods_received_note', 'GRN', 5);
+    }
 }

@@ -30,4 +30,14 @@ class InvalidLabOrderStatusException extends Exception
     {
         return new self("Invalid lab order status transition from {$from} to {$to}");
     }
+
+    public static function invalidSampleTransition(string $from, string $to): self
+    {
+        return new self("Invalid sample lifecycle transition from {$from} to {$to}");
+    }
+
+    public static function cannotVerifyUncompletedSample(): self
+    {
+        return new self('Cannot verify a lab result before sample processing is completed');
+    }
 }

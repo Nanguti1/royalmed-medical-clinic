@@ -19,7 +19,7 @@ class MedicineFactory extends Factory
             'generic_name' => fake()->optional()->word(),
             'medicine_category_id' => $category->id,
             'medicine_form_id' => null,
-            'strength_id' => null,
+            'medicine_strength_id' => null,
             'unit_price' => fake()->randomFloat(2, 10, 500),
             'reorder_level' => fake()->numberBetween(5, 20),
         ];

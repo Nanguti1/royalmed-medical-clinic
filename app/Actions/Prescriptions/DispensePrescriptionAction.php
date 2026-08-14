@@ -5,6 +5,7 @@ namespace App\Actions\Prescriptions;
 use App\Events\StockDispensed;
 use App\Exceptions\InvalidDispenseQuantityException;
 use App\Exceptions\InvalidPrescriptionStatusException;
+use App\Exceptions\PatientAllergyException;
 use App\Models\Prescription;
 use App\Services\InventoryService;
 use Illuminate\Support\Facades\DB;
@@ -37,9 +38,31 @@ class DispensePrescriptionAction
                 throw InvalidPrescriptionStatusException::invalidStatus($prescription->finalized_at ? 'finalized' : 'draft', 'dispensed');
             }
 
+            $prescription->load(['visit.patient.allergies', 'items.medicine']);
+            $patient = $prescription->visit?->patient;
+
             $items = $prescription->items;
             $toDeduct = [];
             foreach ($items as $item) {
+                // Check patient allergies if patient exists
+                if ($patient && $item->medicine) {
+                    $medName = strtolower($item->medicine->name);
+                    $genericName = strtolower($item->medicine->generic_name ?? '');
+
+                    foreach ($patient->allergies as $allergy) {
+                        if (! $allergy->is_active) {
+                            continue;
+                        }
+                        $allergen = strtolower($allergy->allergen);
+                        if (($medName && str_contains($medName, $allergen)) || ($genericName && str_contains($genericName, $allergen)) || ($allergen && (str_contains($medName, $allergen) || str_contains($allergen, $medName)))) {
+                            $severity = strtolower($allergy->severity ?? 'severe');
+                            if (in_array($severity, ['severe', 'critical', 'high', 'major'])) {
+                                throw PatientAllergyException::severeAllergy($allergy->allergen, $allergy->severity ?? 'severe');
+                            }
+                        }
+                    }
+                }
+
                 // Validate prescribed quantity
                 if ($item->quantity <= 0) {
                     throw InvalidDispenseQuantityException::zeroQuantity();
@@ -55,7 +78,7 @@ class DispensePrescriptionAction
                     continue;
                 }
 
-                $toDeduct[] = ['medicine_id' => $item->medicine_id, 'quantity' => $remaining, 'prescription_item_id' => $item->id];
+                $toDeduct[] = ['medicine_id' => $item->medicine_id, 'quantity' => $remaining, 'prescription_item_id' => $item->id, 'prescription_id' => $prescription->id, 'patient_id' => $patient?->id];
             }
 
             // Call inventory service without its own transaction (we're already in one)

@@ -68,6 +68,41 @@ class Patient extends Model
         return $this->hasMany(PatientRelationship::class, 'related_patient_id');
     }
 
+    public function coverages()
+    {
+        return $this->hasMany(PatientCoverage::class);
+    }
+
+    public function employerCoverages()
+    {
+        return $this->hasMany(PatientEmployerCoverage::class);
+    }
+
+    public function deposits()
+    {
+        return $this->hasMany(Deposit::class);
+    }
+
+    public function paymentPlans()
+    {
+        return $this->hasMany(PaymentPlan::class);
+    }
+
+    public function activeCoverages()
+    {
+        return $this->coverages()->active();
+    }
+
+    public function primaryCoverage()
+    {
+        return $this->coverages()->primary()->first();
+    }
+
+    public function hasActiveInsurance(): bool
+    {
+        return $this->activeCoverages()->count() > 0;
+    }
+
     public function sourceMergeRecords()
     {
         return $this->hasMany(PatientMergeRecord::class, 'source_patient_id');

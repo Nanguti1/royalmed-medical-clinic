@@ -8,8 +8,10 @@ use App\Models\LabOrder;
 use App\Models\LabOrderItem;
 use App\Models\LabResult;
 use App\Models\LabTest;
+use App\Models\Patient;
 use App\Models\Visit;
 use App\Services\LabService;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -21,9 +23,9 @@ class LaboratoryController extends Controller
     {
         $this->labService = $labService;
 
-        $this->middleware('permission:laboratory.view')->only(['index', 'show']);
-        $this->middleware('permission:laboratory.order')->only(['create', 'store', 'start', 'complete']);
-        $this->middleware('permission:laboratory.result')->only(['recordResult', 'storeResult']);
+        $this->middleware('permission:laboratory.view')->only(['index', 'show', 'patientHistory', 'testHistory', 'printOrder', 'printResult']);
+        $this->middleware('permission:laboratory.order')->only(['create', 'store', 'start', 'complete', 'collectSample', 'collectSampleItem', 'receiveSampleItem', 'processSampleItem', 'completeSampleItem']);
+        $this->middleware('permission:laboratory.result')->only(['recordResult', 'storeResult', 'verifyResult', 'rejectResult']);
     }
 
     public function index(): Response
@@ -70,7 +72,17 @@ class LaboratoryController extends Controller
 
     public function show(LabOrder $labOrder): Response
     {
-        $labOrder->load(['visit.patient', 'items.test', 'items.result']);
+        $labOrder->load([
+            'visit.patient',
+            'orderedBy',
+            'sampleCollectedBy',
+            'items.test',
+            'items.result.recordedBy',
+            'items.result.verifiedBy',
+            'items.receivedBy',
+            'items.processedBy',
+            'items.completedBy',
+        ]);
 
         return Inertia::render('laboratory/show', [
             'order' => $labOrder,
@@ -112,22 +124,20 @@ class LaboratoryController extends Controller
 
     public function collectSample(LabOrder $labOrder)
     {
-        $labOrder->update([
-            'sample_collected_at' => now(),
-            'sample_collected_by' => auth()->id(),
-        ]);
+        $labOrder->load('items');
+        foreach ($labOrder->items as $item) {
+            if (in_array($item->sample_status, ['pending', 'ordered', null])) {
+                $this->labService->collectSampleItem($item, auth()->id());
+            }
+        }
 
         return redirect()->route('laboratory.show', ['labOrder' => $labOrder])
-            ->with('success', 'Sample collected successfully.');
+            ->with('success', 'Samples collected successfully.');
     }
 
     public function collectSampleItem(LabOrder $labOrder, LabOrderItem $labOrderItem)
     {
-        $labOrderItem->update([
-            'sample_collected_at' => now(),
-            'sample_collected_by' => auth()->id(),
-            'sample_status' => 'collected',
-        ]);
+        $this->labService->collectSampleItem($labOrderItem, auth()->id());
 
         return redirect()->route('laboratory.show', ['labOrder' => $labOrder])
             ->with('success', 'Sample collected successfully.');
@@ -135,9 +145,7 @@ class LaboratoryController extends Controller
 
     public function receiveSampleItem(LabOrder $labOrder, LabOrderItem $labOrderItem)
     {
-        $labOrderItem->update([
-            'sample_status' => 'received',
-        ]);
+        $this->labService->receiveSampleItem($labOrderItem, auth()->id());
 
         return redirect()->route('laboratory.show', ['labOrder' => $labOrder])
             ->with('success', 'Sample received successfully.');
@@ -145,9 +153,7 @@ class LaboratoryController extends Controller
 
     public function processSampleItem(LabOrder $labOrder, LabOrderItem $labOrderItem)
     {
-        $labOrderItem->update([
-            'sample_status' => 'processing',
-        ]);
+        $this->labService->processSampleItem($labOrderItem, auth()->id());
 
         return redirect()->route('laboratory.show', ['labOrder' => $labOrder])
             ->with('success', 'Sample processing started.');
@@ -155,27 +161,92 @@ class LaboratoryController extends Controller
 
     public function completeSampleItem(LabOrder $labOrder, LabOrderItem $labOrderItem)
     {
-        $labOrderItem->update([
-            'sample_status' => 'completed',
-        ]);
+        $this->labService->completeSampleItem($labOrderItem, auth()->id());
 
         return redirect()->route('laboratory.show', ['labOrder' => $labOrder])
             ->with('success', 'Sample processing completed.');
     }
 
-    public function verifyResult(LabOrder $labOrder, LabResult $labResult)
+    public function verifyResult(Request $request, LabOrder $labOrder, LabResult $labResult)
     {
-        $labResult->markAsVerified(auth()->id());
+        $user = auth()->user();
+        if (! $user->can('laboratory.result') && ! $user->can('laboratory.verify') && ! $user->hasRole('Super Admin')) {
+            abort(403, 'Unauthorized to verify lab results.');
+        }
+
+        $this->labService->verifyResult($labResult, $user->id);
 
         return redirect()->route('laboratory.show', ['labOrder' => $labOrder])
             ->with('success', 'Result verified successfully.');
     }
 
-    public function rejectResult(LabOrder $labOrder, LabResult $labResult)
+    public function rejectResult(Request $request, LabOrder $labOrder, LabResult $labResult)
     {
-        $labResult->markAsRejected(auth()->id());
+        $user = auth()->user();
+        if (! $user->can('laboratory.result') && ! $user->can('laboratory.verify') && ! $user->hasRole('Super Admin')) {
+            abort(403, 'Unauthorized to reject lab results.');
+        }
+
+        $reason = $request->input('rejection_reason');
+        $this->labService->rejectResult($labResult, $user->id, $reason);
 
         return redirect()->route('laboratory.show', ['labOrder' => $labOrder])
             ->with('success', 'Result rejected successfully.');
+    }
+
+    public function patientHistory(Patient $patient): Response
+    {
+        $patient->load(['identifiers']);
+        $history = $this->labService->getPatientHistory($patient->id);
+
+        return Inertia::render('laboratory/patient-history', [
+            'patient' => $patient,
+            'history' => $history,
+        ]);
+    }
+
+    public function testHistory(LabTest $labTest): Response
+    {
+        $labTest->load('category');
+        $history = $this->labService->getTestHistory($labTest->id);
+
+        return Inertia::render('laboratory/test-history', [
+            'test' => $labTest,
+            'history' => $history,
+        ]);
+    }
+
+    public function printOrder(LabOrder $labOrder): Response
+    {
+        $labOrder->load([
+            'visit.patient',
+            'orderedBy',
+            'sampleCollectedBy',
+            'items.test',
+            'items.result.recordedBy',
+            'items.result.verifiedBy',
+            'items.receivedBy',
+            'items.processedBy',
+            'items.completedBy',
+        ]);
+
+        return Inertia::render('laboratory/print', [
+            'order' => $labOrder,
+        ]);
+    }
+
+    public function printResult(LabResult $labResult): Response
+    {
+        $labResult->load([
+            'test',
+            'orderItem.order.visit.patient',
+            'orderItem.order.orderedBy',
+            'recordedBy',
+            'verifiedBy',
+        ]);
+
+        return Inertia::render('laboratory/print-result', [
+            'result' => $labResult,
+        ]);
     }
 }

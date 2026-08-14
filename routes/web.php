@@ -187,6 +187,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->middleware('can:laboratory.order');
         Route::post('/', [LaboratoryController::class, 'store'])->name('laboratory.store')
             ->middleware('can:laboratory.order');
+        Route::get('/patient/{patient}/history', [LaboratoryController::class, 'patientHistory'])->name('laboratory.patientHistory')
+            ->middleware('can:laboratory.view');
+        Route::get('/test/{labTest}/history', [LaboratoryController::class, 'testHistory'])->name('laboratory.testHistory')
+            ->middleware('can:laboratory.view');
+        Route::get('/results/{labResult}/print', [LaboratoryController::class, 'printResult'])->name('laboratory.printResult')
+            ->middleware('can:laboratory.view');
+        Route::get('/{labOrder}/print', [LaboratoryController::class, 'printOrder'])->name('laboratory.printOrder')
+            ->middleware('can:laboratory.view');
         Route::get('/{labOrder}', [LaboratoryController::class, 'show'])->name('laboratory.show')
             ->middleware('can:laboratory.view');
         Route::post('/{labOrder}/start', [LaboratoryController::class, 'start'])->name('laboratory.start')

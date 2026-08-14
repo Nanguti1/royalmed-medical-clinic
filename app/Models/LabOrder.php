@@ -9,7 +9,7 @@ class LabOrder extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['visit_id', 'ordered_by', 'order_date', 'status', 'notes', 'in_progress_at', 'completed_at', 'priority', 'sample_collected_at', 'sample_collected_by'];
+    protected $fillable = ['visit_id', 'ordered_by', 'order_date', 'status', 'notes', 'accession_number', 'in_progress_at', 'completed_at', 'priority', 'sample_collected_at', 'sample_collected_by'];
 
     protected $casts = [
         'order_date' => 'datetime',

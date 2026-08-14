@@ -10,11 +10,12 @@ class Medicine extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable = ['name', 'generic_name', 'medicine_category_id', 'medicine_form_id', 'medicine_strength_id', 'unit_price', 'reorder_level'];
+    protected $fillable = ['name', 'generic_name', 'medicine_category_id', 'medicine_form_id', 'medicine_strength_id', 'unit_price', 'reorder_level', 'is_controlled', 'controlled_schedule'];
 
     protected $casts = [
         'unit_price' => 'decimal:2',
         'reorder_level' => 'decimal:2',
+        'is_controlled' => 'boolean',
     ];
 
     public function category()

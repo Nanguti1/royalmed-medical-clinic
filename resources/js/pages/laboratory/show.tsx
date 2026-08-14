@@ -87,7 +87,7 @@ export default function LaboratoryShow() {
                         <div>
                             <h1 className="text-3xl font-bold tracking-tight">Laboratory Order #{order.id}</h1>
                             <p className="text-muted-foreground">
-                                {patientName} • Visit #{order.visit_id}
+                                Accession: <span className="font-mono font-medium">{order.accession_number || `ACC-${order.id}`}</span> • {patientName} • Visit #{order.visit_id}
                             </p>
                         </div>
                     </div>
@@ -98,6 +98,18 @@ export default function LaboratoryShow() {
                         )}
                         {order.priority === 'urgent' && (
                             <Badge className="bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">URGENT</Badge>
+                        )}
+                        <Button variant="outline" asChild>
+                            <a href={`/laboratory/${order.id}/print`} target="_blank" rel="noreferrer">
+                                Print Report
+                            </a>
+                        </Button>
+                        {order.visit?.patient?.id && (
+                            <Button variant="outline" asChild>
+                                <a href={`/laboratory/patient/${order.visit.patient.id}/history`}>
+                                    Lab History
+                                </a>
+                            </Button>
                         )}
                         {order.status === 'ordered' && !order.sample_collected_at && (
                             <PermissionGuard permission="laboratory.order" fallback={null}>
@@ -132,7 +144,7 @@ export default function LaboratoryShow() {
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
                                 <User className="h-5 w-5" />
-                                Patient Information
+                                Patient & Specimen Info
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
@@ -146,9 +158,14 @@ export default function LaboratoryShow() {
                                 </Link>
                             </div>
                             <div>
+                                <p className="text-sm text-muted-foreground">Accession Number</p>
+                                <p className="font-mono font-medium">{order.accession_number || `ACC-${order.id}`}</p>
+                            </div>
+                            <div>
                                 <p className="text-sm text-muted-foreground">Visit ID</p>
                                 <p className="font-medium">#{order.visit_id}</p>
                             </div>
+
                             <div>
                                 <p className="text-sm text-muted-foreground">Order Date</p>
                                 <p className="font-medium">{new Date(order.created_at).toLocaleDateString()}</p>

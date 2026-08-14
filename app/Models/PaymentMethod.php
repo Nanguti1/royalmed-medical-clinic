@@ -9,10 +9,11 @@ class PaymentMethod extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'provider', 'details'];
+    protected $fillable = ['name', 'type', 'provider', 'details', 'is_active'];
 
     protected $casts = [
         'details' => 'json',
+        'is_active' => 'boolean',
     ];
 
     public function payments()

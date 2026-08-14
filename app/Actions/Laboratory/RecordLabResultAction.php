@@ -5,6 +5,7 @@ namespace App\Actions\Laboratory;
 use App\Exceptions\InvalidLabOrderStatusException;
 use App\Models\LabOrderItem;
 use App\Models\LabResult;
+use App\Services\LabService;
 use Illuminate\Support\Facades\Auth;
 
 class RecordLabResultAction
@@ -52,6 +53,10 @@ class RecordLabResultAction
             $result->autoDetectAbnormal($result->orderItem->order->visit->patient);
             $result->autoDetectCritical();
             $result->save();
+        }
+
+        if ($result->is_critical) {
+            app(LabService::class)->handleCriticalResultAlert($result, Auth::id());
         }
 
         return $result;

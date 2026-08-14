@@ -4,13 +4,22 @@ namespace Tests\Feature;
 
 use App\Actions\Inventory\ReceiveStockAction;
 use App\Actions\Inventory\RecordStockMovementAction;
+use App\Actions\Prescriptions\DispensePrescriptionAction;
 use App\Exceptions\InsufficientStockException;
 use App\Exceptions\MedicineExpiredException;
+use App\Exceptions\PatientAllergyException;
+use App\Models\DrugInteraction;
 use App\Models\InventoryBatch;
 use App\Models\Medicine;
+use App\Models\Patient;
+use App\Models\PatientAllergy;
+use App\Models\Prescription;
+use App\Models\PrescriptionItem;
 use App\Models\StockMovement;
 use App\Models\User;
+use App\Models\Visit;
 use App\Services\InventoryService;
+use App\Services\PrescriptionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -320,5 +329,147 @@ class PharmacyWorkflowTest extends TestCase
         // Expired batch should remain unchanged
         $this->assertEquals(30.0, $expiredBatch->quantity);
         $this->assertEquals(25.0, $validBatch->quantity);
+    }
+
+    public function test_dispensing_warns_or_blocks_on_documented_allergy()
+    {
+        $this->expectException(PatientAllergyException::class);
+
+        $patient = Patient::factory()->create();
+        PatientAllergy::create([
+            'patient_id' => $patient->id,
+            'allergen' => 'Penicillin',
+            'severity' => 'severe',
+            'is_active' => true,
+        ]);
+
+        $visit = Visit::factory()->create(['patient_id' => $patient->id]);
+        $prescription = Prescription::factory()->create(['visit_id' => $visit->id, 'finalized_at' => now()]);
+        $medicine = Medicine::factory()->create(['name' => 'Amoxicillin Penicillin 500mg']);
+        InventoryBatch::factory()->create([
+            'medicine_id' => $medicine->id,
+            'quantity' => 100,
+            'expiry_date' => now()->addDays(30),
+        ]);
+
+        PrescriptionItem::factory()->create([
+            'prescription_id' => $prescription->id,
+            'medicine_id' => $medicine->id,
+            'quantity' => 10,
+        ]);
+
+        $action = app(DispensePrescriptionAction::class);
+        $action->execute($prescription);
+    }
+
+    public function test_drug_interaction_warnings_are_generated()
+    {
+        $med1 = Medicine::factory()->create(['name' => 'Warfarin']);
+        $med2 = Medicine::factory()->create(['name' => 'Aspirin']);
+
+        DrugInteraction::create([
+            'medicine_id_1' => $med1->id,
+            'medicine_id_2' => $med2->id,
+            'severity' => 'major',
+            'description' => 'Increased risk of severe bleeding',
+        ]);
+
+        $service = app(PrescriptionService::class);
+        $warnings = $service->checkDrugInteractions([$med1->id, $med2->id]);
+
+        $this->assertCount(1, $warnings);
+        $this->assertEquals('major', $warnings[0]['severity']);
+        $this->assertStringContainsString('Warfarin', $warnings[0]['message']);
+    }
+
+    public function test_controlled_drug_dispensing_writes_register_entries()
+    {
+        $medicine = Medicine::factory()->create(['name' => 'Morphine 10mg', 'is_controlled' => true]);
+        $batch = InventoryBatch::factory()->create([
+            'medicine_id' => $medicine->id,
+            'quantity' => 50,
+            'expiry_date' => now()->addDays(30),
+        ]);
+
+        $service = app(InventoryService::class);
+        $service->deduct($medicine, 5.0);
+
+        $this->assertDatabaseHas('controlled_drug_register', [
+            'medicine_id' => $medicine->id,
+            'quantity' => 5.0,
+            'transaction_type' => 'dispense',
+        ]);
+
+        $this->assertDatabaseHas('activity_logs', [
+            'action' => 'controlled_drug_dispense',
+        ]);
+    }
+
+    public function test_stock_returns_and_adjustments_update_movements_and_audit_logs()
+    {
+        $medicine = Medicine::factory()->create();
+        $batch = InventoryBatch::factory()->create([
+            'medicine_id' => $medicine->id,
+            'quantity' => 50,
+        ]);
+
+        $service = app(InventoryService::class);
+
+        // Adjustment
+        $adjustment = $service->adjustStock([
+            'medicine_id' => $medicine->id,
+            'inventory_batch_id' => $batch->id,
+            'adjustment_type' => 'addition',
+            'quantity' => 20.0,
+            'reason' => 'Inventory Count Correction',
+        ]);
+
+        $batch->refresh();
+        $this->assertEquals(70.0, $batch->quantity);
+
+        $this->assertDatabaseHas('stock_adjustments', [
+            'id' => $adjustment->id,
+            'adjustment_type' => 'addition',
+            'quantity' => 20.0,
+        ]);
+
+        // Return
+        $service->returnStock([
+            'medicine_id' => $medicine->id,
+            'inventory_batch_id' => $batch->id,
+            'quantity' => 5.0,
+            'reason' => 'Unused Return',
+        ]);
+
+        $batch->refresh();
+        $this->assertEquals(75.0, $batch->quantity);
+
+        $this->assertDatabaseHas('stock_movements', [
+            'medicine_id' => $medicine->id,
+            'reference_type' => 'return',
+            'quantity' => 5.0,
+        ]);
+    }
+
+    public function test_low_stock_and_expiry_alerts_are_generated()
+    {
+        $lowStockMed = Medicine::factory()->create(['name' => 'Low Stock Drug', 'reorder_level' => 50.0]);
+        InventoryBatch::factory()->create([
+            'medicine_id' => $lowStockMed->id,
+            'quantity' => 10.0,
+        ]);
+
+        $expiredMed = Medicine::factory()->create(['name' => 'Expired Drug']);
+        InventoryBatch::factory()->expired()->create([
+            'medicine_id' => $expiredMed->id,
+            'quantity' => 20.0,
+        ]);
+
+        $service = app(InventoryService::class);
+        $alerts = $service->generateInventoryAlerts();
+
+        $types = array_column($alerts, 'type');
+        $this->assertContains('low_stock', $types);
+        $this->assertContains('expired_stock', $types);
     }
 }

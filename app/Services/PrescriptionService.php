@@ -7,7 +7,10 @@ use App\Actions\Prescriptions\CreatePrescriptionAction;
 use App\Actions\Prescriptions\CreatePrescriptionWithItemsAction;
 use App\Actions\Prescriptions\DispensePrescriptionAction;
 use App\Actions\Prescriptions\FinalizePrescriptionAction;
+use App\Models\DrugInteraction;
 use App\Models\Medicine;
+use App\Models\Patient;
+use App\Models\PatientAllergy;
 use App\Models\Prescription;
 use Illuminate\Support\Facades\DB;
 
@@ -92,5 +95,79 @@ class PrescriptionService
         // Note: Transaction is handled in DispensePrescriptionAction
         // to ensure atomicity across prescription state and inventory changes
         return $this->dispenseAction->execute($prescription);
+    }
+
+    public function checkPatientAllergies($patient, array $medicineIds): array
+    {
+        $patientModel = is_numeric($patient) ? Patient::find($patient) : $patient;
+        if (! $patientModel) {
+            return [];
+        }
+
+        $allergies = PatientAllergy::where('patient_id', $patientModel->id)
+            ->where('is_active', true)
+            ->get();
+
+        if ($allergies->isEmpty()) {
+            return [];
+        }
+
+        $warnings = [];
+        $medicines = Medicine::whereIn('id', $medicineIds)->get();
+
+        foreach ($medicines as $med) {
+            $medName = strtolower($med->name);
+            $genericName = strtolower($med->generic_name ?? '');
+
+            foreach ($allergies as $allergy) {
+                $allergen = strtolower($allergy->allergen);
+                if (($medName && str_contains($medName, $allergen)) || ($genericName && str_contains($genericName, $allergen)) || ($allergen && (str_contains($medName, $allergen) || str_contains($allergen, $medName)))) {
+                    $warnings[] = [
+                        'medicine_id' => $med->id,
+                        'medicine_name' => $med->name,
+                        'allergen' => $allergy->allergen,
+                        'severity' => $allergy->severity ?? 'severe',
+                        'message' => "Patient allergy match: {$med->name} matches allergen {$allergy->allergen} (Severity: {$allergy->severity})",
+                    ];
+                }
+            }
+        }
+
+        return $warnings;
+    }
+
+    public function checkDrugInteractions(array $medicineIds): array
+    {
+        $medicineIds = array_unique(array_filter($medicineIds));
+        if (count($medicineIds) < 2) {
+            return [];
+        }
+
+        $warnings = [];
+        $count = count($medicineIds);
+
+        for ($i = 0; $i < $count; $i++) {
+            for ($j = $i + 1; $j < $count; $j++) {
+                $med1 = $medicineIds[$i];
+                $med2 = $medicineIds[$j];
+
+                $interaction = DrugInteraction::findInteraction($med1, $med2);
+
+                if ($interaction) {
+                    $m1 = Medicine::find($med1);
+                    $m2 = Medicine::find($med2);
+                    $warnings[] = [
+                        'medicine_1' => $m1?->name,
+                        'medicine_2' => $m2?->name,
+                        'severity' => $interaction->severity,
+                        'description' => $interaction->description,
+                        'recommendation' => $interaction->recommendation,
+                        'message' => "Drug Interaction Warning ({$interaction->severity}): {$m1?->name} + {$m2?->name}",
+                    ];
+                }
+            }
+        }
+
+        return $warnings;
     }
 }

@@ -9,10 +9,29 @@ class LabOrderItem extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['lab_order_id', 'lab_test_id', 'status', 'sample_type', 'sample_collected_at', 'sample_collected_by', 'sample_status'];
+    protected $fillable = [
+        'lab_order_id',
+        'lab_test_id',
+        'status',
+        'sample_type',
+        'sample_collected_at',
+        'sample_collected_by',
+        'sample_status',
+        'accession_number',
+        'specimen_label',
+        'received_at',
+        'received_by',
+        'processing_at',
+        'processed_by',
+        'completed_at',
+        'completed_by',
+    ];
 
     protected $casts = [
         'sample_collected_at' => 'datetime',
+        'received_at' => 'datetime',
+        'processing_at' => 'datetime',
+        'completed_at' => 'datetime',
     ];
 
     public function order()
@@ -35,9 +54,24 @@ class LabOrderItem extends Model
         return $this->belongsTo(User::class, 'sample_collected_by');
     }
 
+    public function receivedBy()
+    {
+        return $this->belongsTo(User::class, 'received_by');
+    }
+
+    public function processedBy()
+    {
+        return $this->belongsTo(User::class, 'processed_by');
+    }
+
+    public function completedBy()
+    {
+        return $this->belongsTo(User::class, 'completed_by');
+    }
+
     public function isSampleCollected(): bool
     {
-        return $this->sample_collected_at !== null;
+        return $this->sample_collected_at !== null || $this->sample_status === 'collected';
     }
 
     public function isSampleReceived(): bool
@@ -57,16 +91,21 @@ class LabOrderItem extends Model
 
     public function canCollectSample(): bool
     {
-        return $this->sample_status === 'pending' && ! $this->isSampleCollected();
+        return in_array($this->sample_status, ['pending', 'ordered', null]) && ! $this->isSampleCollected();
     }
 
     public function canReceiveSample(): bool
     {
-        return $this->isSampleCollected() && $this->sample_status === 'collected';
+        return $this->sample_status === 'collected';
     }
 
     public function canProcessSample(): bool
     {
         return $this->sample_status === 'received';
+    }
+
+    public function canCompleteSample(): bool
+    {
+        return $this->sample_status === 'processing';
     }
 }
