@@ -1,11 +1,12 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
-import { Plus, Search, User } from 'lucide-react';
+import { Plus, Search, User, AlertTriangle, Shield, Heart } from 'lucide-react';
 import { EmptyState } from '@/components/empty-state';
 import { LoadingState } from '@/components/loading-state';
 import { PermissionGuard } from '@/components/permission-guard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import type { Patient } from '@/types/patient';
 
 type PageProps = {
@@ -60,7 +61,7 @@ export default function PatientIndex() {
                             <div className="relative flex-1">
                                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                 <Input
-                                    placeholder="Search by name or phone..."
+                                    placeholder="Search by name, hospital number, phone, or identifier..."
                                     value={data.search}
                                     onChange={(e) => setData('search', e.target.value)}
                                     className="pl-9"
@@ -122,10 +123,23 @@ function PatientCard({ patient }: { patient: Patient }) {
         .filter(Boolean)
         .join(' ');
 
+    const hasAlerts = patient.activeAlerts && patient.activeAlerts.length > 0;
+    const hasAllergies = patient.activeAllergies && patient.activeAllergies.length > 0;
+    const hasChronicConditions = patient.activeChronicConditions && patient.activeChronicConditions.length > 0;
+
     return (
         <Card className="hover:bg-accent/50 transition-colors cursor-pointer" onClick={() => (window.location.href = `/patients/${patient.id}`)}>
             <CardHeader>
-                <CardTitle className="text-lg">{fullName}</CardTitle>
+                <div className="flex items-start justify-between">
+                    <CardTitle className="text-lg">{fullName}</CardTitle>
+                    {hasAlerts && (
+                        <Badge variant="destructive" className="flex items-center gap-1">
+                            <AlertTriangle className="h-3 w-3" />
+                            Alert
+                        </Badge>
+                    )}
+                </div>
+                <p className="text-sm text-muted-foreground">{patient.hospital_number}</p>
             </CardHeader>
             <CardContent>
                 <div className="space-y-1 text-sm">
@@ -138,6 +152,20 @@ function PatientCard({ patient }: { patient: Patient }) {
                     {patient.gender && (
                         <p className="text-muted-foreground">{patient.gender.name}</p>
                     )}
+                    <div className="flex gap-2 mt-2">
+                        {hasAllergies && (
+                            <Badge variant="outline" className="flex items-center gap-1">
+                                <Shield className="h-3 w-3" />
+                                Allergies
+                            </Badge>
+                        )}
+                        {hasChronicConditions && (
+                            <Badge variant="outline" className="flex items-center gap-1">
+                                <Heart className="h-3 w-3" />
+                                Chronic
+                            </Badge>
+                        )}
+                    </div>
                 </div>
             </CardContent>
         </Card>
