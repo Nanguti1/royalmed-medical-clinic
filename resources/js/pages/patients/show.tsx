@@ -4,6 +4,7 @@ import { PermissionGuard } from '@/components/permission-guard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { PatientSafetyBanner } from '@/components/patient-safety-banner';
 import type { Patient } from '@/types/patient';
 
 type PageProps = {
@@ -70,27 +71,12 @@ export default function PatientShow() {
                     </div>
                 </div>
 
-                {/* Safety Alerts */}
-                {(patient.activeAlerts && patient.activeAlerts.length > 0) && (
-                    <div className="grid gap-4">
-                        {patient.activeAlerts.map((alert) => (
-                            <Card key={alert.id} className={`border-l-4 ${alert.severity === 'critical' ? 'border-l-red-500 bg-red-50' : 'border-l-yellow-500 bg-yellow-50'}`}>
-                                <CardContent className="pt-6">
-                                    <div className="flex items-start gap-3">
-                                        <AlertTriangle className={`h-5 w-5 ${alert.severity === 'critical' ? 'text-red-600' : 'text-yellow-600'}`} />
-                                        <div className="flex-1">
-                                            <p className="font-semibold">{alert.alert_type}</p>
-                                            <p className="text-sm">{alert.message}</p>
-                                        </div>
-                                        <Badge variant={alert.severity === 'critical' ? 'destructive' : 'secondary'}>
-                                            {alert.severity}
-                                        </Badge>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        ))}
-                    </div>
-                )}
+                {/* Patient Safety Banner */}
+                <PatientSafetyBanner
+                    allergies={patient.activeAllergies}
+                    chronicConditions={patient.activeChronicConditions}
+                    alerts={patient.activeAlerts}
+                />
 
                 {/* Patient Information */}
                 <div className="grid gap-6 md:grid-cols-2">
