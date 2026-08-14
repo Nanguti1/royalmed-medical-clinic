@@ -14,6 +14,7 @@ use App\Http\Controllers\PaymentReconciliationController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\PharmacyController;
 use App\Http\Controllers\PrescriptionController;
+use App\Http\Controllers\PrintController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VisitController;
@@ -286,6 +287,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('permissions')->group(function () {
         Route::get('/', [PermissionController::class, 'index'])->name('permissions.index')
             ->middleware('can:permissions.view');
+    });
+
+    Route::prefix('print')->group(function () {
+        Route::get('/receipt/{payment}', [PrintController::class, 'receipt'])->name('print.receipt');
+        Route::get('/label/specimen', [PrintController::class, 'specimenLabel'])->name('print.label.specimen');
+        Route::get('/label/inventory', [PrintController::class, 'inventoryLabel'])->name('print.label.inventory');
+        Route::get('/label/patient', [PrintController::class, 'patientCardLabel'])->name('print.label.patient');
     });
 });
 

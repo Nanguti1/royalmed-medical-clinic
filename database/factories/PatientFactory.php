@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 
 class PatientFactory extends Factory
 {
+    protected static $factory = PatientFactory::class;
+
     protected $model = Patient::class;
 
     public function definition(): array

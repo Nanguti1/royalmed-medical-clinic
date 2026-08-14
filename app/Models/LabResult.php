@@ -28,6 +28,11 @@ class LabResult extends Model
         return $this->belongsTo(LabOrderItem::class, 'lab_order_item_id');
     }
 
+    public function labOrder()
+    {
+        return $this->belongsTo(LabOrder::class);
+    }
+
     public function recordedBy()
     {
         return $this->belongsTo(User::class, 'recorded_by');

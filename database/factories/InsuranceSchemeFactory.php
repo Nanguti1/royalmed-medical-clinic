@@ -16,12 +16,12 @@ class InsuranceSchemeFactory extends Factory
             'description' => fake()->optional()->sentence(),
             'scheme_type' => fake()->randomElement(['outpatient', 'inpatient', 'comprehensive', 'dental', 'optical']),
             'coverage_limit' => fake()->optional()->randomFloat(2, 10000, 500000),
-            'co_payment_amount' => fake()->optional()->randomFloat(2, 0, 5000),
-            'co_payment_percentage' => fake()->optional()->randomFloat(2, 0, 20),
+            'co_payment_amount' => fake()->randomFloat(2, 0, 5000),
+            'co_payment_percentage' => fake()->randomFloat(2, 0, 20),
             'requires_preauthorization' => fake()->boolean(30),
             'is_active' => true,
             'effective_from' => fake()->optional()->date(),
-            'effective_to' => fake()->optional()->date('+1 year'),
+            'effective_to' => fake()->optional()->dateTimeBetween('+1 year', '+2 years'),
             'notes' => fake()->optional()->sentence(),
         ];
     }

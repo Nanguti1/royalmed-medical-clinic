@@ -217,6 +217,21 @@ class Patient extends Model
         ];
     }
 
+    public function getFullNameAttribute(): string
+    {
+        return trim($this->first_name.' '.$this->last_name);
+    }
+
+    public function routeNotificationForMail($notification)
+    {
+        return $this->email;
+    }
+
+    public function routeNotificationForSms($notification)
+    {
+        return $this->phone;
+    }
+
     public function createdBy()
     {
         return $this->belongsTo(User::class, 'created_by');

@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\DoctorSchedule;
+use App\Models\DentalChairSchedule;
 use App\Models\Patient;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -19,7 +19,7 @@ class AppointmentFactory extends Factory
             'appointment_number' => 'APT'.fake()->unique()->numerify('########'),
             'patient_id' => Patient::factory(),
             'doctor_id' => User::factory(),
-            'dental_chair_id' => fake()->optional(DoctorSchedule::factory()),
+            'dental_chair_id' => fake()->optional(0.3, null) ? DentalChairSchedule::factory() : null,
             'visit_id' => null,
             'consultation_id' => null,
             'appointment_date' => $appointmentDate,
@@ -35,7 +35,7 @@ class AppointmentFactory extends Factory
             'checked_in_at' => fake()->optional()->dateTime('-29 days'),
             'checked_out_at' => fake()->optional()->dateTime('-29 days'),
             'created_by' => User::factory(),
-            'updated_by' => fake()->optional(User::factory()),
+            'updated_by' => fake()->optional(0.3, null) ? User::factory() : null,
         ];
     }
 }
