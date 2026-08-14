@@ -33,7 +33,6 @@ class Patient extends Model
         return $this->hasMany(PatientIdentifier::class);
     }
 
-
     public function contacts()
     {
         return $this->hasMany(PatientContact::class);
@@ -92,6 +91,42 @@ class Patient extends Model
     public function sub_county()
     {
         return $this->belongsTo(SubCounty::class, 'sub_county_id');
+    }
+
+    public function clinicalAttachments()
+    {
+        return $this->hasMany(ClinicalAttachment::class);
+    }
+
+    public function activeAlerts()
+    {
+        return $this->hasMany(PatientAlert::class)
+            ->where('is_active', true)
+            ->where(function ($query) {
+                $query->whereNull('starts_at')->orWhere('starts_at', '<=', now());
+            })
+            ->where(function ($query) {
+                $query->whereNull('ends_at')->orWhere('ends_at', '>=', now());
+            });
+    }
+
+    public function activeAllergies()
+    {
+        return $this->hasMany(PatientAllergy::class)->where('is_active', true);
+    }
+
+    public function activeChronicConditions()
+    {
+        return $this->hasMany(PatientChronicCondition::class)->where('is_active', true);
+    }
+
+    public function getSafetySummaryAttribute(): array
+    {
+        return [
+            'alerts' => $this->activeAlerts()->get(),
+            'allergies' => $this->activeAllergies()->get(),
+            'chronic_conditions' => $this->activeChronicConditions()->get(),
+        ];
     }
 
     public function createdBy()

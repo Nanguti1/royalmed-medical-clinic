@@ -33,6 +33,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->middleware('can:patients.view');
         Route::get('/create', [PatientController::class, 'create'])->name('patients.create')
             ->middleware('can:patients.create');
+        Route::post('/check-duplicates', [PatientController::class, 'checkDuplicates'])->name('patients.checkDuplicates')
+            ->middleware('can:patients.view');
         Route::post('/', [PatientController::class, 'store'])->name('patients.store')
             ->middleware('can:patients.create');
         Route::get('/{patient}', [PatientController::class, 'show'])->name('patients.show')
@@ -40,6 +42,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/{patient}/edit', [PatientController::class, 'edit'])->name('patients.edit')
             ->middleware('can:patients.update');
         Route::put('/{patient}', [PatientController::class, 'update'])->name('patients.update')
+            ->middleware('can:patients.update');
+        Route::post('/{patient}/merge', [PatientController::class, 'merge'])->name('patients.merge')
             ->middleware('can:patients.update');
         Route::delete('/{patient}', [PatientController::class, 'destroy'])->name('patients.destroy')
             ->middleware('can:patients.delete');

@@ -46,7 +46,7 @@ class ConsultationController extends Controller
 
     public function create(Visit $visit): Response
     {
-        $visit->load(['patient', 'vitalSign', 'queueEntry']);
+        $visit->load(['patient.activeAlerts', 'patient.activeAllergies', 'patient.activeChronicConditions', 'vitalSign', 'queueEntry']);
 
         return Inertia::render('consultations/create', [
             'visit' => $visit,
@@ -63,7 +63,7 @@ class ConsultationController extends Controller
 
     public function show(Consultation $consultation): Response
     {
-        $consultation->load(['visit.patient', 'visit.vitalSign', 'visit.queueEntry', 'visit.labOrders.items.test', 'visit.labOrders.items.result', 'diagnoses', 'prescriptions']);
+        $consultation->load(['visit.patient.activeAlerts', 'visit.patient.activeAllergies', 'visit.patient.activeChronicConditions', 'visit.vitalSign', 'visit.queueEntry', 'visit.labOrders.items.test', 'visit.labOrders.items.result', 'diagnoses', 'prescriptions']);
 
         return Inertia::render('consultations/show', [
             'consultation' => $consultation,
@@ -72,7 +72,7 @@ class ConsultationController extends Controller
 
     public function edit(Consultation $consultation): Response
     {
-        $consultation->load(['visit.patient', 'visit.vitalSign', 'diagnoses', 'prescriptions']);
+        $consultation->load(['visit.patient.activeAlerts', 'visit.patient.activeAllergies', 'visit.patient.activeChronicConditions', 'visit.vitalSign', 'diagnoses', 'prescriptions']);
 
         return Inertia::render('consultations/edit', [
             'consultation' => $consultation,

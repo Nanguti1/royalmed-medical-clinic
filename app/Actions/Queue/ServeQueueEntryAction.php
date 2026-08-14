@@ -14,10 +14,6 @@ class ServeQueueEntryAction
                 throw InvalidQueueStateException::cannotServeServed();
             }
 
-            if ($entry->isWaiting()) {
-                throw InvalidQueueStateException::cannotServeUncalled();
-            }
-
             throw InvalidQueueStateException::invalidStatus($entry->status, 'completed');
         }
 

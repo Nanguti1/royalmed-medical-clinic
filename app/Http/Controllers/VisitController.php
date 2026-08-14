@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\InvalidQueueStateException;
 use App\Http\Requests\AddToQueueRequest;
 use App\Http\Requests\CaptureVitalsRequest;
 use App\Http\Requests\CreateVisitRequest;
@@ -77,7 +78,7 @@ class VisitController extends Controller
 
     public function show(Visit $visit): Response
     {
-        $visit->load(['patient', 'vitalSign', 'queueEntry', 'consultation', 'prescriptions', 'invoice']);
+        $visit->load(['patient.activeAlerts', 'patient.activeAllergies', 'patient.activeChronicConditions', 'vitalSign', 'queueEntry', 'consultation', 'prescriptions', 'invoice']);
 
         return Inertia::render('visits/show', [
             'visit' => $visit,
@@ -86,7 +87,7 @@ class VisitController extends Controller
 
     public function triage(Visit $visit): Response
     {
-        $visit->load(['patient', 'vitalSign']);
+        $visit->load(['patient.activeAlerts', 'patient.activeAllergies', 'patient.activeChronicConditions', 'vitalSign']);
 
         return Inertia::render('visits/triage', [
             'visit' => $visit,
@@ -103,28 +104,39 @@ class VisitController extends Controller
 
     public function queue(Request $request): Response
     {
-        $entries = $this->queueService->waiting();
-        $entries->load(['visit.patient']);
+        $department = $request->input('department');
+        $entries = $this->queueService->getWorklist($department);
 
         return Inertia::render('visits/queue', [
             'entries' => $entries,
+            'department' => $department ?? '',
         ]);
     }
 
     public function addToQueue(AddToQueueRequest $request, Visit $visit)
     {
-        $entry = $this->queueService->add(array_merge($request->validated(), ['visit_id' => $visit->id]));
+        try {
+            $entry = $this->queueService->add(array_merge($request->validated(), ['visit_id' => $visit->id]));
 
-        return redirect()->route('visits.queue')
-            ->with('success', 'Added to queue successfully.');
+            return redirect()->route('visits.queue', ['department' => $entry->department])
+                ->with('success', "Added to {$entry->department} queue successfully with queue number {$entry->queue_number}.");
+        } catch (InvalidQueueStateException $e) {
+            return redirect()->back()
+                ->with('error', $e->getMessage());
+        }
     }
 
     public function removeFromQueue(QueueEntry $entry)
     {
-        $this->queueService->remove($entry);
+        try {
+            $this->queueService->remove($entry);
 
-        return redirect()->route('visits.queue')
-            ->with('success', 'Removed from queue successfully.');
+            return redirect()->route('visits.queue')
+                ->with('success', 'Removed from queue successfully.');
+        } catch (InvalidQueueStateException $e) {
+            return redirect()->back()
+                ->with('error', $e->getMessage());
+        }
     }
 
     public function start(Visit $visit)

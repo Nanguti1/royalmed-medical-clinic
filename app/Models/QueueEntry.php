@@ -50,7 +50,7 @@ class QueueEntry extends Model
 
     public function canServe(): bool
     {
-        return ($this->isCalled() || $this->isInProgress()) && ! $this->isServed();
+        return ($this->isWaiting() || $this->isCalled() || $this->isInProgress()) && ! $this->isServed();
     }
 
     public function canRemove(): bool

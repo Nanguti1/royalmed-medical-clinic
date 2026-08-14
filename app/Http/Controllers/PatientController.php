@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\MergePatientsRequest;
 use App\Http\Requests\StorePatientRequest;
 use App\Http\Requests\UpdatePatientRequest;
 use App\Models\County;
 use App\Models\Gender;
 use App\Models\Patient;
 use App\Services\PatientService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -19,22 +21,24 @@ class PatientController extends Controller
     public function __construct(PatientService $service)
     {
         $this->service = $service;
-        $this->middleware('permission:patients.view')->only(['index', 'show']);
+        $this->middleware('permission:patients.view')->only(['index', 'show', 'checkDuplicates']);
         $this->middleware('permission:patients.create')->only(['create', 'store']);
-        $this->middleware('permission:patients.update')->only(['edit', 'update']);
+        $this->middleware('permission:patients.update')->only(['edit', 'update', 'merge']);
         $this->middleware('permission:patients.delete')->only(['destroy']);
     }
 
     public function index(Request $request): Response
     {
         $query = $request->input('search');
-        $patients = Patient::with(['gender', 'county', 'sub_county'])
+        $patients = Patient::with(['gender', 'county', 'sub_county', 'identifiers', 'activeAlerts', 'activeAllergies'])
             ->where(function ($q) use ($query) {
                 if ($query) {
                     $q->where('first_name', 'like', "%{$query}%")
                         ->orWhere('last_name', 'like', "%{$query}%")
+                        ->orWhere('hospital_number', 'like', "%{$query}%")
                         ->orWhere('phone', 'like', "%{$query}%")
-                        ->orWhere('email', 'like', "%{$query}%");
+                        ->orWhere('email', 'like', "%{$query}%")
+                        ->orWhereHas('identifiers', fn ($i) => $i->where('identifier_value', 'like', "%{$query}%"));
                 }
             })
             ->orderBy('created_at', 'desc')
@@ -56,15 +60,46 @@ class PatientController extends Controller
 
     public function store(StorePatientRequest $request)
     {
-        $patient = $this->service->register($request->validated());
+        $validated = $request->validated();
+
+        if (! $request->boolean('confirm_duplicate')) {
+            $duplicates = $this->service->findDuplicates($validated);
+            if ($duplicates->isNotEmpty()) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with([
+                        'warning' => 'Potential duplicate patient(s) detected. Please confirm to proceed.',
+                        'duplicate_candidates' => $duplicates,
+                    ]);
+            }
+        }
+
+        $patient = $this->service->register($validated);
 
         return redirect()->route('patients.show', $patient)
             ->with('success', 'Patient registered successfully.');
     }
 
+    public function checkDuplicates(Request $request): JsonResponse
+    {
+        $duplicates = $this->service->findDuplicates($request->all(), $request->input('ignore_patient_id'));
+
+        return response()->json([
+            'has_duplicates' => $duplicates->isNotEmpty(),
+            'candidates' => $duplicates,
+        ]);
+    }
+
     public function show(Patient $patient): Response
     {
-        $patient->load(['gender', 'county', 'sub_county']);
+        $patient->load([
+            'gender', 'county', 'sub_county',
+            'identifiers', 'contacts', 'addresses', 'emergencyContacts',
+            'relationships.relatedPatient', 'allergies.recordedBy',
+            'chronicConditions.recordedBy', 'alerts.createdBy',
+            'activeAlerts', 'activeAllergies', 'activeChronicConditions',
+            'visits.vitalSign',
+        ]);
 
         return Inertia::render('patients/show', [
             'patient' => $patient,
@@ -73,7 +108,11 @@ class PatientController extends Controller
 
     public function edit(Patient $patient): Response
     {
-        $patient->load(['gender', 'county', 'sub_county']);
+        $patient->load([
+            'gender', 'county', 'sub_county',
+            'identifiers', 'contacts', 'addresses', 'emergencyContacts',
+            'relationships', 'allergies', 'chronicConditions', 'alerts',
+        ]);
 
         return Inertia::render('patients/edit', [
             'patient' => $patient,
@@ -88,6 +127,17 @@ class PatientController extends Controller
 
         return redirect()->route('patients.show', $patient)
             ->with('success', 'Patient updated successfully.');
+    }
+
+    public function merge(MergePatientsRequest $request, Patient $patient)
+    {
+        $targetPatient = Patient::findOrFail($request->input('target_patient_id'));
+        $reason = $request->input('reason');
+
+        $mergeRecord = $this->service->merge($patient, $targetPatient, $request->user(), $reason);
+
+        return redirect()->route('patients.show', $targetPatient)
+            ->with('success', "Patient {$patient->hospital_number} successfully merged into {$targetPatient->hospital_number}.");
     }
 
     public function destroy(Patient $patient)

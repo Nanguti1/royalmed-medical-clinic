@@ -6,6 +6,7 @@ use App\Actions\Queue\AddToQueueAction;
 use App\Actions\Queue\CallQueueEntryAction;
 use App\Actions\Queue\RemoveFromQueueAction;
 use App\Actions\Queue\ServeQueueEntryAction;
+use App\Exceptions\InvalidQueueStateException;
 use App\Models\QueueEntry;
 use Illuminate\Support\Facades\DB;
 
@@ -55,8 +56,70 @@ class QueueService
         });
     }
 
-    public function waiting()
+    public function waiting(?string $department = null)
     {
-        return QueueEntry::where('status', 'waiting')->orderBy('position')->get();
+        return $this->getWorklist($department, ['waiting']);
+    }
+
+    public function getWorklist(?string $department = null, array $statuses = ['waiting', 'called'])
+    {
+        $query = QueueEntry::with(['visit.patient.activeAlerts', 'visit.patient.activeAllergies', 'visit.vitalSign'])
+            ->whereIn('status', $statuses);
+
+        if ($department) {
+            $query->where('department', $department);
+        }
+
+        return $query->orderByRaw("
+            CASE priority
+                WHEN 'emergency' THEN 1
+                WHEN 'critical' THEN 2
+                WHEN 'urgent' THEN 3
+                WHEN 'high' THEN 4
+                WHEN 'elderly' THEN 5
+                WHEN 'child' THEN 6
+                WHEN 'pregnant' THEN 7
+                WHEN 'normal' THEN 8
+                WHEN 'low' THEN 9
+                ELSE 10
+            END ASC,
+            position ASC,
+            created_at ASC
+        ")->get();
+    }
+
+    public function start(QueueEntry $entry): QueueEntry
+    {
+        return DB::transaction(function () use ($entry) {
+            if ($entry->isServed()) {
+                throw InvalidQueueStateException::cannotServeServed();
+            }
+
+            $entry->update([
+                'status' => 'in_progress',
+                'started_at' => now(),
+                'waiting_minutes' => $entry->created_at?->diffInMinutes(now()),
+            ]);
+
+            return $entry;
+        });
+    }
+
+    public function skip(QueueEntry $entry): QueueEntry
+    {
+        return DB::transaction(function () use ($entry) {
+            $entry->update(['status' => 'skipped']);
+
+            return $entry;
+        });
+    }
+
+    public function cancel(QueueEntry $entry): QueueEntry
+    {
+        return DB::transaction(function () use ($entry) {
+            $entry->update(['status' => 'cancelled']);
+
+            return $entry;
+        });
     }
 }

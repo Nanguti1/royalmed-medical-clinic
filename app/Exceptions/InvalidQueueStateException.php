@@ -31,6 +31,11 @@ class InvalidQueueStateException extends Exception
         return new self('Cannot remove a queue entry that has already been served');
     }
 
+    public static function activeEntryExists(string $department): self
+    {
+        return new self("An active queue entry already exists for this visit in the {$department} department.");
+    }
+
     public static function invalidStatus(string $from, string $to): self
     {
         return new self("Invalid queue status transition from {$from} to {$to}");
