@@ -106,6 +106,41 @@ class Patient extends Model
         return $this->consents()->active();
     }
 
+    public function appointments()
+    {
+        return $this->hasMany(Appointment::class);
+    }
+
+    public function upcomingAppointments()
+    {
+        return $this->appointments()->upcoming()->whereIn('status', ['scheduled', 'confirmed']);
+    }
+
+    public function waitlistEntries()
+    {
+        return $this->hasMany(WaitlistEntry::class);
+    }
+
+    public function vaccinationRecords()
+    {
+        return $this->hasMany(VaccinationRecord::class);
+    }
+
+    public function vaccinationCertificates()
+    {
+        return $this->hasMany(VaccinationCertificate::class);
+    }
+
+    public function dentalCharts()
+    {
+        return $this->hasMany(DentalChart::class);
+    }
+
+    public function dentalTreatmentPlans()
+    {
+        return $this->hasMany(DentalTreatmentPlan::class);
+    }
+
     public function activeCoverages()
     {
         return $this->coverages()->active();
