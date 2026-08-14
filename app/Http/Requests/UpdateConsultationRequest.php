@@ -19,6 +19,21 @@ class UpdateConsultationRequest extends FormRequest
             'examination' => 'nullable|string',
             'plan' => 'nullable|string',
             'notes' => 'nullable|string',
+            'subjective' => 'nullable|string',
+            'objective' => 'nullable|string',
+            'assessment' => 'nullable|string',
+            'follow_up_date' => 'nullable|date',
+            'follow_up_notes' => 'nullable|string',
+            'follow_up_type' => 'nullable|string|max:100',
+
+            'diagnoses' => 'nullable|array',
+            'diagnoses.*.id' => 'nullable|exists:diagnoses,id',
+            'diagnoses.*.code' => 'nullable|string|max:100',
+            'diagnoses.*.coding_system' => 'nullable|string|max:100',
+            'diagnoses.*.description' => 'required_with:diagnoses|string|max:500',
+            'diagnoses.*.diagnosis_type' => 'nullable|string|in:primary,differential',
+            'diagnoses.*.certainty' => 'nullable|string|max:100',
+            'diagnoses.*.rank' => 'nullable|integer',
         ];
     }
 }

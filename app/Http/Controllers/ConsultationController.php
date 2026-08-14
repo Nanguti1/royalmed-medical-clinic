@@ -5,10 +5,13 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreConsultationRequest;
 use App\Http\Requests\UpdateConsultationRequest;
 use App\Models\Consultation;
+use App\Models\ConsultationTemplate;
 use App\Models\Visit;
 use App\Services\ConsultationService;
 use App\Services\QueueService;
 use App\Services\VisitService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -47,9 +50,13 @@ class ConsultationController extends Controller
     public function create(Visit $visit): Response
     {
         $visit->load(['patient.activeAlerts', 'patient.activeAllergies', 'patient.activeChronicConditions', 'vitalSign', 'queueEntry']);
+        $clinicalSummary = $this->consultationService->getClinicalSummary($visit->patient);
+        $templates = ConsultationTemplate::where('is_active', true)->get();
 
         return Inertia::render('consultations/create', [
             'visit' => $visit,
+            'clinical_summary' => $clinicalSummary,
+            'templates' => $templates,
         ]);
     }
 
@@ -63,20 +70,43 @@ class ConsultationController extends Controller
 
     public function show(Consultation $consultation): Response
     {
-        $consultation->load(['visit.patient.activeAlerts', 'visit.patient.activeAllergies', 'visit.patient.activeChronicConditions', 'visit.vitalSign', 'visit.queueEntry', 'visit.labOrders.items.test', 'visit.labOrders.items.result', 'diagnoses', 'prescriptions']);
+        $consultation->load([
+            'visit.patient.activeAlerts', 'visit.patient.activeAllergies', 'visit.patient.activeChronicConditions',
+            'visit.vitalSign', 'visit.queueEntry', 'visit.labOrders.items.test', 'visit.labOrders.items.result',
+            'diagnoses', 'primaryDiagnoses', 'differentialDiagnoses', 'prescriptions', 'attachments',
+        ]);
+
+        $clinicalSummary = $this->consultationService->getClinicalSummary($consultation->visit->patient);
 
         return Inertia::render('consultations/show', [
             'consultation' => $consultation,
+            'clinical_summary' => $clinicalSummary,
         ]);
     }
 
     public function edit(Consultation $consultation): Response
     {
-        $consultation->load(['visit.patient.activeAlerts', 'visit.patient.activeAllergies', 'visit.patient.activeChronicConditions', 'visit.vitalSign', 'diagnoses', 'prescriptions']);
+        $consultation->load([
+            'visit.patient.activeAlerts', 'visit.patient.activeAllergies', 'visit.patient.activeChronicConditions',
+            'visit.vitalSign', 'diagnoses', 'primaryDiagnoses', 'differentialDiagnoses', 'prescriptions', 'attachments',
+        ]);
+
+        $clinicalSummary = $this->consultationService->getClinicalSummary($consultation->visit->patient);
+        $templates = ConsultationTemplate::where('is_active', true)->get();
 
         return Inertia::render('consultations/edit', [
             'consultation' => $consultation,
+            'clinical_summary' => $clinicalSummary,
+            'templates' => $templates,
         ]);
+    }
+
+    public function applyTemplate(Request $request, ConsultationTemplate $template): JsonResponse
+    {
+        $existingData = $request->only(['chief_complaint', 'subjective', 'history', 'objective', 'examination', 'assessment', 'notes', 'plan']);
+        $merged = $this->consultationService->applyTemplate($template, $existingData);
+
+        return response()->json($merged);
     }
 
     public function update(UpdateConsultationRequest $request, Consultation $consultation)

@@ -83,6 +83,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->middleware('can:consultations.create');
         Route::post('/', [ConsultationController::class, 'store'])->name('consultations.store')
             ->middleware('can:consultations.create');
+        Route::post('/templates/{template}/apply', [ConsultationController::class, 'applyTemplate'])->name('consultations.applyTemplate')
+            ->middleware('can:consultations.create');
         Route::get('/{consultation}', [ConsultationController::class, 'show'])->name('consultations.show')
             ->middleware('can:consultations.view');
         Route::get('/{consultation}/edit', [ConsultationController::class, 'edit'])->name('consultations.edit')
