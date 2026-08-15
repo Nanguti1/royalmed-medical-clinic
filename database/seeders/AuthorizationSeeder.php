@@ -18,6 +18,8 @@ class AuthorizationSeeder extends Seeder
             'patients.view', 'patients.create', 'patients.update', 'patients.delete',
             // Visits
             'visits.view', 'visits.create', 'visits.update', 'visits.cancel',
+            // Appointments
+            'appointments.view', 'appointments.create', 'appointments.update', 'appointments.delete',
             // Consultations
             'consultations.view', 'consultations.create', 'consultations.update',
             // Pharmacy
@@ -48,15 +50,18 @@ class AuthorizationSeeder extends Seeder
             'Administrator' => [
                 'patients.view', 'patients.create', 'patients.update',
                 'visits.view', 'visits.create', 'visits.update',
+                'appointments.view', 'appointments.create', 'appointments.update',
                 'users.view', 'users.create', 'users.update', 'roles.view', 'roles.create', 'roles.update', 'permissions.view',
                 'reports.view',
             ],
             'Receptionist' => [
                 'patients.view', 'patients.create', 'visits.view', 'visits.create',
+                'appointments.view', 'appointments.create',
                 'reports.view',
             ],
             'Doctor' => [
                 'patients.view', 'consultations.view', 'consultations.create', 'consultations.update', 'laboratory.order', 'laboratory.view',
+                'appointments.view',
             ],
             'Pharmacist' => [
                 'pharmacy.view', 'pharmacy.dispense', 'inventory.view', 'inventory.adjust',

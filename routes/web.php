@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\ConsultationController;
 use App\Http\Controllers\DashboardController;
@@ -48,6 +49,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->middleware('can:patients.update');
         Route::delete('/{patient}', [PatientController::class, 'destroy'])->name('patients.destroy')
             ->middleware('can:patients.delete');
+    });
+
+    Route::prefix('appointments')->group(function () {
+        Route::get('/', [AppointmentController::class, 'index'])->name('appointments.index');
+        Route::get('/create', [AppointmentController::class, 'create'])->name('appointments.create');
+        Route::post('/', [AppointmentController::class, 'store'])->name('appointments.store');
+        Route::get('/{appointment}', [AppointmentController::class, 'show'])->name('appointments.show');
+        Route::get('/{appointment}/edit', [AppointmentController::class, 'edit'])->name('appointments.edit');
+        Route::put('/{appointment}', [AppointmentController::class, 'update'])->name('appointments.update');
+        Route::delete('/{appointment}', [AppointmentController::class, 'destroy'])->name('appointments.destroy');
+        Route::get('/calendar', [AppointmentController::class, 'calendar'])->name('appointments.calendar');
+        Route::get('/waitlist', [AppointmentController::class, 'waitlist'])->name('appointments.waitlist');
+        Route::prefix('schedules')->group(function () {
+            Route::get('/doctor', [AppointmentController::class, 'scheduleDoctor'])->name('appointments.schedules.doctor');
+            Route::get('/dental', [AppointmentController::class, 'scheduleDental'])->name('appointments.schedules.dental');
+        });
     });
 
     Route::prefix('visits')->group(function () {

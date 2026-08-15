@@ -11,7 +11,8 @@
       "Exec(curl)",
       "Exec(grep)",
       "Exec(composer dump-autoload)",
-      "Exec(mkdir)"
+      "Exec(mkdir)",
+      "Exec(find)"
     ]
   }
 }
