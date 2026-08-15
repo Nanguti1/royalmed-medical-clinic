@@ -17,6 +17,7 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PaymentReconciliationController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\PharmacyController;
+use App\Http\Controllers\PortalController;
 use App\Http\Controllers\PrescriptionController;
 use App\Http\Controllers\PrintController;
 use App\Http\Controllers\ReportController;
@@ -160,6 +161,29 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/claims', [ReportController::class, 'claims'])->name('reports.claims');
         Route::get('/sha-moh', [ReportController::class, 'shaMoh'])->name('reports.sha-moh');
         Route::get('/billing', [ReportController::class, 'billing'])->name('reports.billing');
+    });
+
+    Route::prefix('portal')->group(function () {
+        Route::prefix('patient')->group(function () {
+            Route::get('/dashboard', [PortalController::class, 'patientDashboard'])->name('portal.patient.dashboard');
+            Route::get('/appointments', [PortalController::class, 'patientAppointments'])->name('portal.patient.appointments');
+            Route::get('/book-appointment', [PortalController::class, 'patientBookAppointment'])->name('portal.patient.book-appointment');
+            Route::get('/lab-results', [PortalController::class, 'patientLabResults'])->name('portal.patient.lab-results');
+            Route::get('/billing', [PortalController::class, 'patientBilling'])->name('portal.patient.billing');
+            Route::get('/payments', [PortalController::class, 'patientPayments'])->name('portal.patient.payments');
+            Route::get('/documents', [PortalController::class, 'patientDocuments'])->name('portal.patient.documents');
+            Route::get('/messages', [PortalController::class, 'patientMessages'])->name('portal.patient.messages');
+            Route::get('/profile', [PortalController::class, 'patientProfile'])->name('portal.patient.profile');
+        });
+        Route::prefix('staff')->group(function () {
+            Route::get('/dashboard', [PortalController::class, 'staffDashboard'])->name('portal.staff.dashboard');
+            Route::get('/schedule', [PortalController::class, 'staffSchedule'])->name('portal.staff.schedule');
+            Route::get('/tasks', [PortalController::class, 'staffTasks'])->name('portal.staff.tasks');
+            Route::get('/announcements', [PortalController::class, 'staffAnnouncements'])->name('portal.staff.announcements');
+            Route::get('/messages', [PortalController::class, 'staffMessages'])->name('portal.staff.messages');
+            Route::get('/leave-requests', [PortalController::class, 'staffLeaveRequests'])->name('portal.staff.leave-requests');
+            Route::get('/attendance', [PortalController::class, 'staffAttendance'])->name('portal.staff.attendance');
+        });
     });
 
     Route::prefix('visits')->group(function () {
