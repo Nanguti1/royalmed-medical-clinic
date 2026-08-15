@@ -269,6 +269,70 @@ export type ConsultationFormData = {
     notes?: string;
 };
 
+export type ConsultationTemplate = {
+    id: number;
+    name: string;
+    description: string | null;
+    category: string | null;
+    chief_complaint_template: string | null;
+    history_template: string | null;
+    examination_template: string | null;
+    plan_template: string | null;
+    notes_template: string | null;
+    is_active: boolean;
+    created_by: number | null;
+    created_at: string;
+    updated_at: string;
+};
+
+export type ConsultationTemplateFormData = {
+    name: string;
+    description?: string;
+    category?: string;
+    chief_complaint_template?: string;
+    history_template?: string;
+    examination_template?: string;
+    plan_template?: string;
+    notes_template?: string;
+    is_active?: boolean;
+};
+
+export type ConsultationAttachment = {
+    id: number;
+    consultation_id: number;
+    file_name: string;
+    file_path: string;
+    file_type: string;
+    file_size: number;
+    description: string | null;
+    uploaded_by: number | null;
+    created_at: string;
+    updated_at: string;
+};
+
+export type ConsultationAttachmentFormData = {
+    consultation_id: number;
+    file: File;
+    description?: string;
+};
+
+export type SOAPNote = {
+    subjective: string;
+    objective: string;
+    assessment: string;
+    plan: string;
+};
+
+export type ConsultationSOAPFormData = {
+    visit_id: number;
+    provider_id?: number;
+    subjective?: string;
+    objective?: string;
+    assessment?: string;
+    plan?: string;
+    notes?: string;
+};
+
 export type PrescriptionFormData = {
     visit_id: number;
     prescribed_by?: number;

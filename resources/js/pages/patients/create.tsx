@@ -6,8 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import type { Gender } from '@/types/patient';
+import type { Gender, Patient } from '@/types/patient';
 import { useState } from 'react';
+import DuplicateWarning from './duplicate-warning';
 
 type PageProps = {
     genders: Gender[];
@@ -21,11 +22,14 @@ type PageProps = {
             name: string;
         }>;
     }>;
+    potentialDuplicates?: Patient[];
 };
 
 export default function PatientCreate() {
-    const { genders, counties } = usePage<PageProps>().props;
+    const { genders, counties, potentialDuplicates } = usePage<PageProps>().props;
     const [selectedCounty, setSelectedCounty] = useState<number | ''>('');
+    const [showDuplicateWarning, setShowDuplicateWarning] = useState(false);
+    const [checkedForDuplicates, setCheckedForDuplicates] = useState(false);
 
     const { data, setData, post, processing, errors } = useForm({
         first_name: '',
@@ -49,7 +53,24 @@ export default function PatientCreate() {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        
+        // Check for duplicates if not already checked
+        if (!checkedForDuplicates && potentialDuplicates && potentialDuplicates.length > 0) {
+            setShowDuplicateWarning(true);
+            setCheckedForDuplicates(true);
+            return;
+        }
+        
         post('/patients');
+    };
+
+    const handleContinueAnyway = () => {
+        setShowDuplicateWarning(false);
+        post('/patients');
+    };
+
+    const handleSelectDuplicate = (patientId: number) => {
+        window.location.href = `/patients/${patientId}`;
     };
 
     return (
@@ -263,6 +284,15 @@ export default function PatientCreate() {
                         </form>
                     </CardContent>
                 </Card>
+
+                {/* Duplicate Warning Modal */}
+                <DuplicateWarning
+                    isOpen={showDuplicateWarning}
+                    onClose={() => setShowDuplicateWarning(false)}
+                    duplicates={potentialDuplicates || []}
+                    onContinueAnyway={handleContinueAnyway}
+                    onSelectDuplicate={handleSelectDuplicate}
+                />
             </div>
         </>
     );

@@ -4,15 +4,24 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import InputError from '@/components/input-error';
 import AlertError from '@/components/alert-error';
-import { ArrowLeft, FileText, Heart, User } from 'lucide-react';
+import { ArrowLeft, FileText, Heart, User, LayoutTemplate } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 import type { Visit } from '@/types/visit';
+import { useState } from 'react';
 
 type PageProps = {
     visit: Visit;
+    templates?: Array<{
+        id: number;
+        name: string;
+        category: string | null;
+    }>;
 };
 
 export default function ConsultationCreate() {
-    const { visit } = usePage<PageProps>().props;
+    const { visit, templates } = usePage<PageProps>().props;
+    const [useSOAP, setUseSOAP] = useState(false);
+    const [selectedTemplate, setSelectedTemplate] = useState<number | null>(null);
 
     const { data, setData, post, processing, errors } = useForm({
         visit_id: visit.id,
@@ -22,11 +31,45 @@ export default function ConsultationCreate() {
         examination: '',
         plan: '',
         notes: '',
+        subjective: '',
+        objective: '',
+        assessment: '',
     });
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        post('/consultations');
+        // If using SOAP format, map SOAP fields to traditional fields
+        const submitData = useSOAP ? {
+            visit_id: data.visit_id,
+            provider_id: data.provider_id,
+            chief_complaint: data.subjective,
+            history: data.objective,
+            examination: data.assessment,
+            plan: data.plan,
+            notes: data.notes,
+        } : data;
+        
+        post('/consultations', { data: submitData });
+    };
+
+    const handleTemplateApply = (templateId: number) => {
+        window.location.href = `/consultations/templates/${templateId}/apply?visit_id=${visit.id}`;
+    };
+
+    const toggleSOAPFormat = () => {
+        setUseSOAP(!useSOAP);
+        // Clear existing data when switching formats
+        if (!useSOAP) {
+            // Switching to SOAP, clear traditional fields
+            setData('chief_complaint', '');
+            setData('history', '');
+            setData('examination', '');
+        } else {
+            // Switching to traditional, clear SOAP fields
+            setData('subjective', '');
+            setData('objective', '');
+            setData('assessment', '');
+        }
     };
 
     const patientName = visit.patient
@@ -120,66 +163,169 @@ export default function ConsultationCreate() {
                     {/* Consultation Form */}
                     <Card className="lg:col-span-2">
                         <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <FileText className="h-5 w-5" />
-                                Clinical Notes
-                            </CardTitle>
+                            <div className="flex items-center justify-between">
+                                <CardTitle className="flex items-center gap-2">
+                                    <FileText className="h-5 w-5" />
+                                    Clinical Notes
+                                </CardTitle>
+                                <div className="flex items-center gap-4">
+                                    <div className="flex items-center space-x-2">
+                                        <Checkbox
+                                            id="soap-format"
+                                            checked={useSOAP}
+                                            onCheckedChange={toggleSOAPFormat}
+                                        />
+                                        <Label htmlFor="soap-format" className="cursor-pointer">
+                                            SOAP Format
+                                        </Label>
+                                    </div>
+                                    {templates && templates.length > 0 && (
+                                        <Button variant="outline" size="sm" asChild>
+                                            <a href="/consultations/templates">
+                                                <LayoutTemplate className="h-4 w-4 mr-2" />
+                                                Templates
+                                            </a>
+                                        </Button>
+                                    )}
+                                </div>
+                            </div>
                         </CardHeader>
                         <CardContent>
                             <form onSubmit={handleSubmit} className="space-y-6">
                                 <AlertError errors={errors} />
 
-                                <div className="space-y-2">
-                                    <Label htmlFor="chief_complaint">Chief Complaint</Label>
-                                    <textarea
-                                        id="chief_complaint"
-                                        value={data.chief_complaint}
-                                        onChange={(e) => setData('chief_complaint', e.target.value)}
-                                        rows={3}
-                                        className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                        placeholder="Describe the patient's chief complaint..."
-                                    />
-                                    <InputError message={errors.chief_complaint} />
-                                </div>
+                                {/* Template Selection */}
+                                {templates && templates.length > 0 && (
+                                    <div className="space-y-2">
+                                        <Label>Quick Apply Template</Label>
+                                        <div className="flex gap-2 flex-wrap">
+                                            {templates.map((template) => (
+                                                <Button
+                                                    key={template.id}
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => handleTemplateApply(template.id)}
+                                                >
+                                                    <LayoutTemplate className="h-4 w-4 mr-1" />
+                                                    {template.name}
+                                                </Button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
 
-                                <div className="space-y-2">
-                                    <Label htmlFor="history">History</Label>
-                                    <textarea
-                                        id="history"
-                                        value={data.history}
-                                        onChange={(e) => setData('history', e.target.value)}
-                                        rows={3}
-                                        className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                        placeholder="Patient medical history..."
-                                    />
-                                    <InputError message={errors.history} />
-                                </div>
+                                {useSOAP ? (
+                                    // SOAP Format
+                                    <>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="subjective">Subjective (S)</Label>
+                                            <textarea
+                                                id="subjective"
+                                                value={data.subjective}
+                                                onChange={(e) => setData('subjective', e.target.value)}
+                                                rows={3}
+                                                className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                                placeholder="Patient's reported symptoms, concerns, and history..."
+                                            />
+                                            <InputError message={errors.subjective} />
+                                        </div>
 
-                                <div className="space-y-2">
-                                    <Label htmlFor="examination">Examination</Label>
-                                    <textarea
-                                        id="examination"
-                                        value={data.examination}
-                                        onChange={(e) => setData('examination', e.target.value)}
-                                        rows={3}
-                                        className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                        placeholder="Physical examination findings..."
-                                    />
-                                    <InputError message={errors.examination} />
-                                </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="objective">Objective (O)</Label>
+                                            <textarea
+                                                id="objective"
+                                                value={data.objective}
+                                                onChange={(e) => setData('objective', e.target.value)}
+                                                rows={3}
+                                                className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                                placeholder="Physical examination findings, vitals, lab results..."
+                                            />
+                                            <InputError message={errors.objective} />
+                                        </div>
 
-                                <div className="space-y-2">
-                                    <Label htmlFor="plan">Plan</Label>
-                                    <textarea
-                                        id="plan"
-                                        value={data.plan}
-                                        onChange={(e) => setData('plan', e.target.value)}
-                                        rows={3}
-                                        className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                        placeholder="Treatment plan..."
-                                    />
-                                    <InputError message={errors.plan} />
-                                </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="assessment">Assessment (A)</Label>
+                                            <textarea
+                                                id="assessment"
+                                                value={data.assessment}
+                                                onChange={(e) => setData('assessment', e.target.value)}
+                                                rows={3}
+                                                className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                                placeholder="Diagnosis, clinical impression, problem list..."
+                                            />
+                                            <InputError message={errors.assessment} />
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label htmlFor="plan">Plan (P)</Label>
+                                            <textarea
+                                                id="plan"
+                                                value={data.plan}
+                                                onChange={(e) => setData('plan', e.target.value)}
+                                                rows={3}
+                                                className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                                placeholder="Treatment plan, medications, follow-up, referrals..."
+                                            />
+                                            <InputError message={errors.plan} />
+                                        </div>
+                                    </>
+                                ) : (
+                                    // Traditional Format
+                                    <>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="chief_complaint">Chief Complaint</Label>
+                                            <textarea
+                                                id="chief_complaint"
+                                                value={data.chief_complaint}
+                                                onChange={(e) => setData('chief_complaint', e.target.value)}
+                                                rows={3}
+                                                className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                                placeholder="Describe the patient's chief complaint..."
+                                            />
+                                            <InputError message={errors.chief_complaint} />
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label htmlFor="history">History</Label>
+                                            <textarea
+                                                id="history"
+                                                value={data.history}
+                                                onChange={(e) => setData('history', e.target.value)}
+                                                rows={3}
+                                                className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                                placeholder="Patient medical history..."
+                                            />
+                                            <InputError message={errors.history} />
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label htmlFor="examination">Examination</Label>
+                                            <textarea
+                                                id="examination"
+                                                value={data.examination}
+                                                onChange={(e) => setData('examination', e.target.value)}
+                                                rows={3}
+                                                className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                                placeholder="Physical examination findings..."
+                                            />
+                                            <InputError message={errors.examination} />
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label htmlFor="plan">Plan</Label>
+                                            <textarea
+                                                id="plan"
+                                                value={data.plan}
+                                                onChange={(e) => setData('plan', e.target.value)}
+                                                rows={3}
+                                                className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                                placeholder="Treatment plan..."
+                                            />
+                                            <InputError message={errors.plan} />
+                                        </div>
+                                    </>
+                                )}
 
                                 <div className="space-y-2">
                                     <Label htmlFor="notes">Additional Notes</Label>

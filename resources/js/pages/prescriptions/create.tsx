@@ -5,8 +5,9 @@ import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import InputError from '@/components/input-error';
 import AlertError from '@/components/alert-error';
-import { ArrowLeft, Pill, Plus, Trash2, User, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
+import { ArrowLeft, Pill, Plus, Trash2, User, AlertTriangle, CheckCircle, Clock, XCircle } from 'lucide-react';
 import type { Visit, Medicine, DosageUnit, Frequency, Route, DurationUnit } from '@/types/visit';
+import type { DrugInteraction } from '@/types/pharmacy';
 import { PermissionGuard } from '@/components/permission-guard';
 
 type PageProps = {
@@ -68,6 +69,67 @@ export default function PrescriptionCreate() {
         setData('items', newItems);
     };
 
+    const checkDrugInteractions = (): DrugInteraction[] => {
+        const selectedMedicineIds = data.items.map(item => item.medicine_id).filter(id => id > 0);
+        const interactions: DrugInteraction[] = [];
+
+        for (let i = 0; i < selectedMedicineIds.length; i++) {
+            for (let j = i + 1; j < selectedMedicineIds.length; j++) {
+                const drug1 = medicines.find(m => m.id === selectedMedicineIds[i]);
+                const drug2 = medicines.find(m => m.id === selectedMedicineIds[j]);
+
+                if (drug1 && drug2) {
+                    const interaction = detectInteraction(drug1.name, drug2.name);
+                    if (interaction) {
+                        interactions.push(interaction);
+                    }
+                }
+            }
+        }
+
+        return interactions;
+    };
+
+    const detectInteraction = (drug1: string, drug2: string): DrugInteraction | null => {
+        const drug1Lower = drug1.toLowerCase();
+        const drug2Lower = drug2.toLowerCase();
+
+        const knownInteractions: DrugInteraction[] = [
+            {
+                drug1: 'warfarin',
+                drug2: 'aspirin',
+                severity: 'major',
+                description: 'Increased risk of bleeding',
+                recommendation: 'Monitor INR closely, consider alternative'
+            },
+            {
+                drug1: 'ace inhibitors',
+                drug2: 'potassium supplements',
+                severity: 'major',
+                description: 'Risk of hyperkalemia',
+                recommendation: 'Monitor potassium levels'
+            },
+            {
+                drug1: 'ssris',
+                drug2: 'maois',
+                severity: 'contraindicated',
+                description: 'Serotonin syndrome risk',
+                recommendation: 'Avoid combination'
+            },
+        ];
+
+        for (const interaction of knownInteractions) {
+            if ((drug1Lower.includes(interaction.drug1) && drug2Lower.includes(interaction.drug2)) ||
+                (drug1Lower.includes(interaction.drug2) && drug2Lower.includes(interaction.drug1))) {
+                return interaction;
+            }
+        }
+
+        return null;
+    };
+
+    const interactions = checkDrugInteractions();
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         post('/prescriptions');
@@ -91,6 +153,34 @@ export default function PrescriptionCreate() {
                         </p>
                     </div>
                 </div>
+
+                {/* Drug Interaction Warnings */}
+                {interactions.length > 0 && (
+                    <Card className="border-red-200 bg-red-50">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2 text-red-800">
+                                <XCircle className="h-5 w-5" />
+                                Drug Interaction Warnings
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="space-y-3">
+                                {interactions.map((interaction, index) => (
+                                    <div key={index} className="p-3 border border-red-300 rounded bg-white">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <Badge variant={interaction.severity === 'contraindicated' ? 'destructive' : interaction.severity === 'major' ? 'destructive' : 'secondary'}>
+                                                {interaction.severity.toUpperCase()}
+                                            </Badge>
+                                            <span className="font-medium">{interaction.drug1} ↔ {interaction.drug2}</span>
+                                        </div>
+                                        <p className="text-sm text-muted-foreground">{interaction.description}</p>
+                                        <p className="text-sm font-medium text-red-600 mt-1">{interaction.recommendation}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </CardContent>
+                    </Card>
+                )}
 
                 <div className="grid gap-6 lg:grid-cols-3">
                     {/* Patient & Visit Info */}

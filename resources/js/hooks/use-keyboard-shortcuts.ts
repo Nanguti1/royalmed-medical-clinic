@@ -1,90 +1,125 @@
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 
 type KeyboardShortcut = {
     key: string;
-    ctrl?: boolean;
-    shift?: boolean;
-    alt?: boolean;
-    meta?: boolean;
+    ctrlKey?: boolean;
+    shiftKey?: boolean;
+    altKey?: boolean;
+    metaKey?: boolean;
     callback: () => void;
-    description: string;
+    description?: string;
 };
 
-export function useKeyboardShortcuts(shortcuts: KeyboardShortcut[]) {
-    useEffect(() => {
-        const handleKeyDown = (event: KeyboardEvent) => {
-            for (const shortcut of shortcuts) {
-                const {
-                    key,
-                    ctrl = false,
-                    shift = false,
-                    alt = false,
-                    meta = false,
-                    callback,
-                } = shortcut;
+type UseKeyboardShortcutsOptions = {
+    enabled?: boolean;
+    preventDefault?: boolean;
+};
 
-                const keyMatches = event.key.toLowerCase() === key.toLowerCase();
-                const ctrlMatches = ctrl === event.ctrlKey;
-                const shiftMatches = shift === event.shiftKey;
-                const altMatches = alt === event.altKey;
-                const metaMatches = meta === event.metaKey;
+export function useKeyboardShortcuts(
+    shortcuts: KeyboardShortcut[],
+    options: UseKeyboardShortcutsOptions = {}
+) {
+    const { enabled = true, preventDefault = true } = options;
 
-                if (keyMatches && ctrlMatches && shiftMatches && altMatches && metaMatches) {
-                    event.preventDefault();
-                    callback();
-                    return;
+    const handleKeyDown = useCallback(
+        (e: KeyboardEvent) => {
+            if (!enabled) return;
+
+            const matchingShortcut = shortcuts.find((shortcut) => {
+                return (
+                    e.key.toLowerCase() === shortcut.key.toLowerCase() &&
+                    !!shortcut.ctrlKey === e.ctrlKey &&
+                    !!shortcut.shiftKey === e.shiftKey &&
+                    !!shortcut.altKey === e.altKey &&
+                    !!shortcut.metaKey === e.metaKey
+                );
+            });
+
+            if (matchingShortcut) {
+                if (preventDefault) {
+                    e.preventDefault();
                 }
+                matchingShortcut.callback();
             }
-        };
+        },
+        [shortcuts, enabled, preventDefault]
+    );
 
-        document.addEventListener('keydown', handleKeyDown);
-        return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [shortcuts]);
+    useEffect(() => {
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [handleKeyDown]);
+
+    return {
+        shortcuts,
+        addShortcut: (shortcut: KeyboardShortcut) => {
+            // This would need to be implemented with state if we want dynamic shortcuts
+            console.warn('Dynamic shortcuts not implemented. Use state management for dynamic shortcuts.');
+        },
+        removeShortcut: (key: string) => {
+            // This would need to be implemented with state if we want dynamic shortcuts
+            console.warn('Dynamic shortcuts not implemented. Use state management for dynamic shortcuts.');
+        },
+    };
 }
 
-export const commonShortcuts: KeyboardShortcut[] = [
-    {
+// Common keyboard shortcuts
+export const commonShortcuts = {
+    commandPalette: {
         key: 'k',
-        ctrl: true,
+        ctrlKey: true,
         callback: () => {
-            // Focus search input if available
-            const searchInput = document.querySelector('input[type="search"]') as HTMLInputElement;
-            if (searchInput) {
-                searchInput.focus();
-            }
+            // This will be implemented by the component using the hook
+        },
+        description: 'Open command palette',
+    },
+    search: {
+        key: '/',
+        callback: () => {
+            // This will be implemented by the component using the hook
         },
         description: 'Focus search',
     },
-    {
-        key: 'n',
-        ctrl: true,
-        callback: () => {
-            // Navigate to new patient registration
-            window.location.href = '/patients/create';
-        },
-        description: 'New patient',
-    },
-    {
-        key: 's',
-        ctrl: true,
-        callback: () => {
-            // Save current form
-            const saveButton = document.querySelector('button[type="submit"]') as HTMLButtonElement;
-            if (saveButton) {
-                saveButton.click();
-            }
-        },
-        description: 'Save form',
-    },
-    {
+    escape: {
         key: 'Escape',
         callback: () => {
-            // Close modals or cancel operations
-            const closeButton = document.querySelector('[aria-label="Close"]') as HTMLButtonElement;
-            if (closeButton) {
-                closeButton.click();
-            }
+            // This will be implemented by the component using the hook
         },
-        description: 'Close modal/cancel',
+        description: 'Close modal/dropdown',
     },
-];
+    save: {
+        key: 's',
+        ctrlKey: true,
+        callback: () => {
+            // This will be implemented by the component using the hook
+        },
+        description: 'Save',
+    },
+    new: {
+        key: 'n',
+        ctrlKey: true,
+        callback: () => {
+            // This will be implemented by the component using the hook
+        },
+        description: 'Create new',
+    },
+};
+
+export function useGlobalKeyboardShortcuts(isCommandPaletteOpen: boolean, toggleCommandPalette: () => void) {
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            // Ctrl+K to open command palette
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                e.preventDefault();
+                toggleCommandPalette();
+            }
+            // Escape to close command palette
+            if (e.key === 'Escape' && isCommandPaletteOpen) {
+                toggleCommandPalette();
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [isCommandPaletteOpen, toggleCommandPalette]);
+}

@@ -188,3 +188,43 @@ export type PatientSearchResult = {
     phone: string | null;
     email: string | null;
 };
+
+export type PatientMergeConflict = {
+    field: string;
+    sourceValue: string;
+    targetValue: string;
+};
+
+export type PatientMergeData = {
+    keep_source: boolean;
+    field_selections: Record<string, 'source' | 'target'>;
+};
+
+export type TimelineEventType = 'visit' | 'consultation' | 'prescription' | 'lab_result' | 'vaccination' | 'allergy' | 'condition' | 'procedure' | 'document' | 'alert';
+
+export type TimelineEvent = {
+    id: number;
+    type: TimelineEventType;
+    date: string;
+    title: string;
+    description?: string;
+    details?: Record<string, any>;
+    provider?: string;
+    location?: string;
+    severity?: 'low' | 'medium' | 'high' | 'critical';
+};
+
+export type DuplicateWarningProps = {
+    isOpen: boolean;
+    onClose: () => void;
+    duplicates: Patient[];
+    onContinueAnyway: () => void;
+    onSelectDuplicate: (patientId: number) => void;
+};
+
+export type ClinicalTimelineProps = {
+    events: TimelineEvent[];
+    title?: string;
+    compact?: boolean;
+    maxEvents?: number;
+};

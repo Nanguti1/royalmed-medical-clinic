@@ -1,18 +1,20 @@
 import { Head, router, usePage } from '@inertiajs/react';
-import { ArrowLeft, Calendar, Edit, MapPin, Phone, Trash2, User, Mail, Stethoscope, AlertTriangle, Shield, Heart, Users, CreditCard, Baby, Briefcase, Church, Languages, Droplet } from 'lucide-react';
+import { ArrowLeft, Calendar, Edit, MapPin, Phone, Trash2, User, Mail, Stethoscope, AlertTriangle, Shield, Heart, Users, CreditCard, Baby, Briefcase, Church, Languages, Droplet, Camera, Clock } from 'lucide-react';
 import { PermissionGuard } from '@/components/permission-guard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { PatientSafetyBanner } from '@/components/patient-safety-banner';
-import type { Patient } from '@/types/patient';
+import ClinicalTimelineComponent from '@/components/clinical-timeline';
+import type { Patient, TimelineEvent } from '@/types/patient';
 
 type PageProps = {
     patient: Patient;
+    timelineEvents?: TimelineEvent[];
 };
 
 export default function PatientShow() {
-    const { patient } = usePage<PageProps>().props;
+    const { patient, timelineEvents } = usePage<PageProps>().props;
 
     const fullName = [patient.first_name, patient.other_names, patient.last_name]
         .filter(Boolean)
@@ -62,6 +64,14 @@ export default function PatientShow() {
                                 </a>
                             </Button>
                         </PermissionGuard>
+                        <PermissionGuard permission="patients.update" fallback={null}>
+                            <Button variant="outline" asChild>
+                                <a href={`/patients/${patient.id}/photo`}>
+                                    <Camera className="mr-2 h-4 w-4" />
+                                    Photo
+                                </a>
+                            </Button>
+                        </PermissionGuard>
                         <PermissionGuard permission="patients.delete" fallback={null}>
                             <Button variant="destructive" onClick={handleDelete}>
                                 <Trash2 className="mr-2 h-4 w-4" />
@@ -77,6 +87,26 @@ export default function PatientShow() {
                     chronicConditions={patient.activeChronicConditions}
                     alerts={patient.activeAlerts}
                 />
+
+                {/* Clinical Timeline */}
+                {timelineEvents && timelineEvents.length > 0 && (
+                    <div className="space-y-4">
+                        <ClinicalTimelineComponent
+                            events={timelineEvents}
+                            title="Recent Clinical Activity"
+                            compact={true}
+                            maxEvents={5}
+                        />
+                        <div className="flex justify-center">
+                            <Button variant="outline" asChild>
+                                <a href={`/patients/${patient.id}/timeline`}>
+                                    <Clock className="mr-2 h-4 w-4" />
+                                    View Full Timeline
+                                </a>
+                            </Button>
+                        </div>
+                    </div>
+                )}
 
                 {/* Patient Information */}
                 <div className="grid gap-6 md:grid-cols-2">
