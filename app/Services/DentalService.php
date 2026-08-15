@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Appointment;
 use App\Models\DentalAttachment;
 use App\Models\DentalChart;
 use App\Models\DentalNote;
@@ -165,5 +166,42 @@ class DentalService
     public function getAllActiveProcedures()
     {
         return DentalProcedure::active()->orderBy('category')->orderBy('name')->get();
+    }
+
+    public function getDentalAppointments(?string $date = null, ?string $query = null)
+    {
+        return Appointment::with(['patient', 'doctor'])
+            ->where('appointment_type', 'dental')
+            ->when($date, fn ($q) => $q->whereDate('appointment_date', $date))
+            ->when($query, fn ($q) => $q->whereHas('patient', fn ($p) => $p->where('first_name', 'like', "%{$query}%")
+                ->orWhere('last_name', 'like', "%{$query}%")
+                ->orWhere('hospital_number', 'like', "%{$query}%")))
+            ->orderBy('appointment_date')
+            ->orderBy('start_time')
+            ->paginate(20);
+    }
+
+    public function getPatientDentalChart(int $patientId)
+    {
+        return DentalChart::byPatient($patientId)
+            ->with(['teeth', 'dentist'])
+            ->orderBy('chart_date', 'desc')
+            ->first();
+    }
+
+    public function getPatientDentalAttachments(int $patientId)
+    {
+        return DentalAttachment::where('patient_id', $patientId)
+            ->with(['dentalChart', 'dentalNote'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+    }
+
+    public function getPatientDentalNotes(int $patientId)
+    {
+        return DentalNote::where('patient_id', $patientId)
+            ->with(['dentist', 'treatmentPlan'])
+            ->orderBy('note_date', 'desc')
+            ->get();
     }
 }

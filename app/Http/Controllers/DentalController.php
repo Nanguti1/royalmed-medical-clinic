@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\DentalTreatmentPlan;
 use App\Models\DentalProcedure;
+use App\Models\DentalTreatmentPlan;
 use App\Models\Patient;
 use App\Services\DentalService;
 use Illuminate\Http\Request;
@@ -43,7 +43,7 @@ class DentalController extends Controller
         $chart = $this->service->getPatientDentalChart($patient->id);
 
         return Inertia::render('dental/chart', [
-            'patient' => $patient->load(['dentalChart', 'dentalTeeth', 'dentalPeriodontalMeasurements']),
+            'patient' => $patient->load(['dentalChart.teeth']),
             'chart' => $chart,
         ]);
     }

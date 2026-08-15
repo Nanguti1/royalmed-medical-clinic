@@ -4,6 +4,7 @@ use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\ConsultationController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DentalController;
 use App\Http\Controllers\HealthController;
 use App\Http\Controllers\LabCategoryController;
 use App\Http\Controllers\LaboratoryController;
@@ -65,6 +66,23 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('/doctor', [AppointmentController::class, 'scheduleDoctor'])->name('appointments.schedules.doctor');
             Route::get('/dental', [AppointmentController::class, 'scheduleDental'])->name('appointments.schedules.dental');
         });
+    });
+
+    Route::prefix('dental')->group(function () {
+        Route::get('/', [DentalController::class, 'index'])->name('dental.index');
+        Route::get('/patients/{patient}/chart', [DentalController::class, 'chart'])->name('dental.chart');
+        Route::prefix('treatment-plans')->group(function () {
+            Route::get('/', [DentalController::class, 'treatmentPlansIndex'])->name('dental.treatment-plans.index');
+            Route::get('/create', [DentalController::class, 'treatmentPlansCreate'])->name('dental.treatment-plans.create');
+            Route::get('/{plan}', [DentalController::class, 'treatmentPlansShow'])->name('dental.treatment-plans.show');
+        });
+        Route::prefix('procedures')->group(function () {
+            Route::get('/', [DentalController::class, 'proceduresIndex'])->name('dental.procedures.index');
+            Route::get('/create', [DentalController::class, 'proceduresCreate'])->name('dental.procedures.create');
+            Route::get('/{procedure}/edit', [DentalController::class, 'proceduresEdit'])->name('dental.procedures.edit');
+        });
+        Route::get('/patients/{patient}/attachments', [DentalController::class, 'attachments'])->name('dental.attachments');
+        Route::get('/patients/{patient}/notes', [DentalController::class, 'notes'])->name('dental.notes');
     });
 
     Route::prefix('visits')->group(function () {
