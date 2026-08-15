@@ -65,6 +65,7 @@ class VaccinationService
         return VaccinationCertificate::create([
             'patient_id' => $record->patient_id,
             'vaccination_record_id' => $record->id,
+            'issue_date' => now(),
             'valid_from' => $data['valid_from'] ?? now(),
             'valid_until' => $data['valid_until'] ?? null,
             'issuing_authority' => $data['issuing_authority'] ?? 'Royalmed Clinic',
@@ -72,6 +73,7 @@ class VaccinationService
             'issuer_license' => $data['issuer_license'] ?? null,
             'file_path' => $data['file_path'] ?? null,
             'file_name' => $data['file_name'] ?? null,
+            'status' => 'issued',
             'created_by' => $data['created_by'] ?? auth()->id(),
         ]);
     }

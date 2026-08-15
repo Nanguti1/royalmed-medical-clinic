@@ -21,9 +21,9 @@ class ConsentTemplateFactory extends Factory
             'validity_days' => fake()->optional()->numberBetween(30, 365),
             'minimum_age' => 18,
             'version' => '1.0',
-            'effective_from' => fake()->date('-1 year'),
-            'effective_to' => fake()->optional()->date('+2 years'),
-            'created_by' => User::factory(),
+            'effective_from' => now()->subYear(),
+            'effective_to' => fake()->optional(0.7, null) ? now()->addYears(2) : null,
+            'created_by' => fn () => User::factory()->create()->id,
         ];
     }
 }

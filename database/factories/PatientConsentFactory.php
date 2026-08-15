@@ -18,14 +18,14 @@ class PatientConsentFactory extends Factory
             'visit_id' => null,
             'consultation_id' => null,
             'status' => fake()->randomElement(['draft', 'signed', 'revoked', 'expired']),
-            'signed_at' => fake()->optional()->dateTime('-10 days'),
-            'revoked_at' => fake()->optional()->dateTime('-5 days'),
-            'expires_at' => fake()->optional()->dateTime('+90 days'),
+            'signed_at' => fake()->optional(0.7, null) ? now()->subDays(10) : null,
+            'revoked_at' => fake()->optional(0.3, null) ? now()->subDays(5) : null,
+            'expires_at' => fake()->optional(0.5, null) ? now()->addDays(90) : null,
             'revocation_reason' => fake()->optional()->sentence(),
             'notes' => fake()->optional()->sentence(),
-            'signed_by' => fake()->optional(User::factory()),
-            'revoked_by' => fake()->optional(User::factory()),
-            'created_by' => User::factory(),
+            'signed_by' => null,
+            'revoked_by' => null,
+            'created_by' => fn () => User::factory()->create()->id,
         ];
     }
 }

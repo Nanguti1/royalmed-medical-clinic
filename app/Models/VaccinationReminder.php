@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use Database\Factories\VaccinationReminderFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,8 +9,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class VaccinationReminder extends Model
 {
     use HasFactory;
-
-    protected static $factory = VaccinationReminderFactory::class;
 
     protected $fillable = [
         'vaccination_record_id',
@@ -51,6 +48,11 @@ class VaccinationReminder extends Model
     public function scopePending($query)
     {
         return $query->where('is_sent', false)->where('scheduled_at', '<=', now());
+    }
+
+    public function scopeFailed($query)
+    {
+        return $query->where('status', 'failed');
     }
 
     public function scopeByType($query, string $type)

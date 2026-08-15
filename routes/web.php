@@ -5,7 +5,9 @@ use App\Http\Controllers\BillingController;
 use App\Http\Controllers\ConsultationController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DentalController;
+use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\HealthController;
+use App\Http\Controllers\InsuranceController;
 use App\Http\Controllers\LabCategoryController;
 use App\Http\Controllers\LaboratoryController;
 use App\Http\Controllers\LabTestController;
@@ -17,8 +19,10 @@ use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\PharmacyController;
 use App\Http\Controllers\PrescriptionController;
 use App\Http\Controllers\PrintController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\VaccinationController;
 use App\Http\Controllers\VisitController;
 use Illuminate\Support\Facades\Route;
 
@@ -83,6 +87,79 @@ Route::middleware(['auth', 'verified'])->group(function () {
         });
         Route::get('/patients/{patient}/attachments', [DentalController::class, 'attachments'])->name('dental.attachments');
         Route::get('/patients/{patient}/notes', [DentalController::class, 'notes'])->name('dental.notes');
+    });
+
+    Route::prefix('insurance')->group(function () {
+        Route::prefix('insurers')->group(function () {
+            Route::get('/', [InsuranceController::class, 'insurersIndex'])->name('insurance.insurers.index');
+            Route::get('/create', [InsuranceController::class, 'insurersCreate'])->name('insurance.insurers.create');
+            Route::get('/{insurer}/edit', [InsuranceController::class, 'insurersEdit'])->name('insurance.insurers.edit');
+        });
+        Route::prefix('schemes')->group(function () {
+            Route::get('/', [InsuranceController::class, 'schemesIndex'])->name('insurance.schemes.index');
+            Route::get('/create', [InsuranceController::class, 'schemesCreate'])->name('insurance.schemes.create');
+            Route::get('/{scheme}/edit', [InsuranceController::class, 'schemesEdit'])->name('insurance.schemes.edit');
+        });
+        Route::get('/patients/{patient}/coverage', [InsuranceController::class, 'patientCoverage'])->name('insurance.patients.coverage');
+        Route::post('/patients/{patient}/coverage', [InsuranceController::class, 'patientCoverageCreate'])->name('insurance.patients.coverage.create');
+        Route::prefix('claims')->group(function () {
+            Route::get('/', [InsuranceController::class, 'claimsIndex'])->name('insurance.claims.index');
+            Route::get('/create/{invoice}', [InsuranceController::class, 'claimsCreate'])->name('insurance.claims.create');
+            Route::get('/{claim}', [InsuranceController::class, 'claimsShow'])->name('insurance.claims.show');
+            Route::get('/{claim}/edit', [InsuranceController::class, 'claimsEdit'])->name('insurance.claims.edit');
+            Route::post('/{claim}/resubmit', [InsuranceController::class, 'claimsResubmit'])->name('insurance.claims.resubmit');
+            Route::get('/aging-report', [InsuranceController::class, 'claimsAgingReport'])->name('insurance.claims.aging-report');
+        });
+        Route::prefix('preauthorizations')->group(function () {
+            Route::get('/', [InsuranceController::class, 'preauthorizationsIndex'])->name('insurance.preauthorizations.index');
+            Route::get('/create', [InsuranceController::class, 'preauthorizationsCreate'])->name('insurance.preauthorizations.create');
+            Route::post('/{preauth}/approve', [InsuranceController::class, 'preauthorizationsApprove'])->name('insurance.preauthorizations.approve');
+        });
+    });
+
+    Route::prefix('documents')->group(function () {
+        Route::get('/', [DocumentController::class, 'index'])->name('documents.index');
+        Route::get('/upload', [DocumentController::class, 'upload'])->name('documents.upload');
+        Route::post('/upload', [DocumentController::class, 'store'])->name('documents.store');
+        Route::prefix('consent-templates')->group(function () {
+            Route::get('/', [DocumentController::class, 'consentTemplatesIndex'])->name('documents.consent-templates.index');
+            Route::get('/create', [DocumentController::class, 'consentTemplatesCreate'])->name('documents.consent-templates.create');
+            Route::get('/{template}/edit', [DocumentController::class, 'consentTemplatesEdit'])->name('documents.consent-templates.edit');
+        });
+        Route::get('/patients/{patient}/documents', [DocumentController::class, 'patientDocuments'])->name('documents.patients.index');
+        Route::get('/consultations/{consultation}/documents', [DocumentController::class, 'consultationDocuments'])->name('documents.consultations.index');
+        Route::get('/patients/{patient}/consents', [DocumentController::class, 'patientConsents'])->name('documents.patients.consents');
+        Route::post('/patients/{patient}/consents/sign', [DocumentController::class, 'patientConsentsSign'])->name('documents.patients.consents.sign');
+        Route::get('/{document}', [DocumentController::class, 'show'])->name('documents.show');
+        Route::get('/{document}/versions', [DocumentController::class, 'versions'])->name('documents.versions');
+    });
+
+    Route::prefix('vaccinations')->group(function () {
+        Route::get('/', [VaccinationController::class, 'index'])->name('vaccinations.index');
+        Route::get('/create', [VaccinationController::class, 'create'])->name('vaccinations.create');
+        Route::post('/', [VaccinationController::class, 'store'])->name('vaccinations.store');
+        Route::get('/schedule', [VaccinationController::class, 'schedule'])->name('vaccinations.schedule');
+        Route::prefix('certificates')->group(function () {
+            Route::get('/', [VaccinationController::class, 'certificatesIndex'])->name('vaccinations.certificates.index');
+            Route::post('/{record}/generate', [VaccinationController::class, 'certificatesGenerate'])->name('vaccinations.certificates.generate');
+            Route::get('/{certificate}/print', [VaccinationController::class, 'certificatesPrint'])->name('vaccinations.certificates.print');
+        });
+        Route::get('/patients/{patient}/vaccinations', [VaccinationController::class, 'patientVaccinations'])->name('vaccinations.patients.index');
+        Route::get('/reminders', [VaccinationController::class, 'reminders'])->name('vaccinations.reminders');
+        Route::get('/{record}', [VaccinationController::class, 'show'])->name('vaccinations.show');
+    });
+
+    Route::prefix('reports')->group(function () {
+        Route::get('/', [ReportController::class, 'index'])->name('reports.index');
+        Route::get('/revenue', [ReportController::class, 'revenue'])->name('reports.revenue');
+        Route::get('/disease', [ReportController::class, 'disease'])->name('reports.disease');
+        Route::get('/lab', [ReportController::class, 'lab'])->name('reports.lab');
+        Route::get('/pharmacy', [ReportController::class, 'pharmacy'])->name('reports.pharmacy');
+        Route::get('/inventory', [ReportController::class, 'inventory'])->name('reports.inventory');
+        Route::get('/doctor-performance', [ReportController::class, 'doctorPerformance'])->name('reports.doctor-performance');
+        Route::get('/claims', [ReportController::class, 'claims'])->name('reports.claims');
+        Route::get('/sha-moh', [ReportController::class, 'shaMoh'])->name('reports.sha-moh');
+        Route::get('/billing', [ReportController::class, 'billing'])->name('reports.billing');
     });
 
     Route::prefix('visits')->group(function () {

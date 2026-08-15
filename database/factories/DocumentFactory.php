@@ -18,7 +18,7 @@ class DocumentFactory extends Factory
             'lab_result_id' => null,
             'uploaded_by' => User::factory(),
             'title' => fake()->sentence(4),
-            'category' => fake()->randomElement(['clinical', 'lab', 'consent', 'dental', 'scanned', 'general']),
+            'category' => fake()->randomElement(['general', 'medical', 'lab', 'radiology', 'consent', 'insurance', 'legal']),
             'file_path' => 'documents/'.fake()->uuid().'.pdf',
             'file_name' => fake()->word().'.pdf',
             'file_type' => 'pdf',

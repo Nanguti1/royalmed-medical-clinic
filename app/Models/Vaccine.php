@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use Database\Factories\VaccineFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -11,8 +10,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Vaccine extends Model
 {
     use HasFactory, SoftDeletes;
-
-    protected static $factory = VaccineFactory::class;
 
     protected $fillable = [
         'code',

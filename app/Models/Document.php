@@ -13,8 +13,6 @@ class Document extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected static $factory = DocumentFactory::class;
-
     protected $fillable = [
         'document_number',
         'patient_id',

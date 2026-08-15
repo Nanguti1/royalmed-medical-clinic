@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use Database\Factories\VaccinationCertificateFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,8 +10,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class VaccinationCertificate extends Model
 {
     use HasFactory, SoftDeletes;
-
-    protected static $factory = VaccinationCertificateFactory::class;
 
     protected $fillable = [
         'certificate_number',
