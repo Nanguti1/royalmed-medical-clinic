@@ -1,6 +1,7 @@
 import { Link } from '@inertiajs/react';
 import {
     Activity,
+    Calendar,
     DollarSign,
     FileText,
     FlaskConical,
@@ -11,6 +12,8 @@ import {
     Shield,
     Stethoscope,
     Users as UsersIcon,
+    Bell,
+    BarChart3,
 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavMain } from '@/components/nav-main';
@@ -39,6 +42,42 @@ const mainNavItems: NavItem[] = [
         href: '/patients',
         icon: UsersIcon,
         permission: 'patients.view',
+    },
+    {
+        title: 'Appointments',
+        href: '/appointments',
+        icon: Calendar,
+        permission: 'appointments.view',
+    },
+    {
+        title: 'Dental',
+        href: '/dental',
+        icon: LayoutGrid,
+        permission: 'dental.view',
+    },
+    {
+        title: 'Insurance',
+        href: '/insurance/insurers',
+        icon: Shield,
+        permission: 'insurance.view',
+    },
+    {
+        title: 'Documents',
+        href: '/documents',
+        icon: FileText,
+        permission: 'documents.view',
+    },
+    {
+        title: 'Vaccinations',
+        href: '/vaccinations',
+        icon: Bell,
+        permission: 'vaccinations.view',
+    },
+    {
+        title: 'Reports',
+        href: '/reports',
+        icon: BarChart3,
+        permission: 'reports.view',
     },
     {
         title: 'Visits',
