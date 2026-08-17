@@ -50,7 +50,7 @@ return new class extends Migration
             $table->integer('recommended_age_months')->nullable();
             $table->timestamps();
 
-            $table->index(['vaccination_schedule_id', 'dose_number']);
+            $table->index(['vaccination_schedule_id', 'dose_number'], 'vsi_schedule_dose_idx');
         });
 
         Schema::create('vaccination_records', function (Blueprint $table) {

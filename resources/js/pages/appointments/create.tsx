@@ -27,11 +27,13 @@ type PageProps = {
         patient_id?: number;
         visit_id?: number;
         consultation_id?: number;
+        appointment_type?: string;
     };
 };
 
 export default function AppointmentCreate() {
     const { patients, doctors, dentalChairs, defaults } = usePage<PageProps>().props;
+    
     const { data, setData, post, processing, errors } = useForm({
         patient_id: defaults.patient_id,
         doctor_id: '',
@@ -41,7 +43,7 @@ export default function AppointmentCreate() {
         appointment_date: '',
         start_time: '',
         end_time: '',
-        appointment_type: 'consultation',
+        appointment_type: defaults.appointment_type || 'consultation',
         reason: '',
         notes: '',
         is_walk_in: false,
@@ -157,6 +159,8 @@ export default function AppointmentCreate() {
                                             <SelectItem value="consultation">Consultation</SelectItem>
                                             <SelectItem value="procedure">Procedure</SelectItem>
                                             <SelectItem value="follow_up">Follow-up</SelectItem>
+                                            <SelectItem value="dental">Dental</SelectItem>
+                                            <SelectItem value="laboratory">Laboratory</SelectItem>
                                             <SelectItem value="walk_in">Walk-in</SelectItem>
                                         </SelectContent>
                                     </Select>

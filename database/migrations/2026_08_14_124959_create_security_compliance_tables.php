@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('user_agent')->nullable();
             $table->timestamp('accessed_at')->useCurrent();
 
-            $table->index(['record_type', 'record_id', 'accessed_at']);
+            $table->index(['record_type', 'record_id', 'accessed_at'], 'sdal_record_access_idx');
             $table->index(['user_id', 'accessed_at']);
             $table->index('action');
         });

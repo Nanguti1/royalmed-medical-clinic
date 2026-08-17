@@ -57,6 +57,7 @@ class AppointmentController extends Controller
         $patientId = $request->input('patient_id');
         $visitId = $request->input('visit_id');
         $consultationId = $request->input('consultation_id');
+        $appointmentType = $request->query('appointment_type'); // Use query() for URL parameters
 
         $patients = Patient::select('id', 'first_name', 'last_name', 'hospital_number')->get();
         $doctors = User::whereHas('roles', fn ($q) => $q->where('name', 'Doctor'))->get(['id', 'first_name', 'last_name']);
@@ -70,6 +71,7 @@ class AppointmentController extends Controller
                 'patient_id' => $patientId,
                 'visit_id' => $visitId,
                 'consultation_id' => $consultationId,
+                'appointment_type' => $appointmentType,
             ],
         ]);
     }

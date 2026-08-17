@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Appointment;
+use App\Models\DentalChairSchedule;
 use App\Models\DentalProcedure;
 use App\Models\DentalTreatmentPlan;
 use App\Models\Patient;
@@ -24,17 +26,85 @@ class DentalController extends Controller
 
     public function index(Request $request): Response
     {
-        $query = $request->input('search');
-        $date = $request->input('date');
-
-        $appointments = $this->service->getDentalAppointments($date, $query);
+        $today = now()->toDateString();
+        $todayDayOfWeek = now()->dayName; // Monday, Tuesday, etc.
+        
+        // Get today's dental appointments for statistics
+        $todayAppointments = $this->service->getDentalAppointments($today, null);
+        
+        // Get upcoming dental appointments (next 7 days) for display
+        $upcomingAppointments = Appointment::with(['patient', 'doctor'])
+            ->where('appointment_type', 'dental')
+            ->whereDate('appointment_date', '>=', $today)
+            ->whereDate('appointment_date', '<=', now()->addDays(7)->toDateString())
+            ->whereIn('status', ['scheduled', 'confirmed'])
+            ->orderBy('appointment_date')
+            ->orderBy('start_time')
+            ->limit(10)
+            ->get();
+        
+        // Get in-progress appointments (patients currently being treated)
+        $inProgressAppointments = Appointment::with(['patient', 'doctor'])
+            ->where('appointment_type', 'dental')
+            ->where('status', 'in_progress')
+            ->orderBy('start_time')
+            ->get();
+        
+        // Get active treatment plans
+        $activeTreatmentPlans = DentalTreatmentPlan::with(['patient'])
+            ->whereIn('status', ['active', 'draft'])
+            ->orderBy('plan_date', 'desc')
+            ->limit(10)
+            ->get();
+        
+        // Get chair schedules for today
+        $chairSchedules = DentalChairSchedule::where('day_of_week', $todayDayOfWeek)
+            ->where('is_available', true)
+            ->get();
+        
+        // Get appointments with chairs for today to show occupied chairs
+        $occupiedChairs = Appointment::with(['patient', 'doctor'])
+            ->where('appointment_type', 'dental')
+            ->whereDate('appointment_date', $today)
+            ->whereNotNull('dental_chair_id')
+            ->whereIn('status', ['scheduled', 'confirmed', 'in_progress'])
+            ->get()
+            ->map(function ($appointment) {
+                $chair = DentalChairSchedule::find($appointment->dental_chair_id);
+                return [
+                    'id' => $appointment->dental_chair_id,
+                    'chair_name' => $chair ? $chair->chair_name : "Chair {$appointment->dental_chair_id}",
+                    'appointment' => [
+                        'patient' => [
+                            'first_name' => $appointment->patient->first_name,
+                            'last_name' => $appointment->patient->last_name,
+                        ],
+                        'doctor' => $appointment->doctor ? [
+                            'first_name' => $appointment->doctor->first_name,
+                            'last_name' => $appointment->doctor->last_name,
+                        ] : null,
+                    ],
+                ];
+            });
+        
+        // Get department statistics
+        $stats = [
+            'today_appointments' => $todayAppointments->total(),
+            'completed_today' => Appointment::where('appointment_type', 'dental')
+                ->whereDate('appointment_date', $today)
+                ->where('status', 'completed')
+                ->count(),
+            'in_progress' => $inProgressAppointments->count(),
+            'active_treatment_plans' => DentalTreatmentPlan::whereIn('status', ['active', 'draft'])->count(),
+            'available_chairs' => $chairSchedules->count() - $occupiedChairs->count(),
+        ];
 
         return Inertia::render('dental/index', [
-            'appointments' => $appointments,
-            'filters' => [
-                'search' => $query,
-                'date' => $date,
-            ],
+            'stats' => $stats,
+            'inProgressAppointments' => $inProgressAppointments,
+            'activeTreatmentPlans' => $activeTreatmentPlans,
+            'occupiedChairs' => $occupiedChairs,
+            'upcomingAppointments' => $upcomingAppointments,
         ]);
     }
 
