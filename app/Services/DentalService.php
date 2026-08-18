@@ -39,9 +39,10 @@ class DentalService
                 'patient_id' => $data['patient_id'],
                 'dentist_id' => $data['dentist_id'] ?? null,
                 'dental_chart_id' => $data['dental_chart_id'] ?? null,
-                'plan_date' => $data['plan_date'] ?? now(),
-                'status' => 'draft',
-                'estimated_cost' => 0,
+                'plan_date' => $data['plan_date'],
+                'status' => $data['status'],
+                'priority' => $data['priority'],
+                'estimated_cost' => $data['estimated_cost'] ?? 0,
                 'notes' => $data['notes'] ?? null,
                 'created_by' => $data['created_by'] ?? auth()->id(),
             ]);

@@ -4,13 +4,19 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 
 const alertVariants = cva(
-  "relative w-full rounded-lg border px-4 py-3 text-sm grid has-[>svg]:grid-cols-[calc(var(--spacing)*4)_1fr] grid-cols-[0_1fr] has-[>svg]:gap-x-3 gap-y-0.5 items-start [&>svg]:size-4 [&>svg]:translate-y-0.5 [&>svg]:text-current",
+  "relative w-full rounded-lg border-l-4 px-4 py-3 text-sm grid has-[>svg]:grid-cols-[calc(var(--spacing)*4)_1fr] grid-cols-[0_1fr] has-[>svg]:gap-x-3 gap-y-0.5 items-start [&>svg]:size-4 [&>svg]:translate-y-0.5 [&>svg]:text-current shadow-sm",
   {
     variants: {
       variant: {
-        default: "bg-background text-foreground",
+        default: "bg-background text-foreground border-border",
         destructive:
-          "text-destructive-foreground [&>svg]:text-current *:data-[slot=alert-description]:text-destructive-foreground/80",
+          "bg-destructive/10 text-destructive-foreground border-destructive [&>svg]:text-destructive *:data-[slot=alert-description]:text-destructive-foreground/90",
+        success:
+          "bg-success/10 text-success-foreground border-success [&>svg]:text-success *:data-[slot=alert-description]:text-success-foreground/90",
+        warning:
+          "bg-warning/10 text-warning-foreground border-warning [&>svg]:text-warning *:data-[slot=alert-description]:text-warning-foreground/90",
+        info:
+          "bg-info/10 text-info-foreground border-info [&>svg]:text-info *:data-[slot=alert-description]:text-info-foreground/90",
       },
     },
     defaultVariants: {

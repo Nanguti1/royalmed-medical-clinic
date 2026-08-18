@@ -23,6 +23,8 @@ class DocumentAccessLog extends Model
         'accessed_at' => 'datetime',
     ];
 
+    public const CREATED_AT = 'accessed_at';
+
     public const UPDATED_AT = null;
 
     public function document(): BelongsTo

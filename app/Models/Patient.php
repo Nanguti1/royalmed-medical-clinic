@@ -5,6 +5,9 @@ namespace App\Models;
 use Database\Factories\PatientFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Patient extends Model
@@ -21,127 +24,132 @@ class Patient extends Model
         'date_of_birth' => 'date',
     ];
 
-    public function visits()
+    public function visits(): HasMany
     {
         return $this->hasMany(Visit::class);
     }
 
-    public function emergencyContacts()
+    public function emergencyContacts(): HasMany
     {
         return $this->hasMany(EmergencyContact::class);
     }
 
-    public function identifiers()
+    public function identifiers(): HasMany
     {
         return $this->hasMany(PatientIdentifier::class);
     }
 
-    public function contacts()
+    public function contacts(): HasMany
     {
         return $this->hasMany(PatientContact::class);
     }
 
-    public function addresses()
+    public function addresses(): HasMany
     {
         return $this->hasMany(PatientAddress::class);
     }
 
-    public function allergies()
+    public function allergies(): HasMany
     {
         return $this->hasMany(PatientAllergy::class);
     }
 
-    public function chronicConditions()
+    public function chronicConditions(): HasMany
     {
         return $this->hasMany(PatientChronicCondition::class);
     }
 
-    public function alerts()
+    public function alerts(): HasMany
     {
         return $this->hasMany(PatientAlert::class);
     }
 
-    public function relationships()
+    public function relationships(): HasMany
     {
         return $this->hasMany(PatientRelationship::class);
     }
 
-    public function relatedRelationships()
+    public function relatedRelationships(): HasMany
     {
         return $this->hasMany(PatientRelationship::class, 'related_patient_id');
     }
 
-    public function coverages()
+    public function coverages(): HasMany
     {
         return $this->hasMany(PatientCoverage::class);
     }
 
-    public function employerCoverages()
+    public function employerCoverages(): HasMany
     {
         return $this->hasMany(PatientEmployerCoverage::class);
     }
 
-    public function deposits()
+    public function deposits(): HasMany
     {
         return $this->hasMany(Deposit::class);
     }
 
-    public function paymentPlans()
+    public function paymentPlans(): HasMany
     {
         return $this->hasMany(PaymentPlan::class);
     }
 
-    public function documents()
+    public function documents(): HasMany
     {
         return $this->hasMany(Document::class);
     }
 
-    public function consents()
+    public function consents(): HasMany
     {
         return $this->hasMany(PatientConsent::class);
     }
 
-    public function activeConsents()
+    public function activeConsents(): HasMany
     {
         return $this->consents()->active();
     }
 
-    public function appointments()
+    public function appointments(): HasMany
     {
         return $this->hasMany(Appointment::class);
     }
 
-    public function upcomingAppointments()
+    public function upcomingAppointments(): HasMany
     {
         return $this->appointments()->upcoming()->whereIn('status', ['scheduled', 'confirmed']);
     }
 
-    public function waitlistEntries()
+    public function waitlistEntries(): HasMany
     {
         return $this->hasMany(WaitlistEntry::class);
     }
 
-    public function vaccinationRecords()
+    public function vaccinationRecords(): HasMany
     {
         return $this->hasMany(VaccinationRecord::class);
     }
 
-    public function vaccinationCertificates()
+    public function vaccinationCertificates(): HasMany
     {
         return $this->hasMany(VaccinationCertificate::class);
     }
 
-    public function dentalCharts()
+    public function dentalCharts(): HasMany
     {
         return $this->hasMany(DentalChart::class);
     }
 
-    public function dentalTreatmentPlans()
+    public function dentalChart(): HasOne
+    {
+        return $this->hasOne(DentalChart::class)->latestOfMany();
+    }
+
+    public function dentalTreatmentPlans(): HasMany
     {
         return $this->hasMany(DentalTreatmentPlan::class);
     }
 
-    public function activeCoverages()
+    public function activeCoverages(): HasMany
     {
         return $this->coverages()->active();
     }
@@ -156,37 +164,37 @@ class Patient extends Model
         return $this->activeCoverages()->count() > 0;
     }
 
-    public function sourceMergeRecords()
+    public function sourceMergeRecords(): HasMany
     {
         return $this->hasMany(PatientMergeRecord::class, 'source_patient_id');
     }
 
-    public function targetMergeRecords()
+    public function targetMergeRecords(): HasMany
     {
         return $this->hasMany(PatientMergeRecord::class, 'target_patient_id');
     }
 
-    public function gender()
+    public function gender(): BelongsTo
     {
         return $this->belongsTo(Gender::class);
     }
 
-    public function county()
+    public function county(): BelongsTo
     {
         return $this->belongsTo(County::class);
     }
 
-    public function sub_county()
+    public function sub_county(): BelongsTo
     {
         return $this->belongsTo(SubCounty::class, 'sub_county_id');
     }
 
-    public function clinicalAttachments()
+    public function clinicalAttachments(): HasMany
     {
         return $this->hasMany(ClinicalAttachment::class);
     }
 
-    public function activeAlerts()
+    public function activeAlerts(): HasMany
     {
         return $this->hasMany(PatientAlert::class)
             ->where('is_active', true)
@@ -198,12 +206,12 @@ class Patient extends Model
             });
     }
 
-    public function activeAllergies()
+    public function activeAllergies(): HasMany
     {
         return $this->hasMany(PatientAllergy::class)->where('is_active', true);
     }
 
-    public function activeChronicConditions()
+    public function activeChronicConditions(): HasMany
     {
         return $this->hasMany(PatientChronicCondition::class)->where('is_active', true);
     }
@@ -222,22 +230,22 @@ class Patient extends Model
         return trim($this->first_name.' '.$this->last_name);
     }
 
-    public function routeNotificationForMail($notification)
+    public function routeNotificationForMail($notification): ?string
     {
         return $this->email;
     }
 
-    public function routeNotificationForSms($notification)
+    public function routeNotificationForSms($notification): ?string
     {
         return $this->phone;
     }
 
-    public function createdBy()
+    public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    public function updatedBy()
+    public function updatedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'updated_by');
     }

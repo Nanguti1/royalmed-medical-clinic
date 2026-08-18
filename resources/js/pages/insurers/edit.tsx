@@ -1,4 +1,4 @@
-import { Head, useForm, usePage } from '@inertiajs/react';
+import { Head, useForm, usePage, Link } from '@inertiajs/react';
 import { ArrowLeft, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -34,17 +34,12 @@ export default function InsurerEdit() {
         email: insurer.email || '',
         address: insurer.address || '',
         website: insurer.website || '',
-        notes: insurer.notes || '',
         is_active: insurer.is_active,
     });
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        put(`/insurance/insurers/${insurer.id}`, {
-            onSuccess: () => {
-                window.location.href = '/insurance/insurers';
-            },
-        });
+        put(`/insurance/insurers/${insurer.id}`);
     };
 
     return (
@@ -54,9 +49,9 @@ export default function InsurerEdit() {
                 {/* Header */}
                 <div className="flex items-center gap-4">
                     <Button variant="ghost" size="icon" asChild>
-                        <a href="/insurance/insurers">
+                        <Link href="/insurance/insurers">
                             <ArrowLeft className="h-4 w-4" />
-                        </a>
+                        </Link>
                     </Button>
                     <div>
                         <h1 className="text-3xl font-bold tracking-tight">Edit Insurance Insurer</h1>
@@ -79,7 +74,7 @@ export default function InsurerEdit() {
                                         value={data.name}
                                         onChange={(e) => setData('name', e.target.value)}
                                     />
-                                    {errors.name && <p className="text-sm text-red-500">{errors.name}</p>}
+                                    {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
                                 </div>
 
                                 <div className="space-y-2">
@@ -89,7 +84,7 @@ export default function InsurerEdit() {
                                         value={data.code}
                                         onChange={(e) => setData('code', e.target.value)}
                                     />
-                                    {errors.code && <p className="text-sm text-red-500">{errors.code}</p>}
+                                    {errors.code && <p className="text-sm text-destructive">{errors.code}</p>}
                                 </div>
 
                                 <div className="space-y-2">
@@ -104,11 +99,10 @@ export default function InsurerEdit() {
                                         <SelectContent>
                                             <SelectItem value="private">Private</SelectItem>
                                             <SelectItem value="public">Public</SelectItem>
-                                            <SelectItem value="nhif">NHIF</SelectItem>
-                                            <SelectItem value="corporate">Corporate</SelectItem>
+                                            <SelectItem value="government">Government</SelectItem>
                                         </SelectContent>
                                     </Select>
-                                    {errors.type && <p className="text-sm text-red-500">{errors.type}</p>}
+                                    {errors.type && <p className="text-sm text-destructive">{errors.type}</p>}
                                 </div>
 
                                 <div className="space-y-2">
@@ -158,15 +152,6 @@ export default function InsurerEdit() {
                                 />
                             </div>
 
-                            <div className="space-y-2">
-                                <Label htmlFor="notes">Notes</Label>
-                                <Input
-                                    id="notes"
-                                    value={data.notes}
-                                    onChange={(e) => setData('notes', e.target.value)}
-                                />
-                            </div>
-
                             <div className="flex items-center space-x-2">
                                 <Checkbox
                                     id="is_active"
@@ -178,7 +163,7 @@ export default function InsurerEdit() {
 
                             <div className="flex justify-end gap-2">
                                 <Button type="button" variant="outline" asChild>
-                                    <a href="/insurance/insurers">Cancel</a>
+                                    <Link href="/insurance/insurers">Cancel</Link>
                                 </Button>
                                 <Button type="submit" disabled={processing}>
                                     <Save className="mr-2 h-4 w-4" />

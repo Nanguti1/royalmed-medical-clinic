@@ -29,7 +29,11 @@ class AuthenticationTest extends TestCase
         ]);
 
         $this->assertAuthenticated();
-        $response->assertRedirect(route('dashboard', absolute: false));
+        $response->assertRedirect(route('home'));
+
+        // Follow the redirect to verify it goes to dashboard
+        $response = $this->get(route('home'));
+        $response->assertRedirect(route('dashboard'));
     }
 
     public function test_users_with_two_factor_enabled_are_redirected_to_two_factor_challenge()
@@ -78,6 +82,10 @@ class AuthenticationTest extends TestCase
         $response->assertRedirect(route('home'));
 
         $this->assertGuest();
+
+        // Follow the redirect to verify it goes to login
+        $response = $this->get(route('home'));
+        $response->assertRedirect(route('login'));
     }
 
     public function test_users_are_rate_limited()

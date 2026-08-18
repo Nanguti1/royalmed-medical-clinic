@@ -1,5 +1,6 @@
-import { Head, useForm, usePage } from '@inertiajs/react';
+import { Head, useForm, usePage, Link } from '@inertiajs/react';
 import { ArrowLeft, Upload, Save } from 'lucide-react';
+import { index } from '@/routes/documents';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -31,21 +32,8 @@ export default function DocumentUpload() {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        const formData = new FormData();
-        if (data.patient_id) formData.append('patient_id', data.patient_id);
-        formData.append('title', data.title);
-        formData.append('category', data.category);
-        if (data.file) formData.append('file', data.file);
-        if (data.description) formData.append('description', data.description);
-        formData.append('is_sensitive', data.is_sensitive.toString());
-        formData.append('is_confidential', data.is_confidential.toString());
-        if (data.expires_at) formData.append('expires_at', data.expires_at);
-
-        post('/documents', {
-            data: formData,
-            onSuccess: () => {
-                window.location.href = '/documents';
-            },
+        post('/documents/upload', {
+            forceFormData: true,
         });
     };
 
@@ -55,9 +43,9 @@ export default function DocumentUpload() {
             <div className="flex h-full flex-1 flex-col gap-6 p-4 md:p-6">
                 <div className="flex items-center gap-4">
                     <Button variant="ghost" size="icon" asChild>
-                        <a href="/documents">
+                        <Link href={index()}>
                             <ArrowLeft className="h-4 w-4" />
-                        </a>
+                        </Link>
                     </Button>
                     <div>
                         <h1 className="text-3xl font-bold tracking-tight">Upload Document</h1>
@@ -178,7 +166,7 @@ export default function DocumentUpload() {
 
                             <div className="flex justify-end gap-2">
                                 <Button type="button" variant="outline" asChild>
-                                    <a href="/documents">Cancel</a>
+                                    <Link href={index()}>Cancel</Link>
                                 </Button>
                                 <Button type="submit" disabled={processing}>
                                     <Upload className="mr-2 h-4 w-4" />

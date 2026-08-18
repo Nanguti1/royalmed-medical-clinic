@@ -77,7 +77,7 @@ class PortalService
             ->paginate(20);
 
         $totalPending = Invoice::where('patient_id', $patientId)
-            ->where('status', 'pending')
+            ->whereHas('status', fn ($q) => $q->where('code', 'unpaid'))
             ->sum('total_amount');
 
         return [

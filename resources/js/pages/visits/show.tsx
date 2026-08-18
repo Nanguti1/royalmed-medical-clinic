@@ -44,10 +44,16 @@ export default function VisitShow() {
     };
 
     const handleAddToQueue = () => {
-        router.post(`/visits/${visit.id}/queue`, {}, {
+        router.post(`/visits/${visit.id}/queue`, {
+            department: 'consultation',
+            priority: 'normal',
+        }, {
             onSuccess: () => {
                 window.location.href = '/visits/queue';
             },
+            onError: (errors) => {
+                console.error('Failed to add to queue:', errors);
+            }
         });
     };
 

@@ -165,8 +165,8 @@ class AutomationService
     public function checkInsuranceExpiry(): int
     {
         $expiringCoverages = PatientCoverage::active()
-            ->where('end_date', '<=', now()->addDays(30))
-            ->where('end_date', '>=', now())
+            ->where('effective_to', '<=', now()->addDays(30))
+            ->where('effective_to', '>=', now())
             ->get();
 
         $count = 0;
@@ -188,7 +188,7 @@ class AutomationService
 
     public function processBillingNotifications(): int
     {
-        $pendingPayments = Invoice::where('status', 'pending')
+        $pendingPayments = Invoice::whereHas('status', fn ($q) => $q->where('code', 'unpaid'))
             ->where('due_date', '<=', now()->addDays(3))
             ->where('due_date', '>=', now())
             ->get();
@@ -263,7 +263,7 @@ class AutomationService
         Log::info('Insurance expiry notification', [
             'coverage_id' => $coverage->id,
             'patient_id' => $coverage->patient_id,
-            'end_date' => $coverage->end_date,
+            'effective_to' => $coverage->effective_to,
         ]);
     }
 

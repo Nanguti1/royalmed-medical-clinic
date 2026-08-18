@@ -153,6 +153,6 @@ class VaccinationRecord extends Model
             return null;
         }
 
-        return $this->administration_date->addDays($vaccine->interval_days);
+        return Carbon::parse($this->administration_date)->addDays($vaccine->interval_days);
     }
 }

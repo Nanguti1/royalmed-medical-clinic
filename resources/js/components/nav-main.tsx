@@ -47,8 +47,8 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
 
     return (
         <SidebarGroup className="px-2 py-0">
-            <SidebarGroupLabel>Platform</SidebarGroupLabel>
-            <SidebarMenu>
+            <SidebarGroupLabel className="text-sidebar-foreground/70 text-xs font-semibold uppercase tracking-wider">Platform</SidebarGroupLabel>
+            <SidebarMenu className="gap-1">
                 {items.map((item) => {
                     if (item.items && item.items.length > 0) {
                         // This is a group with nested items
@@ -67,17 +67,18 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
                                 <SidebarMenuButton
                                     onClick={() => toggleMenu(item.title)}
                                     tooltip={{ children: item.title }}
+                                    className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-primary data-[active=true]:text-primary-foreground transition-all duration-200"
                                 >
-                                    {item.icon && <item.icon />}
-                                    <span>{item.title}</span>
+                                    {item.icon && <item.icon className="h-4 w-4" />}
+                                    <span className="font-medium">{item.title}</span>
                                     {isOpen ? (
-                                        <ChevronDown className="ml-auto" />
+                                        <ChevronDown className="ml-auto h-4 w-4" />
                                     ) : (
-                                        <ChevronRight className="ml-auto" />
+                                        <ChevronRight className="ml-auto h-4 w-4" />
                                     )}
                                 </SidebarMenuButton>
                                 {isOpen && (
-                                    <SidebarMenuSub>
+                                    <SidebarMenuSub className="ml-2 gap-1">
                                         {item.items
                                             .filter((subItem) => !subItem.permission || useCan(subItem.permission))
                                             .map((subItem) => (
@@ -85,9 +86,10 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
                                                     <SidebarMenuSubButton
                                                         asChild
                                                         isActive={isCurrentUrl(subItem.href)}
+                                                        className="text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-primary data-[active=true]:text-primary-foreground transition-all duration-200"
                                                     >
                                                         <Link href={subItem.href} prefetch>
-                                                            {subItem.icon && <subItem.icon />}
+                                                            {subItem.icon && <subItem.icon className="h-4 w-4" />}
                                                             <span>{subItem.title}</span>
                                                         </Link>
                                                     </SidebarMenuSubButton>
@@ -110,10 +112,11 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
                                 asChild
                                 isActive={isCurrentUrl(item.href)}
                                 tooltip={{ children: item.title }}
+                                className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-primary data-[active=true]:text-primary-foreground transition-all duration-200"
                             >
                                 <Link href={item.href} prefetch>
-                                    {item.icon && <item.icon />}
-                                    <span>{item.title}</span>
+                                    {item.icon && <item.icon className="h-4 w-4" />}
+                                    <span className="font-medium">{item.title}</span>
                                 </Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>

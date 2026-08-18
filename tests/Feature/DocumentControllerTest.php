@@ -71,7 +71,7 @@ class DocumentControllerTest extends TestCase
         $response = $this->actingAs($this->user)
             ->get(route('documents.upload'));
 
-        $response->assertStatus(500); // Frontend page doesn't exist yet
+        $response->assertStatus(200);
     }
 
     public function test_store_uploads_document(): void

@@ -12,7 +12,7 @@ type PageProps = {
         last_name: string;
         hospital_number: string;
     };
-    chart: DentalChart;
+    chart: DentalChart | null;
 };
 
 export default function DentalChartPage() {
@@ -53,99 +53,118 @@ export default function DentalChartPage() {
                     </div>
                 </div>
 
-                {/* Odontogram */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Odontogram</CardTitle>
-                        <p className="text-sm text-muted-foreground">Last examined: {chart.chart_date ? new Date(chart.chart_date).toLocaleDateString() : 'N/A'}</p>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="space-y-8">
-                            {/* Upper Teeth */}
-                            <div>
-                                <p className="text-sm font-medium mb-3 text-center">Upper Arch</p>
-                                <div className="flex justify-center gap-2">
-                                    {upperTeeth.map((toothNumber) => {
-                                        const tooth = getTooth(toothNumber);
-                                        return (
-                                            <ToothDisplay
-                                                key={toothNumber}
-                                                toothNumber={toothNumber}
-                                                tooth={tooth}
-                                                getStatusColor={getToothStatusColor}
-                                            />
-                                        );
-                                    })}
-                                </div>
-                            </div>
-
-                            {/* Lower Teeth */}
-                            <div>
-                                <p className="text-sm font-medium mb-3 text-center">Lower Arch</p>
-                                <div className="flex justify-center gap-2">
-                                    {lowerTeeth.map((toothNumber) => {
-                                        const tooth = getTooth(toothNumber);
-                                        return (
-                                            <ToothDisplay
-                                                key={toothNumber}
-                                                toothNumber={toothNumber}
-                                                tooth={tooth}
-                                                getStatusColor={getToothStatusColor}
-                                            />
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Legend */}
-                        <div className="flex flex-wrap gap-4 mt-6 pt-6 border-t">
-                            <div className="flex items-center gap-2">
-                                <div className="w-4 h-4 bg-blue-100 border border-blue-300 rounded" />
-                                <span className="text-sm">Normal</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <div className="w-4 h-4 bg-green-100 border border-green-300 rounded" />
-                                <span className="text-sm">Filled/Crowned</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <div className="w-4 h-4 bg-yellow-100 border border-yellow-300 rounded" />
-                                <span className="text-sm">Needs Treatment</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <div className="w-4 h-4 bg-red-100 border border-red-300 rounded" />
-                                <span className="text-sm">Extracted</span>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Tooth Details */}
-                {chart.teeth && chart.teeth.length > 0 && (
+                {!chart ? (
                     <Card>
-                        <CardHeader>
-                            <CardTitle>Tooth Details</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="grid gap-4 md:grid-cols-2">
-                                {chart.teeth.map((tooth) => (
-                                    <ToothDetail key={tooth.id} tooth={tooth} />
-                                ))}
-                            </div>
+                        <CardContent className="flex flex-col items-center justify-center py-12">
+                            <AlertTriangle className="h-12 w-12 text-muted-foreground mb-4" />
+                            <h3 className="text-lg font-medium mb-2">No Dental Chart Found</h3>
+                            <p className="text-muted-foreground text-center mb-4">
+                                This patient does not have a dental chart record yet.
+                            </p>
+                            <Button asChild>
+                                <a href={`/dental/charts/create?patient_id=${patient.id}`}>
+                                    Create Dental Chart
+                                </a>
+                            </Button>
                         </CardContent>
                     </Card>
-                )}
+                ) : (
+                    <>
+                        {/* Odontogram */}
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Odontogram</CardTitle>
+                                <p className="text-sm text-muted-foreground">Last examined: {chart.chart_date ? new Date(chart.chart_date).toLocaleDateString() : 'N/A'}</p>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="space-y-8">
+                                    {/* Upper Teeth */}
+                                    <div>
+                                        <p className="text-sm font-medium mb-3 text-center">Upper Arch</p>
+                                        <div className="flex justify-center gap-2">
+                                            {upperTeeth.map((toothNumber) => {
+                                                const tooth = getTooth(toothNumber);
+                                                return (
+                                                    <ToothDisplay
+                                                        key={toothNumber}
+                                                        toothNumber={toothNumber}
+                                                        tooth={tooth}
+                                                        getStatusColor={getToothStatusColor}
+                                                    />
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
 
-                {/* Notes */}
-                {chart.notes && (
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Chart Notes</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-muted-foreground">{chart.notes}</p>
-                        </CardContent>
-                    </Card>
+                                    {/* Lower Teeth */}
+                                    <div>
+                                        <p className="text-sm font-medium mb-3 text-center">Lower Arch</p>
+                                        <div className="flex justify-center gap-2">
+                                            {lowerTeeth.map((toothNumber) => {
+                                                const tooth = getTooth(toothNumber);
+                                                return (
+                                                    <ToothDisplay
+                                                        key={toothNumber}
+                                                        toothNumber={toothNumber}
+                                                        tooth={tooth}
+                                                        getStatusColor={getToothStatusColor}
+                                                    />
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Legend */}
+                                <div className="flex flex-wrap gap-4 mt-6 pt-6 border-t">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-4 h-4 bg-blue-100 border border-blue-300 rounded" />
+                                        <span className="text-sm">Normal</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-4 h-4 bg-green-100 border border-green-300 rounded" />
+                                        <span className="text-sm">Filled/Crowned</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-4 h-4 bg-yellow-100 border border-yellow-300 rounded" />
+                                        <span className="text-sm">Needs Treatment</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-4 h-4 bg-red-100 border border-red-300 rounded" />
+                                        <span className="text-sm">Extracted</span>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        {/* Tooth Details */}
+                        {chart.teeth && chart.teeth.length > 0 && (
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Tooth Details</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="grid gap-4 md:grid-cols-2">
+                                        {chart.teeth.map((tooth) => (
+                                            <ToothDetail key={tooth.id} tooth={tooth} />
+                                        ))}
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        )}
+
+                        {/* Notes */}
+                        {chart.notes && (
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Chart Notes</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <p className="text-muted-foreground">{chart.notes}</p>
+                                </CardContent>
+                            </Card>
+                        )}
+                    </>
                 )}
             </div>
         </>

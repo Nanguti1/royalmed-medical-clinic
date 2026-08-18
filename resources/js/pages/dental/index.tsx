@@ -367,7 +367,7 @@ export default function DentalIndex() {
                                                 {new Date(plan.plan_date).toLocaleDateString()}
                                             </span>
                                             <span className="font-medium">
-                                                ${plan.estimated_cost.toFixed(2)}
+                                                ${plan.estimated_cost ? Number(plan.estimated_cost).toFixed(2) : '0.00'}
                                             </span>
                                         </div>
                                     </div>

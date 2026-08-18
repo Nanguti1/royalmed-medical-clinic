@@ -1,4 +1,4 @@
-import { Head, useForm, usePage } from '@inertiajs/react';
+import { Head, useForm, usePage, Link } from '@inertiajs/react';
 import { ArrowLeft, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,20 +21,15 @@ export default function InsuranceSchemeCreate() {
         name: '',
         code: '',
         description: '',
-        coverage_type: '',
-        coverage_limits: '',
-        copayment_percentage: '',
-        annual_limit: '',
+        coverage_type: 'individual',
+        max_benefit_amount: '',
+        co_payment_percentage: '',
         is_active: true,
     });
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        post('/insurance/schemes', {
-            onSuccess: () => {
-                window.location.href = '/insurance/schemes';
-            },
-        });
+        post('/insurance/schemes');
     };
 
     return (
@@ -43,9 +38,9 @@ export default function InsuranceSchemeCreate() {
             <div className="flex h-full flex-1 flex-col gap-6 p-4 md:p-6">
                 <div className="flex items-center gap-4">
                     <Button variant="ghost" size="icon" asChild>
-                        <a href="/insurance/schemes">
+                        <Link href="/insurance/schemes">
                             <ArrowLeft className="h-4 w-4" />
-                        </a>
+                        </Link>
                     </Button>
                     <div>
                         <h1 className="text-3xl font-bold tracking-tight">New Insurance Scheme</h1>
@@ -101,34 +96,43 @@ export default function InsuranceSchemeCreate() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="coverage_type">Coverage Type</Label>
-                                    <Input
-                                        id="coverage_type"
+                                    <Label htmlFor="coverage_type">Coverage Type *</Label>
+                                    <Select
                                         value={data.coverage_type}
-                                        onChange={(e) => setData('coverage_type', e.target.value)}
-                                    />
+                                        onValueChange={(value) => setData('coverage_type', value)}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="individual">Individual</SelectItem>
+                                            <SelectItem value="family">Family</SelectItem>
+                                            <SelectItem value="corporate">Corporate</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    {errors.coverage_type && <p className="text-sm text-red-500">{errors.coverage_type}</p>}
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="copayment_percentage">Copayment Percentage</Label>
+                                    <Label htmlFor="co_payment_percentage">Co-payment Percentage</Label>
                                     <Input
-                                        id="copayment_percentage"
+                                        id="co_payment_percentage"
                                         type="number"
                                         step="0.01"
-                                        value={data.copayment_percentage}
-                                        onChange={(e) => setData('copayment_percentage', e.target.value)}
+                                        value={data.co_payment_percentage}
+                                        onChange={(e) => setData('co_payment_percentage', e.target.value)}
                                         placeholder="0.00"
                                     />
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="annual_limit">Annual Limit</Label>
+                                    <Label htmlFor="max_benefit_amount">Max Benefit Amount</Label>
                                     <Input
-                                        id="annual_limit"
+                                        id="max_benefit_amount"
                                         type="number"
                                         step="0.01"
-                                        value={data.annual_limit}
-                                        onChange={(e) => setData('annual_limit', e.target.value)}
+                                        value={data.max_benefit_amount}
+                                        onChange={(e) => setData('max_benefit_amount', e.target.value)}
                                         placeholder="0.00"
                                     />
                                 </div>
@@ -143,15 +147,6 @@ export default function InsuranceSchemeCreate() {
                                 />
                             </div>
 
-                            <div className="space-y-2">
-                                <Label htmlFor="coverage_limits">Coverage Limits</Label>
-                                <Input
-                                    id="coverage_limits"
-                                    value={data.coverage_limits}
-                                    onChange={(e) => setData('coverage_limits', e.target.value)}
-                                />
-                            </div>
-
                             <div className="flex items-center space-x-2">
                                 <Checkbox
                                     id="is_active"
@@ -163,7 +158,7 @@ export default function InsuranceSchemeCreate() {
 
                             <div className="flex justify-end gap-2">
                                 <Button type="button" variant="outline" asChild>
-                                    <a href="/insurance/schemes">Cancel</a>
+                                    <Link href="/insurance/schemes">Cancel</Link>
                                 </Button>
                                 <Button type="submit" disabled={processing}>
                                     <Save className="mr-2 h-4 w-4" />

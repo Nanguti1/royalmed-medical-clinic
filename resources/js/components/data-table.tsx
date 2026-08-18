@@ -137,12 +137,12 @@ export function DataTable<T extends Record<string, any>>({
                         <div className="overflow-x-auto">
                             <table className="w-full">
                                 <thead>
-                                    <tr className="border-b">
+                                    <tr className="border-b border-border bg-muted/30">
                                         {columns.map((column) => (
                                             <th
                                                 key={String(column.key)}
-                                                className={`text-left p-2 ${column.className || ''} ${
-                                                    column.sortable && sortable ? 'cursor-pointer hover:bg-accent' : ''
+                                                className={`text-left p-3 font-medium text-muted-foreground ${column.className || ''} ${
+                                                    column.sortable && sortable ? 'cursor-pointer hover:bg-muted/50 transition-colors' : ''
                                                 }`}
                                                 onClick={() => column.sortable && handleSort(String(column.key))}
                                             >
@@ -158,13 +158,13 @@ export function DataTable<T extends Record<string, any>>({
                                     {paginatedData.map((row, index) => (
                                         <tr
                                             key={index}
-                                            className={`border-b ${onRowClick ? 'cursor-pointer hover:bg-accent/50' : ''}`}
+                                            className={`border-b border-border ${onRowClick ? 'cursor-pointer hover:bg-muted/50 transition-colors' : ''}`}
                                             onClick={() => onRowClick?.(row)}
                                         >
                                             {columns.map((column) => (
                                                 <td
                                                     key={String(column.key)}
-                                                    className={`p-2 ${column.className || ''}`}
+                                                    className={`p-3 ${column.className || ''}`}
                                                 >
                                                     {column.render
                                                         ? column.render(row[column.key], row)

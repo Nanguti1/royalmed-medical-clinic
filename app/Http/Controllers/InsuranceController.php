@@ -22,8 +22,9 @@ class InsuranceController extends Controller
     {
         $this->service = $service;
         $this->middleware('can:insurance.view')->only(['insurersIndex', 'insurersEdit', 'schemesIndex', 'schemesEdit', 'patientCoverage', 'claimsIndex', 'claimsShow', 'claimsEdit', 'preauthorizationsIndex', 'claimsAgingReport']);
-        $this->middleware('can:insurance.create')->only(['insurersCreate', 'schemesCreate', 'patientCoverageCreate', 'claimsCreate', 'preauthorizationsCreate']);
-        $this->middleware('can:insurance.update')->only(['insurersEdit', 'schemesEdit', 'claimsEdit', 'claimsResubmit', 'preauthorizationsApprove']);
+        $this->middleware('can:insurance.create')->only(['insurersCreate', 'insurersStore', 'schemesCreate', 'schemesStore', 'patientCoverageCreate', 'claimsCreate', 'preauthorizationsCreate']);
+        $this->middleware('can:insurance.update')->only(['insurersEdit', 'insurersUpdate', 'schemesEdit', 'schemesUpdate', 'claimsEdit', 'claimsResubmit', 'preauthorizationsApprove']);
+        $this->middleware('can:insurance.delete')->only(['insurersDestroy', 'schemesDestroy']);
     }
 
     public function insurersIndex(Request $request): Response
@@ -37,7 +38,7 @@ class InsuranceController extends Controller
             ->orderBy('name')
             ->paginate(20);
 
-        return Inertia::render('insurance/insurers/index', [
+        return Inertia::render('insurers/index', [
             'insurers' => $insurers,
             'filters' => [
                 'search' => $query,
@@ -48,14 +49,62 @@ class InsuranceController extends Controller
 
     public function insurersCreate(): Response
     {
-        return Inertia::render('insurance/insurers/create');
+        return Inertia::render('insurers/create');
     }
 
     public function insurersEdit(Insurer $insurer): Response
     {
-        return Inertia::render('insurance/insurers/edit', [
+        return Inertia::render('insurers/edit', [
             'insurer' => $insurer,
         ]);
+    }
+
+    public function insurersStore(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'code' => 'required|string|max:50|unique:insurers,code',
+            'type' => 'required|in:private,public,government',
+            'contact_person' => 'nullable|string|max:255',
+            'phone' => 'nullable|string|max:20',
+            'email' => 'nullable|email|max:255',
+            'address' => 'nullable|string',
+            'website' => 'nullable|url|max:255',
+            'is_active' => 'boolean',
+        ]);
+
+        Insurer::create($validated);
+
+        return to_route('insurance.insurers.index')
+            ->with('success', 'Insurer created successfully.');
+    }
+
+    public function insurersUpdate(Request $request, Insurer $insurer)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'code' => 'required|string|max:50|unique:insurers,code,'.$insurer->id,
+            'type' => 'required|in:private,public,government',
+            'contact_person' => 'nullable|string|max:255',
+            'phone' => 'nullable|string|max:20',
+            'email' => 'nullable|email|max:255',
+            'address' => 'nullable|string',
+            'website' => 'nullable|url|max:255',
+            'is_active' => 'boolean',
+        ]);
+
+        $insurer->update($validated);
+
+        return to_route('insurance.insurers.index')
+            ->with('success', 'Insurer updated successfully.');
+    }
+
+    public function insurersDestroy(Insurer $insurer)
+    {
+        $insurer->delete();
+
+        return to_route('insurance.insurers.index')
+            ->with('success', 'Insurer deleted successfully.');
     }
 
     public function schemesIndex(Request $request): Response
@@ -70,7 +119,7 @@ class InsuranceController extends Controller
             ->orderBy('name')
             ->paginate(20);
 
-        return Inertia::render('insurance/schemes/index', [
+        return Inertia::render('insurance-schemes/index', [
             'schemes' => $schemes,
             'filters' => [
                 'search' => $query,
@@ -83,7 +132,7 @@ class InsuranceController extends Controller
     {
         $insurers = Insurer::select('id', 'name')->get();
 
-        return Inertia::render('insurance/schemes/create', [
+        return Inertia::render('insurance-schemes/create', [
             'insurers' => $insurers,
         ]);
     }
@@ -93,10 +142,56 @@ class InsuranceController extends Controller
         $scheme->load('insurer');
         $insurers = Insurer::select('id', 'name')->get();
 
-        return Inertia::render('insurance/schemes/edit', [
+        return Inertia::render('insurance-schemes/edit', [
             'scheme' => $scheme,
             'insurers' => $insurers,
         ]);
+    }
+
+    public function schemesStore(Request $request)
+    {
+        $validated = $request->validate([
+            'insurer_id' => 'required|exists:insurers,id',
+            'name' => 'required|string|max:255',
+            'code' => 'required|string|max:50|unique:insurance_schemes,code',
+            'description' => 'nullable|string',
+            'coverage_type' => 'required|in:individual,family,corporate',
+            'max_benefit_amount' => 'nullable|numeric',
+            'co_payment_percentage' => 'nullable|numeric|min:0|max:100',
+            'is_active' => 'boolean',
+        ]);
+
+        InsuranceScheme::create($validated);
+
+        return to_route('insurance.schemes.index')
+            ->with('success', 'Insurance scheme created successfully.');
+    }
+
+    public function schemesUpdate(Request $request, InsuranceScheme $scheme)
+    {
+        $validated = $request->validate([
+            'insurer_id' => 'required|exists:insurers,id',
+            'name' => 'required|string|max:255',
+            'code' => 'required|string|max:50|unique:insurance_schemes,code,'.$scheme->id,
+            'description' => 'nullable|string',
+            'coverage_type' => 'required|in:individual,family,corporate',
+            'max_benefit_amount' => 'nullable|numeric',
+            'co_payment_percentage' => 'nullable|numeric|min:0|max:100',
+            'is_active' => 'boolean',
+        ]);
+
+        $scheme->update($validated);
+
+        return to_route('insurance.schemes.index')
+            ->with('success', 'Insurance scheme updated successfully.');
+    }
+
+    public function schemesDestroy(InsuranceScheme $scheme)
+    {
+        $scheme->delete();
+
+        return to_route('insurance.schemes.index')
+            ->with('success', 'Insurance scheme deleted successfully.');
     }
 
     public function patientCoverage(Patient $patient): Response
@@ -130,7 +225,7 @@ class InsuranceController extends Controller
             'created_by' => auth()->id(),
         ]));
 
-        return redirect()->route('insurance.patients.coverage', $patient)
+        return to_route('insurance.patients.coverage', $patient)
             ->with('success', 'Patient coverage added successfully.');
     }
 
@@ -149,7 +244,7 @@ class InsuranceController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(20);
 
-        return Inertia::render('insurance/claims/index', [
+        return Inertia::render('billing/claims/index', [
             'claims' => $claims,
             'filters' => [
                 'search' => $query,
@@ -163,7 +258,7 @@ class InsuranceController extends Controller
     {
         $invoice->load(['patient', 'patientCoverage', 'items']);
 
-        return Inertia::render('insurance/claims/create', [
+        return Inertia::render('billing/claims/create', [
             'invoice' => $invoice,
         ]);
     }
@@ -172,7 +267,7 @@ class InsuranceController extends Controller
     {
         $claim->load(['patient', 'insurer', 'invoice', 'items']);
 
-        return Inertia::render('insurance/claims/show', [
+        return Inertia::render('billing/claims/show', [
             'claim' => $claim,
         ]);
     }
@@ -181,7 +276,7 @@ class InsuranceController extends Controller
     {
         $claim->load(['patient', 'insurer', 'invoice', 'items']);
 
-        return Inertia::render('insurance/claims/edit', [
+        return Inertia::render('billing/claims/edit', [
             'claim' => $claim,
         ]);
     }
@@ -194,7 +289,7 @@ class InsuranceController extends Controller
 
         $this->service->resubmitClaim($claim, $validated['corrected_data'], auth()->id());
 
-        return redirect()->route('insurance.claims.show', $claim)
+        return to_route('billing.claims.show', $claim)
             ->with('success', 'Claim resubmitted successfully.');
     }
 
@@ -202,7 +297,7 @@ class InsuranceController extends Controller
     {
         $report = $this->service->getClaimAgingReport();
 
-        return Inertia::render('insurance/claims/aging-report', [
+        return Inertia::render('billing/claims/aging-report', [
             'report' => $report,
         ]);
     }
@@ -220,7 +315,7 @@ class InsuranceController extends Controller
             ->orderBy('request_date', 'desc')
             ->paginate(20);
 
-        return Inertia::render('insurance/preauthorizations/index', [
+        return Inertia::render('billing/preauthorizations/index', [
             'preauthorizations' => $preauths,
             'filters' => [
                 'search' => $query,
@@ -234,7 +329,7 @@ class InsuranceController extends Controller
         $patients = Patient::select('id', 'first_name', 'last_name', 'hospital_number')->get();
         $schemes = InsuranceScheme::with('insurer')->get();
 
-        return Inertia::render('insurance/preauthorizations/create', [
+        return Inertia::render('billing/preauthorizations/create', [
             'patients' => $patients,
             'schemes' => $schemes,
         ]);
@@ -254,7 +349,7 @@ class InsuranceController extends Controller
             $this->service->rejectPreauthorization($preauth, $validated['notes'] ?? 'Rejected', auth()->id());
         }
 
-        return redirect()->route('insurance.preauthorizations.index')
+        return to_route('billing.preauthorizations.index')
             ->with('success', 'Preauthorization processed successfully.');
     }
 }

@@ -39,7 +39,7 @@ class ConsultationController extends Controller
 
     public function index(): Response
     {
-        $entries = $this->queueService->waiting();
+        $entries = $this->queueService->getWorklist(null, ['waiting', 'called']);
         $entries->load(['visit.patient', 'visit.vitalSign']);
 
         return Inertia::render('consultations/index', [
@@ -120,6 +120,11 @@ class ConsultationController extends Controller
     public function startConsultation(Visit $visit)
     {
         $this->visitService->start($visit);
+
+        // Update queue entry status if exists
+        if ($visit->queueEntry) {
+            $this->queueService->start($visit->queueEntry);
+        }
 
         return redirect()->route('consultations.create', $visit)
             ->with('success', 'Visit started. You can now begin the consultation.');

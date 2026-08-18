@@ -42,19 +42,19 @@ export default function Dashboard() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'paid':
-        return <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">Paid</Badge>;
+        return <Badge className="bg-success/10 text-success-foreground border-success/20">Paid</Badge>;
       case 'partial':
-        return <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">Partial</Badge>;
+        return <Badge className="bg-warning/10 text-warning-foreground border-warning/20">Partial</Badge>;
       case 'unpaid':
-        return <Badge className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">Unpaid</Badge>;
+        return <Badge className="bg-destructive/10 text-destructive-foreground border-destructive/20">Unpaid</Badge>;
       case 'completed':
-        return <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">Completed</Badge>;
+        return <Badge className="bg-success/10 text-success-foreground border-success/20">Completed</Badge>;
       case 'in_progress':
-        return <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">In Progress</Badge>;
+        return <Badge className="bg-primary/10 text-primary-foreground border-primary/20">In Progress</Badge>;
       case 'pending':
-        return <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">Pending</Badge>;
+        return <Badge className="bg-warning/10 text-warning-foreground border-warning/20">Pending</Badge>;
       case 'cancelled':
-        return <Badge className="bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200">Cancelled</Badge>;
+        return <Badge className="bg-muted text-muted-foreground border-border">Cancelled</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -87,10 +87,12 @@ export default function Dashboard() {
         {/* Summary Cards */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <PermissionGuard permission="patients.view" fallback={null}>
-            <Card>
+            <Card className="border-l-4 border-l-primary">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Patients Today</CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
+                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Users className="h-4 w-4 text-primary" />
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{dashboard.patients.total_today}</div>
@@ -100,10 +102,12 @@ export default function Dashboard() {
           </PermissionGuard>
 
           <PermissionGuard permission="visits.view" fallback={null}>
-            <Card>
+            <Card className="border-l-4 border-l-cyan-500">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Visits</CardTitle>
-                <Activity className="h-4 w-4 text-muted-foreground" />
+                <div className="h-8 w-8 rounded-full bg-cyan-500/10 flex items-center justify-center">
+                  <Activity className="h-4 w-4 text-cyan-600" />
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{dashboard.visits.total}</div>
@@ -115,10 +119,12 @@ export default function Dashboard() {
           </PermissionGuard>
 
           <PermissionGuard permission="billing.view" fallback={null}>
-            <Card>
+            <Card className="border-l-4 border-l-amber-500">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Revenue Today</CardTitle>
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
+                <div className="h-8 w-8 rounded-full bg-amber-500/10 flex items-center justify-center">
+                  <DollarSign className="h-4 w-4 text-amber-600" />
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{Number(dashboard.payments.total_collected).toFixed(2)}</div>
@@ -130,10 +136,12 @@ export default function Dashboard() {
           </PermissionGuard>
 
           <PermissionGuard permission="billing.view" fallback={null}>
-            <Card>
+            <Card className="border-l-4 border-l-green-500">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Outstanding</CardTitle>
-                <FileText className="h-4 w-4 text-muted-foreground" />
+                <div className="h-8 w-8 rounded-full bg-green-500/10 flex items-center justify-center">
+                  <FileText className="h-4 w-4 text-green-600" />
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{Number(dashboard.billing.outstanding).toFixed(2)}</div>
@@ -148,28 +156,30 @@ export default function Dashboard() {
         {/* Alerts Row */}
         <div className="grid gap-4 md:grid-cols-3">
           <PermissionGuard permission="pharmacy.view" fallback={null}>
-            <Card className={dashboard.pharmacy.low_stock > 0 || dashboard.pharmacy.expiring_soon > 0 ? 'border-orange-200' : ''}>
+            <Card className={dashboard.pharmacy.low_stock > 0 || dashboard.pharmacy.expiring_soon > 0 ? 'border-l-4 border-l-emerald-500' : 'border-l-4 border-l-emerald-500'}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Pharmacy Alerts</CardTitle>
-                <Pill className="h-4 w-4 text-muted-foreground" />
+                <div className="h-8 w-8 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                  <Pill className="h-4 w-4 text-emerald-600" />
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
                   {dashboard.pharmacy.low_stock > 0 && (
                     <div className="flex items-center gap-2 text-sm">
-                      <AlertTriangle className="h-4 w-4 text-orange-500" />
+                      <AlertTriangle className="h-4 w-4 text-warning" />
                       <span>{dashboard.pharmacy.low_stock} low stock items</span>
                     </div>
                   )}
                   {dashboard.pharmacy.expiring_soon > 0 && (
                     <div className="flex items-center gap-2 text-sm">
-                      <Clock className="h-4 w-4 text-yellow-500" />
+                      <Clock className="h-4 w-4 text-warning" />
                       <span>{dashboard.pharmacy.expiring_soon} expiring soon</span>
                     </div>
                   )}
                   {dashboard.pharmacy.expired > 0 && (
                     <div className="flex items-center gap-2 text-sm">
-                      <AlertTriangle className="h-4 w-4 text-red-500" />
+                      <AlertTriangle className="h-4 w-4 text-destructive" />
                       <span>{dashboard.pharmacy.expired} expired</span>
                     </div>
                   )}
@@ -182,10 +192,12 @@ export default function Dashboard() {
           </PermissionGuard>
 
           <PermissionGuard permission="laboratory.view" fallback={null}>
-            <Card>
+            <Card className="border-l-4 border-l-teal-500">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Laboratory</CardTitle>
-                <FlaskConical className="h-4 w-4 text-muted-foreground" />
+                <div className="h-8 w-8 rounded-full bg-teal-500/10 flex items-center justify-center">
+                  <FlaskConical className="h-4 w-4 text-teal-600" />
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
@@ -211,10 +223,12 @@ export default function Dashboard() {
           </PermissionGuard>
 
           <PermissionGuard permission="pharmacy.view" fallback={null}>
-            <Card>
+            <Card className="border-l-4 border-l-indigo-500">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Prescriptions</CardTitle>
-                <FileText className="h-4 w-4 text-muted-foreground" />
+                <div className="h-8 w-8 rounded-full bg-indigo-500/10 flex items-center justify-center">
+                  <FileText className="h-4 w-4 text-indigo-600" />
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
@@ -292,7 +306,7 @@ export default function Dashboard() {
                     {dashboard.activeConsultations.map((consultation) => (
                       <div key={consultation.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                         <div className="flex items-center gap-3">
-                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
                             <Stethoscope className="h-4 w-4" />
                           </div>
                           <div>
@@ -333,17 +347,17 @@ export default function Dashboard() {
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b">
-                      <th className="text-left p-3">Patient</th>
-                      <th className="text-left p-3">Phone</th>
-                      <th className="text-left p-3">Status</th>
-                      <th className="text-left p-3">Time</th>
-                      <th className="text-right p-3">Action</th>
+                    <tr className="border-b border-border bg-muted/30">
+                      <th className="text-left p-3 font-medium text-muted-foreground">Patient</th>
+                      <th className="text-left p-3 font-medium text-muted-foreground">Phone</th>
+                      <th className="text-left p-3 font-medium text-muted-foreground">Status</th>
+                      <th className="text-left p-3 font-medium text-muted-foreground">Time</th>
+                      <th className="text-right p-3 font-medium text-muted-foreground">Action</th>
                     </tr>
                   </thead>
                   <tbody>
                     {dashboard.recentPatients.map((patient) => (
-                      <tr key={patient.id} className="border-b">
+                      <tr key={patient.id} className="border-b border-border hover:bg-muted/50 transition-colors">
                         <td className="p-3 font-medium">{patient.patient_name}</td>
                         <td className="p-3">{patient.phone || '—'}</td>
                         <td className="p-3">{getStatusBadge(patient.visit_status)}</td>

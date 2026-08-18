@@ -1,0 +1,1 @@
+import{n as e}from"./jsx-runtime-CTQSNLil.js";import{c as t}from"./dist-BEAKNXc7.js";var n=e();function r(e){let r=(0,n.c)(3),{auth:i}=t().props,a=i?.user;if(!a)return!1;if(a.is_super_admin)return!0;let o;return r[0]!==e||r[1]!==a.permissions?(o=a.permissions.includes(e),r[0]=e,r[1]=a.permissions,r[2]=o):o=r[2],o}export{r as t};

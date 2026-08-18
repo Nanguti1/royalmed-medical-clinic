@@ -30,11 +30,20 @@ use Illuminate\Support\Facades\Route;
 // Health check endpoint (public for monitoring)
 Route::get('/health', HealthController::class)->name('health');
 
-Route::inertia('/', 'welcome')->name('home');
+Route::get('/', function () {
+    return auth()->check()
+        ? redirect()->route('dashboard')
+        : redirect()->route('login');
+})->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard')
         ->middleware('can:patients.view');
+
+    // Redirect old insurers route to new location
+    Route::redirect('/insurers', '/insurance/insurers', 301);
+    Route::redirect('/insurance/claims', '/billing/claims', 301);
+    Route::redirect('/insurance/preauthorizations', '/billing/preauthorizations', 301);
 
     Route::prefix('patients')->group(function () {
         Route::get('/', [PatientController::class, 'index'])->name('patients.index')
@@ -76,9 +85,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('dental')->group(function () {
         Route::get('/', [DentalController::class, 'index'])->name('dental.index');
         Route::get('/patients/{patient}/chart', [DentalController::class, 'chart'])->name('dental.chart');
+        Route::prefix('charts')->group(function () {
+            Route::get('/create', [DentalController::class, 'chartsCreate'])->name('dental.charts.create');
+            Route::post('/', [DentalController::class, 'chartsStore'])->name('dental.charts.store');
+        });
         Route::prefix('treatment-plans')->group(function () {
             Route::get('/', [DentalController::class, 'treatmentPlansIndex'])->name('dental.treatment-plans.index');
             Route::get('/create', [DentalController::class, 'treatmentPlansCreate'])->name('dental.treatment-plans.create');
+            Route::post('/', [DentalController::class, 'treatmentPlansStore'])->name('dental.treatment-plans.store');
             Route::get('/{plan}', [DentalController::class, 'treatmentPlansShow'])->name('dental.treatment-plans.show');
         });
         Route::prefix('procedures')->group(function () {
@@ -94,28 +108,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::prefix('insurers')->group(function () {
             Route::get('/', [InsuranceController::class, 'insurersIndex'])->name('insurance.insurers.index');
             Route::get('/create', [InsuranceController::class, 'insurersCreate'])->name('insurance.insurers.create');
+            Route::post('/', [InsuranceController::class, 'insurersStore'])->name('insurance.insurers.store');
             Route::get('/{insurer}/edit', [InsuranceController::class, 'insurersEdit'])->name('insurance.insurers.edit');
+            Route::put('/{insurer}', [InsuranceController::class, 'insurersUpdate'])->name('insurance.insurers.update');
+            Route::delete('/{insurer}', [InsuranceController::class, 'insurersDestroy'])->name('insurance.insurers.destroy');
         });
         Route::prefix('schemes')->group(function () {
             Route::get('/', [InsuranceController::class, 'schemesIndex'])->name('insurance.schemes.index');
             Route::get('/create', [InsuranceController::class, 'schemesCreate'])->name('insurance.schemes.create');
+            Route::post('/', [InsuranceController::class, 'schemesStore'])->name('insurance.schemes.store');
             Route::get('/{scheme}/edit', [InsuranceController::class, 'schemesEdit'])->name('insurance.schemes.edit');
+            Route::put('/{scheme}', [InsuranceController::class, 'schemesUpdate'])->name('insurance.schemes.update');
+            Route::delete('/{scheme}', [InsuranceController::class, 'schemesDestroy'])->name('insurance.schemes.destroy');
         });
         Route::get('/patients/{patient}/coverage', [InsuranceController::class, 'patientCoverage'])->name('insurance.patients.coverage');
         Route::post('/patients/{patient}/coverage', [InsuranceController::class, 'patientCoverageCreate'])->name('insurance.patients.coverage.create');
-        Route::prefix('claims')->group(function () {
-            Route::get('/', [InsuranceController::class, 'claimsIndex'])->name('insurance.claims.index');
-            Route::get('/create/{invoice}', [InsuranceController::class, 'claimsCreate'])->name('insurance.claims.create');
-            Route::get('/{claim}', [InsuranceController::class, 'claimsShow'])->name('insurance.claims.show');
-            Route::get('/{claim}/edit', [InsuranceController::class, 'claimsEdit'])->name('insurance.claims.edit');
-            Route::post('/{claim}/resubmit', [InsuranceController::class, 'claimsResubmit'])->name('insurance.claims.resubmit');
-            Route::get('/aging-report', [InsuranceController::class, 'claimsAgingReport'])->name('insurance.claims.aging-report');
-        });
-        Route::prefix('preauthorizations')->group(function () {
-            Route::get('/', [InsuranceController::class, 'preauthorizationsIndex'])->name('insurance.preauthorizations.index');
-            Route::get('/create', [InsuranceController::class, 'preauthorizationsCreate'])->name('insurance.preauthorizations.create');
-            Route::post('/{preauth}/approve', [InsuranceController::class, 'preauthorizationsApprove'])->name('insurance.preauthorizations.approve');
-        });
     });
 
     Route::prefix('documents')->group(function () {
@@ -367,6 +374,30 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->middleware('can:billing.create');
         Route::get('/{invoice}', [BillingController::class, 'show'])->name('billing.show')
             ->middleware('can:billing.view');
+
+        Route::prefix('claims')->group(function () {
+            Route::get('/', [InsuranceController::class, 'claimsIndex'])->name('billing.claims.index')
+                ->middleware('can:insurance.view');
+            Route::get('/create/{invoice}', [InsuranceController::class, 'claimsCreate'])->name('billing.claims.create')
+                ->middleware('can:insurance.create');
+            Route::get('/{claim}', [InsuranceController::class, 'claimsShow'])->name('billing.claims.show')
+                ->middleware('can:insurance.view');
+            Route::get('/{claim}/edit', [InsuranceController::class, 'claimsEdit'])->name('billing.claims.edit')
+                ->middleware('can:insurance.update');
+            Route::post('/{claim}/resubmit', [InsuranceController::class, 'claimsResubmit'])->name('billing.claims.resubmit')
+                ->middleware('can:insurance.update');
+            Route::get('/aging-report', [InsuranceController::class, 'claimsAgingReport'])->name('billing.claims.aging-report')
+                ->middleware('can:insurance.view');
+        });
+
+        Route::prefix('preauthorizations')->group(function () {
+            Route::get('/', [InsuranceController::class, 'preauthorizationsIndex'])->name('billing.preauthorizations.index')
+                ->middleware('can:insurance.view');
+            Route::get('/create', [InsuranceController::class, 'preauthorizationsCreate'])->name('billing.preauthorizations.create')
+                ->middleware('can:insurance.create');
+            Route::post('/{preauth}/approve', [InsuranceController::class, 'preauthorizationsApprove'])->name('billing.preauthorizations.approve')
+                ->middleware('can:insurance.update');
+        });
     });
 
     Route::prefix('payments')->group(function () {

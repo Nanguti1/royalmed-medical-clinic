@@ -27,12 +27,12 @@ export function UserInfo({
             <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">{user.name}</span>
                 {showEmail && (
-                    <span className="truncate text-xs text-muted-foreground">
+                    <span className="truncate text-xs text-sidebar-foreground/70">
                         {user.email}
                     </span>
                 )}
                 {showRole && (
-                    <span className="truncate text-xs text-muted-foreground capitalize">
+                    <span className="truncate text-xs text-sidebar-foreground/70 capitalize">
                         {roleLabel}
                     </span>
                 )}

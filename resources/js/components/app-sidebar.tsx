@@ -14,6 +14,8 @@ import {
     Users as UsersIcon,
     Bell,
     BarChart3,
+    FileCheck,
+    FilePlus,
 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavMain } from '@/components/nav-main';
@@ -38,70 +40,54 @@ const mainNavItems: NavItem[] = [
         permission: null, // Everyone can see dashboard
     },
     {
-        title: 'Patients',
-        href: '/patients',
+        title: 'Patient Management',
         icon: UsersIcon,
-        permission: 'patients.view',
+        permission: null, // Group header, individual items have permissions
+        items: [
+            {
+                title: 'Patients',
+                href: '/patients',
+                icon: UsersIcon,
+                permission: 'patients.view',
+            },
+            {
+                title: 'Appointments',
+                href: '/appointments',
+                icon: Calendar,
+                permission: 'appointments.view',
+            },
+        ],
     },
     {
-        title: 'Appointments',
-        href: '/appointments',
-        icon: Calendar,
-        permission: 'appointments.view',
-    },
-    {
-        title: 'Dental',
-        href: '/dental',
-        icon: LayoutGrid,
-        permission: 'dental.view',
-    },
-    {
-        title: 'Insurance',
-        href: '/insurance/insurers',
-        icon: Shield,
-        permission: 'insurance.view',
-    },
-    {
-        title: 'Documents',
-        href: '/documents',
-        icon: FileText,
-        permission: 'documents.view',
-    },
-    {
-        title: 'Vaccinations',
-        href: '/vaccinations',
-        icon: Bell,
-        permission: 'vaccinations.view',
-    },
-    {
-        title: 'Reports',
-        href: '/reports',
-        icon: BarChart3,
-        permission: 'reports.view',
-    },
-    {
-        title: 'Visits',
-        href: '/visits',
+        title: 'Clinical Workflow',
         icon: Stethoscope,
-        permission: 'visits.view',
-    },
-    {
-        title: 'Queue',
-        href: '/visits/queue',
-        icon: Activity,
-        permission: 'visits.view',
-    },
-    {
-        title: 'Clinician Desk',
-        href: '/consultations',
-        icon: FileText,
-        permission: 'consultations.view',
-    },
-    {
-        title: 'Prescriptions',
-        href: '/prescriptions',
-        icon: FileText,
-        permission: 'consultations.view',
+        permission: null, // Group header, individual items have permissions
+        items: [
+            {
+                title: 'Waiting Queue',
+                href: '/visits/queue',
+                icon: Activity,
+                permission: 'visits.view',
+            },
+            {
+                title: 'Clinician Desk',
+                href: '/consultations',
+                icon: FileText,
+                permission: 'consultations.view',
+            },
+            {
+                title: 'Prescriptions',
+                href: '/prescriptions',
+                icon: Pill,
+                permission: 'consultations.view',
+            },
+            {
+                title: 'Laboratory',
+                href: '/laboratory',
+                icon: FlaskConical,
+                permission: 'laboratory.view',
+            },
+        ],
     },
     {
         title: 'Pharmacy',
@@ -129,22 +115,78 @@ const mainNavItems: NavItem[] = [
         ],
     },
     {
-        title: 'Laboratory',
-        href: '/laboratory',
-        icon: FlaskConical,
-        permission: 'laboratory.view',
-    },
-    {
         title: 'Billing',
-        href: '/billing',
         icon: DollarSign,
-        permission: 'billing.view',
+        permission: null, // Group header, individual items have permissions
+        items: [
+            {
+                title: 'Invoices',
+                href: '/billing',
+                icon: DollarSign,
+                permission: 'billing.view',
+            },
+            {
+                title: 'Payments',
+                href: '/payments',
+                icon: DollarSign,
+                permission: 'billing.view',
+            },
+            {
+                title: 'Insurance Claims',
+                href: '/billing/claims',
+                icon: FileText,
+                permission: 'insurance.view',
+            },
+            {
+                title: 'Preauthorizations',
+                href: '/billing/preauthorizations',
+                icon: FilePlus,
+                permission: 'insurance.view',
+            },
+        ],
     },
     {
-        title: 'User Management',
+        title: 'Specialized Services',
         icon: Shield,
         permission: null, // Group header, individual items have permissions
         items: [
+            {
+                title: 'Dental',
+                href: '/dental',
+                icon: LayoutGrid,
+                permission: 'dental.view',
+            },
+            {
+                title: 'Vaccinations',
+                href: '/vaccinations',
+                icon: Bell,
+                permission: 'vaccinations.view',
+            },
+            {
+                title: 'Documents',
+                href: '/documents',
+                icon: FileText,
+                permission: 'documents.view',
+            },
+        ],
+    },
+    {
+        title: 'Administration',
+        icon: Settings,
+        permission: null, // Group header, individual items have permissions
+        items: [
+            {
+                title: 'Reports',
+                href: '/reports',
+                icon: BarChart3,
+                permission: 'reports.view',
+            },
+            {
+                title: 'Insurance Setup',
+                href: '/insurance/insurers',
+                icon: Shield,
+                permission: 'insurance.view',
+            },
             {
                 title: 'Users',
                 href: '/users',
@@ -152,16 +194,10 @@ const mainNavItems: NavItem[] = [
                 permission: 'users.view',
             },
             {
-                title: 'Roles',
+                title: 'Roles & Permissions',
                 href: '/roles',
                 icon: Shield,
                 permission: 'roles.view',
-            },
-            {
-                title: 'Permissions',
-                href: '/permissions',
-                icon: Settings,
-                permission: 'permissions.view',
             },
         ],
     },

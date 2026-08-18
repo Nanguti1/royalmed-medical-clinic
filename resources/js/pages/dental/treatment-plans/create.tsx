@@ -23,7 +23,7 @@ export default function TreatmentPlanCreate() {
     const { data, setData, post, processing, errors } = useForm({
         patient_id: defaults.patient_id,
         plan_date: new Date().toISOString().split('T')[0],
-        status: 'pending',
+        status: 'draft',
         priority: 'medium',
         estimated_cost: '',
         notes: '',
@@ -31,11 +31,7 @@ export default function TreatmentPlanCreate() {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        post('/dental/treatment-plans', {
-            onSuccess: () => {
-                window.location.href = '/dental/treatment-plans';
-            },
-        });
+        post('/dental/treatment-plans');
     };
 
     return (
@@ -95,7 +91,7 @@ export default function TreatmentPlanCreate() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="status">Status</Label>
+                                    <Label htmlFor="status">Status *</Label>
                                     <Select
                                         value={data.status}
                                         onValueChange={(value) => setData('status', value as any)}
@@ -104,16 +100,17 @@ export default function TreatmentPlanCreate() {
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="pending">Pending</SelectItem>
-                                            <SelectItem value="in_progress">In Progress</SelectItem>
+                                            <SelectItem value="draft">Draft</SelectItem>
+                                            <SelectItem value="active">Active</SelectItem>
                                             <SelectItem value="completed">Completed</SelectItem>
                                             <SelectItem value="cancelled">Cancelled</SelectItem>
                                         </SelectContent>
                                     </Select>
+                                    {errors.status && <p className="text-sm text-red-500">{errors.status}</p>}
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="priority">Priority</Label>
+                                    <Label htmlFor="priority">Priority *</Label>
                                     <Select
                                         value={data.priority}
                                         onValueChange={(value) => setData('priority', value as any)}
@@ -128,6 +125,7 @@ export default function TreatmentPlanCreate() {
                                             <SelectItem value="urgent">Urgent</SelectItem>
                                         </SelectContent>
                                     </Select>
+                                    {errors.priority && <p className="text-sm text-red-500">{errors.priority}</p>}
                                 </div>
 
                                 <div className="space-y-2">
@@ -140,6 +138,7 @@ export default function TreatmentPlanCreate() {
                                         onChange={(e) => setData('estimated_cost', e.target.value)}
                                         placeholder="0.00"
                                     />
+                                    {errors.estimated_cost && <p className="text-sm text-red-500">{errors.estimated_cost}</p>}
                                 </div>
                             </div>
 
@@ -151,6 +150,7 @@ export default function TreatmentPlanCreate() {
                                     onChange={(e) => setData('notes', e.target.value)}
                                     placeholder="Additional notes"
                                 />
+                                {errors.notes && <p className="text-sm text-red-500">{errors.notes}</p>}
                             </div>
 
                             <div className="flex justify-end gap-2">

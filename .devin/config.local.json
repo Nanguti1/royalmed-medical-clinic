@@ -12,7 +12,8 @@
       "Exec(grep)",
       "Exec(composer dump-autoload)",
       "Exec(mkdir)",
-      "Exec(find)"
+      "Exec(find)",
+      "Exec(move)"
     ]
   }
 }

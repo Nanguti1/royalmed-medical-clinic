@@ -14,7 +14,6 @@ class AddToQueueRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'visit_id' => 'required|exists:visits,id',
             'department' => 'nullable|string|in:triage,consultation,laboratory,pharmacy,dental',
             'queue_number' => 'nullable|string|max:255',
             'position' => 'nullable|integer',

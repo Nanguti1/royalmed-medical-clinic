@@ -86,6 +86,19 @@ function QueueCard({ entry, onStartConsultation }: { entry: QueueEntry; onStartC
 
     const hasVitals = entry.visit?.vitalSign !== null;
 
+    const getStatusColor = (status: string) => {
+        switch (status) {
+            case 'waiting':
+                return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
+            case 'called':
+                return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+            case 'in_progress':
+                return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+            default:
+                return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
+        }
+    };
+
     return (
         <Card>
             <CardContent className="pt-6">
@@ -102,6 +115,9 @@ function QueueCard({ entry, onStartConsultation }: { entry: QueueEntry; onStartC
                         </div>
                     </div>
                     <div className="flex items-center gap-4">
+                        <Badge className={getStatusColor(entry.status)}>
+                            {entry.status.charAt(0).toUpperCase() + entry.status.slice(1).replace('_', ' ')}
+                        </Badge>
                         {hasVitals && (
                             <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
                                 Vitals Captured

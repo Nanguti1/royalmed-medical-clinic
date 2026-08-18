@@ -60,24 +60,43 @@ class PatientController extends Controller
 
     public function store(StorePatientRequest $request)
     {
-        $validated = $request->validated();
+        try {
+            $validated = $request->validated();
 
-        if (! $request->boolean('confirm_duplicate')) {
-            $duplicates = $this->service->findDuplicates($validated);
-            if ($duplicates->isNotEmpty()) {
-                return redirect()->back()
-                    ->withInput()
-                    ->with([
-                        'warning' => 'Potential duplicate patient(s) detected. Please confirm to proceed.',
-                        'duplicate_candidates' => $duplicates,
+            if (! $request->boolean('confirm_duplicate')) {
+                try {
+                    $duplicates = $this->service->findDuplicates($validated);
+                    if ($duplicates->isNotEmpty()) {
+                        return redirect()->back()
+                            ->withInput()
+                            ->with([
+                                'warning' => 'Potential duplicate patient(s) detected. Please confirm to proceed.',
+                                'duplicate_candidates' => $duplicates,
+                            ]);
+                    }
+                } catch (\Exception $e) {
+                    // If duplicate check fails, log but continue with registration
+                    \Log::warning('Duplicate check failed, proceeding with registration', [
+                        'error' => $e->getMessage(),
+                        'data' => $validated,
                     ]);
+                }
             }
+
+            $patient = $this->service->register($validated);
+
+            return redirect()->route('patients.show', $patient)
+                ->with('success', 'Patient registered successfully.');
+        } catch (\Exception $e) {
+            \Log::error('Patient registration failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Failed to register patient: ' . $e->getMessage());
         }
-
-        $patient = $this->service->register($validated);
-
-        return redirect()->route('patients.show', $patient)
-            ->with('success', 'Patient registered successfully.');
     }
 
     public function checkDuplicates(Request $request): JsonResponse

@@ -1,4 +1,4 @@
-import { Head, useForm } from '@inertiajs/react';
+import { Head, useForm, Link } from '@inertiajs/react';
 import { ArrowLeft, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,17 +17,12 @@ export default function InsurerCreate() {
         email: '',
         address: '',
         website: '',
-        notes: '',
         is_active: true,
     });
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        post('/insurance/insurers', {
-            onSuccess: () => {
-                window.location.href = '/insurance/insurers';
-            },
-        });
+        post('/insurance/insurers');
     };
 
     return (
@@ -37,9 +32,9 @@ export default function InsurerCreate() {
                 {/* Header */}
                 <div className="flex items-center gap-4">
                     <Button variant="ghost" size="icon" asChild>
-                        <a href="/insurance/insurers">
+                        <Link href="/insurance/insurers">
                             <ArrowLeft className="h-4 w-4" />
-                        </a>
+                        </Link>
                     </Button>
                     <div>
                         <h1 className="text-3xl font-bold tracking-tight">New Insurance Insurer</h1>
@@ -63,7 +58,7 @@ export default function InsurerCreate() {
                                         onChange={(e) => setData('name', e.target.value)}
                                         placeholder="e.g., NHIF"
                                     />
-                                    {errors.name && <p className="text-sm text-red-500">{errors.name}</p>}
+                                    {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
                                 </div>
 
                                 <div className="space-y-2">
@@ -74,7 +69,7 @@ export default function InsurerCreate() {
                                         onChange={(e) => setData('code', e.target.value)}
                                         placeholder="e.g., NHIF001"
                                     />
-                                    {errors.code && <p className="text-sm text-red-500">{errors.code}</p>}
+                                    {errors.code && <p className="text-sm text-destructive">{errors.code}</p>}
                                 </div>
 
                                 <div className="space-y-2">
@@ -89,11 +84,10 @@ export default function InsurerCreate() {
                                         <SelectContent>
                                             <SelectItem value="private">Private</SelectItem>
                                             <SelectItem value="public">Public</SelectItem>
-                                            <SelectItem value="nhif">NHIF</SelectItem>
-                                            <SelectItem value="corporate">Corporate</SelectItem>
+                                            <SelectItem value="government">Government</SelectItem>
                                         </SelectContent>
                                     </Select>
-                                    {errors.type && <p className="text-sm text-red-500">{errors.type}</p>}
+                                    {errors.type && <p className="text-sm text-destructive">{errors.type}</p>}
                                 </div>
 
                                 <div className="space-y-2">
@@ -148,16 +142,6 @@ export default function InsurerCreate() {
                                 />
                             </div>
 
-                            <div className="space-y-2">
-                                <Label htmlFor="notes">Notes</Label>
-                                <Input
-                                    id="notes"
-                                    value={data.notes}
-                                    onChange={(e) => setData('notes', e.target.value)}
-                                    placeholder="Additional notes"
-                                />
-                            </div>
-
                             <div className="flex items-center space-x-2">
                                 <Checkbox
                                     id="is_active"
@@ -169,7 +153,7 @@ export default function InsurerCreate() {
 
                             <div className="flex justify-end gap-2">
                                 <Button type="button" variant="outline" asChild>
-                                    <a href="/insurance/insurers">Cancel</a>
+                                    <Link href="/insurance/insurers">Cancel</Link>
                                 </Button>
                                 <Button type="submit" disabled={processing}>
                                     <Save className="mr-2 h-4 w-4" />

@@ -30,10 +30,16 @@ export default function VisitQueue() {
     };
 
     const handleAddToQueue = (visitId: number) => {
-        router.post(`/visits/${visitId}/queue`, {}, {
+        router.post(`/visits/${visitId}/queue`, {
+            department: 'consultation',
+            priority: 'normal',
+        }, {
             onSuccess: () => {
                 router.reload();
             },
+            onError: (errors) => {
+                console.error('Failed to add to queue:', errors);
+            }
         });
     };
 

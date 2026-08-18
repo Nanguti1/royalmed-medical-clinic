@@ -22,6 +22,7 @@ class DentalTreatmentPlan extends Model
         'dental_chart_id',
         'plan_date',
         'status',
+        'priority',
         'estimated_cost',
         'actual_cost',
         'notes',
@@ -32,6 +33,7 @@ class DentalTreatmentPlan extends Model
         'plan_date' => 'date',
         'estimated_cost' => 'decimal:2',
         'actual_cost' => 'decimal:2',
+        'priority' => 'string',
     ];
 
     protected static function booted()
@@ -65,12 +67,17 @@ class DentalTreatmentPlan extends Model
 
     public function treatmentItems(): HasMany
     {
-        return $this->hasMany(DentalTreatmentItem::class);
+        return $this->hasMany(DentalTreatmentItem::class, 'treatment_plan_id');
     }
 
     public function dentalNotes(): HasMany
     {
-        return $this->hasMany(DentalNote::class);
+        return $this->hasMany(DentalNote::class, 'treatment_plan_id');
+    }
+
+    public function notes(): HasMany
+    {
+        return $this->dentalNotes();
     }
 
     public function scopeByPatient($query, int $patientId)

@@ -34,7 +34,7 @@ class DentalTreatmentItem extends Model
 
     public function treatmentPlan(): BelongsTo
     {
-        return $this->belongsTo(DentalTreatmentPlan::class);
+        return $this->belongsTo(DentalTreatmentPlan::class, 'treatment_plan_id');
     }
 
     public function dentalProcedure(): BelongsTo

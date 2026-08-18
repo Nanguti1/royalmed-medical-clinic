@@ -1,11 +1,12 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
-import { ArrowLeft, Calendar, MapPin, Phone, User } from 'lucide-react';
+import { ArrowLeft, Calendar, MapPin, Phone, User, AlertCircle } from 'lucide-react';
 import AlertError from '@/components/alert-error';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import type { Gender, Patient } from '@/types/patient';
 import { useState } from 'react';
 import DuplicateWarning from './duplicate-warning';
@@ -27,9 +28,18 @@ type PageProps = {
 
 export default function PatientCreate() {
     const { genders, counties, potentialDuplicates } = usePage<PageProps>().props;
+    const { props } = usePage();
     const [selectedCounty, setSelectedCounty] = useState<number | ''>('');
     const [showDuplicateWarning, setShowDuplicateWarning] = useState(false);
     const [checkedForDuplicates, setCheckedForDuplicates] = useState(false);
+
+    // Check for flash data duplicates from backend
+    const flashDuplicates = (props as any).duplicate_candidates as any[] || [];
+    const hasFlashDuplicates = flashDuplicates.length > 0;
+
+    // Check for flash error messages
+    const flashError = (props as any).error as string | null;
+    const flashWarning = (props as any).warning as string | null;
 
     const { data, setData, post, processing, errors } = useForm({
         first_name: '',
@@ -43,6 +53,7 @@ export default function PatientCreate() {
         county_id: '',
         sub_county_id: '',
         notes: '',
+        confirm_duplicate: false,
     });
 
     const handleCountyChange = (countyId: string) => {
@@ -55,17 +66,22 @@ export default function PatientCreate() {
         e.preventDefault();
         
         // Check for duplicates if not already checked
-        if (!checkedForDuplicates && potentialDuplicates && potentialDuplicates.length > 0) {
+        if (!checkedForDuplicates && (potentialDuplicates && potentialDuplicates.length > 0 || hasFlashDuplicates)) {
             setShowDuplicateWarning(true);
             setCheckedForDuplicates(true);
             return;
         }
         
-        post('/patients');
+        post('/patients', {
+            onError: (errors) => {
+                console.error('Form submission errors:', errors);
+            }
+        });
     };
 
     const handleContinueAnyway = () => {
         setShowDuplicateWarning(false);
+        setData('confirm_duplicate', true);
         post('/patients');
     };
 
@@ -99,6 +115,20 @@ export default function PatientCreate() {
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={handleSubmit} className="space-y-6">
+                            {flashError && (
+                                <Alert variant="destructive">
+                                    <AlertCircle />
+                                    <AlertTitle>Error</AlertTitle>
+                                    <AlertDescription>{flashError}</AlertDescription>
+                                </Alert>
+                            )}
+                            {flashWarning && (
+                                <Alert>
+                                    <AlertCircle />
+                                    <AlertTitle>Warning</AlertTitle>
+                                    <AlertDescription>{flashWarning}</AlertDescription>
+                                </Alert>
+                            )}
                             <AlertError errors={errors} />
 
                             {/* Personal Information */}
@@ -289,7 +319,7 @@ export default function PatientCreate() {
                 <DuplicateWarning
                     isOpen={showDuplicateWarning}
                     onClose={() => setShowDuplicateWarning(false)}
-                    duplicates={potentialDuplicates || []}
+                    duplicates={hasFlashDuplicates ? flashDuplicates : (potentialDuplicates || [])}
                     onContinueAnyway={handleContinueAnyway}
                     onSelectDuplicate={handleSelectDuplicate}
                 />

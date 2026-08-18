@@ -1,11 +1,9 @@
 import { Head, usePage } from '@inertiajs/react';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { EmptyState } from '@/components/empty-state';
 import { LoadingState } from '@/components/loading-state';
-import { Plus, FileText } from 'lucide-react';
+import { FileText } from 'lucide-react';
 import type { Prescription } from '@/types/visit';
-import { PermissionGuard } from '@/components/permission-guard';
 
 type PageProps = {
     prescriptions: {
@@ -30,14 +28,6 @@ export default function PrescriptionIndex() {
                             Manage patient prescriptions
                         </p>
                     </div>
-                    <PermissionGuard permission="consultations.create" fallback={null}>
-                        <Button asChild>
-                            <a href="/visits/create">
-                                <Plus className="mr-2 h-4 w-4" />
-                                New Visit
-                            </a>
-                        </Button>
-                    </PermissionGuard>
                 </div>
 
                 {/* Prescription List */}

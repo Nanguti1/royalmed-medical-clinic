@@ -1,4 +1,4 @@
-import { Head, useForm, usePage } from '@inertiajs/react';
+import { Head, useForm, usePage, Link, router } from '@inertiajs/react';
 import { Search, Plus, CheckCircle, XCircle } from 'lucide-react';
 import { EmptyState } from '@/components/empty-state';
 import { LoadingState } from '@/components/loading-state';
@@ -49,10 +49,10 @@ export default function InsurersIndex() {
                         </p>
                     </div>
                     <Button asChild>
-                        <a href="/insurance/insurers/create">
+                        <Link href="/insurance/insurers/create">
                             <Plus className="mr-2 h-4 w-4" />
                             New Insurer
-                        </a>
+                        </Link>
                     </Button>
                 </div>
 
@@ -103,7 +103,7 @@ export default function InsurersIndex() {
                         description="Try adjusting your search terms or create a new insurer."
                         action={{
                             label: 'New Insurer',
-                            onClick: () => (window.location.href = '/insurance/insurers/create'),
+                            onClick: () => router.visit('/insurance/insurers/create'),
                         }}
                     />
                 ) : (
@@ -139,7 +139,7 @@ export default function InsurersIndex() {
 
 function InsurerCard({ insurer }: { insurer: Insurer }) {
     return (
-        <Card className="hover:bg-accent/50 transition-colors cursor-pointer" onClick={() => (window.location.href = `/insurance/insurers/${insurer.id}/edit`)}>
+        <Card className="hover:bg-accent/50 transition-colors cursor-pointer" onClick={() => router.visit(`/insurance/insurers/${insurer.id}/edit`)}>
             <CardHeader>
                 <div className="flex items-start justify-between">
                     <div>

@@ -9,7 +9,7 @@ class Invoice extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['visit_id', 'issued_at', 'invoice_number', 'created_by', 'discount_amount', 'tax_amount', 'discount_id', 'patient_coverage_id', 'insurance_claim_id', 'is_insurance_claim', 'notes'];
+    protected $fillable = ['visit_id', 'issued_at', 'invoice_number', 'created_by', 'discount_amount', 'tax_amount', 'discount_id', 'patient_coverage_id', 'insurance_claim_id', 'is_insurance_claim', 'notes', 'invoice_date', 'due_date'];
 
     protected $casts = [
         'total_amount' => 'decimal:2',
@@ -17,6 +17,8 @@ class Invoice extends Model
         'discount_amount' => 'decimal:2',
         'tax_amount' => 'decimal:2',
         'issued_at' => 'datetime',
+        'invoice_date' => 'date',
+        'due_date' => 'date',
         'is_insurance_claim' => 'boolean',
     ];
 
@@ -24,6 +26,13 @@ class Invoice extends Model
 
     protected static function booted()
     {
+        static::creating(function ($invoice) {
+            // Auto-set invoice_date from issued_at if not provided
+            if (empty($invoice->invoice_date) && ! empty($invoice->issued_at)) {
+                $invoice->invoice_date = $invoice->issued_at->format('Y-m-d');
+            }
+        });
+
         static::updating(function ($invoice) {
             // Skip protection when in server update mode
             if (self::$serverUpdateMode) {

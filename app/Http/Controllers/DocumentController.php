@@ -80,7 +80,7 @@ class DocumentController extends Controller
             'uploaded_by' => auth()->id(),
         ]));
 
-        return redirect()->route('documents.show', $document)
+        return to_route('documents.show', $document)
             ->with('success', 'Document uploaded successfully.');
     }
 
