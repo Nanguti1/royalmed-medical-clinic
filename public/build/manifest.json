@@ -723,6 +723,13 @@
       "_createLucideIcon-D9S2cJWN.js"
     ]
   },
+  "_thermometer-BFjXMCta.js": {
+    "file": "assets/thermometer-BFjXMCta.js",
+    "name": "thermometer",
+    "imports": [
+      "_createLucideIcon-D9S2cJWN.js"
+    ]
+  },
   "_trash-2-D72LkwaX.js": {
     "file": "assets/trash-2-D72LkwaX.js",
     "name": "trash-2",
@@ -809,7 +816,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-J3vFhfQ1.css",
+    "file": "assets/app-CLArDMSP.css",
     "name": "app",
     "names": [
       "app.css"
@@ -818,7 +825,7 @@
     "isEntry": true
   },
   "resources/js/app.tsx": {
-    "file": "assets/app-BgIdznJI.js",
+    "file": "assets/app-DyQoGckn.js",
     "name": "app",
     "src": "resources/js/app.tsx",
     "isEntry": true,
@@ -1735,7 +1742,7 @@
     ]
   },
   "resources/js/pages/consultations/edit.tsx": {
-    "file": "assets/edit-DtunuD9V.js",
+    "file": "assets/edit-CgNC0PSk.js",
     "name": "edit",
     "src": "resources/js/pages/consultations/edit.tsx",
     "isDynamicEntry": true,
@@ -1743,23 +1750,29 @@
       "_jsx-runtime-CTQSNLil.js",
       "_dist-BEAKNXc7.js",
       "_arrow-left-DD_CM7T3.js",
+      "_chevron-right-CBofusPJ.js",
+      "_circle-check-big-B_0FJL8E.js",
       "_file-text-DbS7JxCO.js",
       "_save-BkA7qBSf.js",
+      "_triangle-alert-CVo3kvGt.js",
       "_button-CJQ5X1ir.js",
       "_card-BZN2PXO0.js",
+      "_badge-PPmXdh_o.js",
       "_label-C6vzcPMv.js",
+      "_permission-guard-CHh36WFt.js",
       "_input-error-Dp0o-RMx.js",
       "_alert-error-BgQa2B2a.js"
     ]
   },
   "resources/js/pages/consultations/index.tsx": {
-    "file": "assets/consultations-Nnv2JX2h.js",
+    "file": "assets/consultations-Njk9820E.js",
     "name": "consultations",
     "src": "resources/js/pages/consultations/index.tsx",
     "isDynamicEntry": true,
     "imports": [
       "_jsx-runtime-CTQSNLil.js",
       "_dist-BEAKNXc7.js",
+      "_flask-conical-DshFrz0o.js",
       "_play-CbEyYE7Q.js",
       "_refresh-cw-B3oXDWIO.js",
       "_stethoscope-C8-RToHt.js",
@@ -1772,19 +1785,22 @@
     ]
   },
   "resources/js/pages/consultations/show.tsx": {
-    "file": "assets/show-DYnejcxS.js",
+    "file": "assets/show-B-BYyouo.js",
     "name": "show",
     "src": "resources/js/pages/consultations/show.tsx",
     "isDynamicEntry": true,
     "imports": [
       "_jsx-runtime-CTQSNLil.js",
       "_dist-BEAKNXc7.js",
+      "_createLucideIcon-D9S2cJWN.js",
       "_arrow-left-DD_CM7T3.js",
+      "_chevron-right-CBofusPJ.js",
       "_circle-check-big-B_0FJL8E.js",
       "_file-text-DbS7JxCO.js",
       "_flask-conical-DshFrz0o.js",
       "_heart-B2zN2_AP.js",
       "_pill-BU74sHJC.js",
+      "_triangle-alert-CVo3kvGt.js",
       "_user-Ce4dyEsO.js",
       "_button-CJQ5X1ir.js",
       "_card-BZN2PXO0.js",
@@ -3725,7 +3741,7 @@
     ]
   },
   "resources/js/pages/prescriptions/create.tsx": {
-    "file": "assets/create-BWt3flCa.js",
+    "file": "assets/create-Bmp6bgD4.js",
     "name": "create",
     "src": "resources/js/pages/prescriptions/create.tsx",
     "isDynamicEntry": true,
@@ -4383,7 +4399,7 @@
     ]
   },
   "resources/js/pages/visits/show.tsx": {
-    "file": "assets/show-VtAlvcrB.js",
+    "file": "assets/show-BteeT_J9.js",
     "name": "show",
     "src": "resources/js/pages/visits/show.tsx",
     "isDynamicEntry": true,
@@ -4394,9 +4410,16 @@
       "_calendar-Doiteq86.js",
       "_circle-check-big-B_0FJL8E.js",
       "_circle-x-D2V9fONm.js",
+      "_clock-CuorTc7n.js",
+      "_credit-card-CQv2Epd3.js",
       "_dollar-sign-0cXqKfOx.js",
+      "_file-text-DbS7JxCO.js",
+      "_flask-conical-DshFrz0o.js",
       "_heart-B2zN2_AP.js",
+      "_pill-BU74sHJC.js",
       "_play-CbEyYE7Q.js",
+      "_stethoscope-C8-RToHt.js",
+      "_thermometer-BFjXMCta.js",
       "_user-Ce4dyEsO.js",
       "_button-CJQ5X1ir.js",
       "_card-BZN2PXO0.js",
@@ -4405,7 +4428,7 @@
     ]
   },
   "resources/js/pages/visits/triage.tsx": {
-    "file": "assets/triage-1X2av9ho.js",
+    "file": "assets/triage-Duw7gF7K.js",
     "name": "triage",
     "src": "resources/js/pages/visits/triage.tsx",
     "isDynamicEntry": true,
@@ -4417,6 +4440,7 @@
       "_arrow-left-DD_CM7T3.js",
       "_circle-alert-B-ZKJ1xf.js",
       "_heart-B2zN2_AP.js",
+      "_thermometer-BFjXMCta.js",
       "_button-CJQ5X1ir.js",
       "_input-CmqlKrzs.js",
       "_card-BZN2PXO0.js",

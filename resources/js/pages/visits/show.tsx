@@ -2,7 +2,7 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Calendar, CheckCircle, DollarSign, FileText, Heart, Play, Stethoscope, Thermometer, Trash2, User, XCircle, Flask, Pill, CreditCard, Clock } from 'lucide-react';
+import { ArrowLeft, Calendar, CheckCircle, DollarSign, FileText, Heart, Play, Stethoscope, Thermometer, Trash2, User, XCircle, FlaskConical, Pill, CreditCard, Clock } from 'lucide-react';
 import type { Visit } from '@/types/visit';
 import { PermissionGuard } from '@/components/permission-guard';
 
@@ -451,7 +451,7 @@ export default function VisitShow() {
                     <Card>
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
-                                <Flask className="h-5 w-5" />
+                                <FlaskConical className="h-5 w-5" />
                                 Laboratory
                             </CardTitle>
                         </CardHeader>
