@@ -11,6 +11,7 @@ use App\Services\ConsultationService;
 use App\Services\QueueService;
 use App\Services\VisitService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -47,9 +48,15 @@ class ConsultationController extends Controller
         ]);
     }
 
-    public function create(Visit $visit): Response
+    public function create(Visit $visit): Response|RedirectResponse
     {
-        $visit->load(['patient.activeAlerts', 'patient.activeAllergies', 'patient.activeChronicConditions', 'vitalSign', 'queueEntry']);
+        $visit->load(['patient.activeAlerts', 'patient.activeAllergies', 'patient.activeChronicConditions', 'vitalSign', 'queueEntry', 'consultation']);
+
+        if ($visit->consultation) {
+            return redirect()->route('consultations.show', $visit->consultation)
+                ->with('info', 'This visit already has a consultation. Continue the existing consultation.');
+        }
+
         $clinicalSummary = $this->consultationService->getClinicalSummary($visit->patient);
         $templates = ConsultationTemplate::where('is_active', true)->get();
 
@@ -119,10 +126,18 @@ class ConsultationController extends Controller
 
     public function startConsultation(Visit $visit)
     {
-        $this->visitService->start($visit);
+        $visit->loadMissing(['consultation', 'queueEntry']);
 
-        // Update queue entry status if exists
-        if ($visit->queueEntry) {
+        if ($visit->consultation) {
+            return redirect()->route('consultations.show', $visit->consultation)
+                ->with('info', 'This visit already has a consultation. Continue the existing consultation.');
+        }
+
+        if ($visit->canStart()) {
+            $this->visitService->start($visit);
+        }
+
+        if ($visit->queueEntry && ! $visit->queueEntry->isInProgress()) {
             $this->queueService->start($visit->queueEntry);
         }
 

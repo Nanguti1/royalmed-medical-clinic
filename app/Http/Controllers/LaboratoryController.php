@@ -66,9 +66,10 @@ class LaboratoryController extends Controller
             ]);
         }
 
-        // Redirect back to consultation if it exists, otherwise to lab order show
-        if ($order->visit->consultation_id) {
-            return redirect()->route('consultations.show', $order->visit->consultation_id)
+        $order->load('visit.consultation');
+
+        if ($order->visit->consultation) {
+            return redirect()->route('consultations.show', $order->visit->consultation)
                 ->with('success', 'Laboratory order created successfully.');
         }
 
