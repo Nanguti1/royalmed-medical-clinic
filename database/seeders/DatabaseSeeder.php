@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
             CountySeeder::class,
             PaymentMethodSeeder::class,
             InvoiceStatusSeeder::class,
+            VisitStatusSeeder::class,
             MedicineCategorySeeder::class,
             MedicineFormSeeder::class,
             MedicineStrengthSeeder::class,

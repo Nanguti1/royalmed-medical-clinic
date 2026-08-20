@@ -9,13 +9,14 @@ class QueueEntry extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['visit_id', 'department', 'queue_number', 'position', 'priority', 'status', 'called_at', 'started_at', 'served_at', 'completed_at', 'waiting_minutes'];
+    protected $fillable = ['visit_id', 'department', 'queue_number', 'position', 'priority', 'status', 'called_at', 'started_at', 'served_at', 'completed_at', 'waiting_minutes', 'metadata'];
 
     protected $casts = [
         'called_at' => 'datetime',
         'started_at' => 'datetime',
         'served_at' => 'datetime',
         'completed_at' => 'datetime',
+        'metadata' => 'array',
     ];
 
     public function visit()

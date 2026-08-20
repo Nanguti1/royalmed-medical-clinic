@@ -14,9 +14,13 @@ use App\Models\LabOrderItem;
 use App\Models\LabResult;
 use App\Models\LabTest;
 use App\Models\Patient;
+use App\Models\QueueEntry;
 use App\Models\User;
 use App\Models\Visit;
+use App\Models\VisitStatus;
 use App\Services\LabService;
+use App\Services\QueueService;
+use Database\Seeders\VisitStatusSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
@@ -24,6 +28,12 @@ use Tests\TestCase;
 class LaboratoryWorkflowTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->seed(VisitStatusSeeder::class);
+    }
 
     public function test_lab_order_created_with_ordered_status()
     {
@@ -164,7 +174,8 @@ class LaboratoryWorkflowTest extends TestCase
         LabResult::factory()->create(['lab_order_item_id' => $item1->id, 'lab_test_id' => $test1->id]);
         LabResult::factory()->create(['lab_order_item_id' => $item2->id, 'lab_test_id' => $test2->id]);
 
-        $action = new CompleteLabOrderAction;
+        $queueService = app(QueueService::class);
+        $action = new CompleteLabOrderAction($queueService);
         $order = $action->execute($order);
 
         $this->assertEquals('completed', $order->status);
@@ -179,7 +190,8 @@ class LaboratoryWorkflowTest extends TestCase
         $test = LabTest::factory()->create();
         LabOrderItem::factory()->create(['lab_order_id' => $order->id, 'lab_test_id' => $test->id]);
 
-        $action = new CompleteLabOrderAction;
+        $queueService = app(QueueService::class);
+        $action = new CompleteLabOrderAction($queueService);
         $action->execute($order);
     }
 
@@ -188,7 +200,8 @@ class LaboratoryWorkflowTest extends TestCase
         $this->expectException(InvalidLabOrderStatusException::class);
 
         $order = LabOrder::factory()->create(['status' => 'ordered']);
-        $action = new CompleteLabOrderAction;
+        $queueService = app(QueueService::class);
+        $action = new CompleteLabOrderAction($queueService);
         $action->execute($order);
     }
 
@@ -197,7 +210,8 @@ class LaboratoryWorkflowTest extends TestCase
         $this->expectException(InvalidLabOrderStatusException::class);
 
         $order = LabOrder::factory()->create(['status' => 'completed']);
-        $action = new CompleteLabOrderAction;
+        $queueService = app(QueueService::class);
+        $action = new CompleteLabOrderAction($queueService);
         $action->execute($order);
     }
 
@@ -220,7 +234,8 @@ class LaboratoryWorkflowTest extends TestCase
 
         // Add result and complete
         LabResult::factory()->create(['lab_order_item_id' => $item->id, 'lab_test_id' => $test->id]);
-        $completeAction = new CompleteLabOrderAction;
+        $queueService = app(QueueService::class);
+        $completeAction = new CompleteLabOrderAction($queueService);
         $order = $completeAction->execute($order);
 
         $this->assertNotNull($order->in_progress_at);
@@ -445,6 +460,7 @@ class LaboratoryWorkflowTest extends TestCase
         $action = new CreateLabOrderAction;
         $order = $action->execute([
             'visit_id' => $visit->id,
+            'status' => 'ordered',
             'tests' => [['lab_test_id' => $test->id]],
         ]);
 
@@ -464,6 +480,7 @@ class LaboratoryWorkflowTest extends TestCase
         $action = new CreateLabOrderAction;
         $order = $action->execute([
             'visit_id' => $visit->id,
+            'status' => 'ordered',
             'tests' => [['lab_test_id' => $test->id]],
         ]);
 
@@ -485,11 +502,13 @@ class LaboratoryWorkflowTest extends TestCase
         $action = new CreateLabOrderAction;
         $order1 = $action->execute([
             'visit_id' => $visit->id,
+            'status' => 'ordered',
             'tests' => [['lab_test_id' => $test1->id]],
         ]);
 
         $order2 = $action->execute([
             'visit_id' => $visit->id,
+            'status' => 'ordered',
             'tests' => [['lab_test_id' => $test2->id]],
         ]);
 
@@ -509,10 +528,255 @@ class LaboratoryWorkflowTest extends TestCase
         $order = $action->execute([
             'visit_id' => $visit->id,
             'consultation_id' => $consultation2->id,
+            'status' => 'ordered',
             'tests' => [['lab_test_id' => $test->id]],
         ]);
 
         $this->assertEquals($consultation2->id, $order->consultation_id);
         $this->assertNotEquals($consultation1->id, $order->consultation_id);
+    }
+
+    public function test_doctor_orders_lab_transitions_visit_to_waiting_for_lab()
+    {
+        $visit = Visit::factory()->create();
+        $consultation = Consultation::factory()->create(['visit_id' => $visit->id]);
+        $test = LabTest::factory()->create();
+
+        $action = new CreateLabOrderAction;
+        $order = $action->execute([
+            'visit_id' => $visit->id,
+            'status' => 'ordered',
+            'tests' => [['lab_test_id' => $test->id]],
+        ]);
+
+        $visit->refresh();
+        $waitingForLabStatus = VisitStatus::where('code', 'WAITING_FOR_LAB')->first();
+
+        $this->assertNotNull($waitingForLabStatus);
+        $this->assertEquals($waitingForLabStatus->id, $visit->visit_status_id);
+    }
+
+    public function test_lab_starts_transitions_visit_to_lab_in_progress()
+    {
+        $visit = Visit::factory()->create();
+        $consultation = Consultation::factory()->create(['visit_id' => $visit->id]);
+        $test = LabTest::factory()->create();
+
+        $createAction = new CreateLabOrderAction;
+        $order = $createAction->execute([
+            'visit_id' => $visit->id,
+            'status' => 'ordered',
+            'tests' => [['lab_test_id' => $test->id]],
+        ]);
+
+        // Create lab order item manually since CreateLabOrderAction doesn't handle items
+        $item = LabOrderItem::factory()->create(['lab_order_id' => $order->id, 'lab_test_id' => $test->id]);
+
+        $startAction = new StartLabOrderAction;
+        $order = $startAction->execute($order);
+
+        $visit->refresh();
+        $labInProgressStatus = VisitStatus::where('code', 'LAB_IN_PROGRESS')->first();
+
+        $this->assertNotNull($labInProgressStatus);
+        $this->assertEquals($labInProgressStatus->id, $visit->visit_status_id);
+    }
+
+    public function test_lab_completes_transitions_visit_to_lab_results_ready()
+    {
+        $visit = Visit::factory()->create();
+        $consultation = Consultation::factory()->create(['visit_id' => $visit->id]);
+        $test = LabTest::factory()->create();
+
+        $createAction = new CreateLabOrderAction;
+        $order = $createAction->execute([
+            'visit_id' => $visit->id,
+            'status' => 'ordered',
+            'tests' => [['lab_test_id' => $test->id]],
+        ]);
+
+        // Create lab order item manually
+        $item = LabOrderItem::factory()->create(['lab_order_id' => $order->id, 'lab_test_id' => $test->id]);
+
+        $startAction = new StartLabOrderAction;
+        $order = $startAction->execute($order);
+
+        LabResult::factory()->create(['lab_order_item_id' => $item->id, 'lab_test_id' => $test->id]);
+
+        $queueService = app(QueueService::class);
+        $completeAction = new CompleteLabOrderAction($queueService);
+        $order = $completeAction->execute($order);
+
+        $visit->refresh();
+        $labResultsReadyStatus = VisitStatus::where('code', 'LAB_RESULTS_READY')->first();
+
+        $this->assertNotNull($labResultsReadyStatus);
+        $this->assertEquals($labResultsReadyStatus->id, $visit->visit_status_id);
+    }
+
+    public function test_lab_completes_creates_queue_item_for_same_doctor()
+    {
+        $visit = Visit::factory()->create();
+        $doctor = User::factory()->create();
+        $consultation = Consultation::factory()->create(['visit_id' => $visit->id, 'provider_id' => $doctor->id]);
+        $test = LabTest::factory()->create();
+
+        $createAction = new CreateLabOrderAction;
+        $order = $createAction->execute([
+            'visit_id' => $visit->id,
+            'ordered_by' => $doctor->id,
+            'status' => 'ordered',
+            'tests' => [['lab_test_id' => $test->id]],
+        ]);
+
+        // Create lab order item manually
+        $item = LabOrderItem::factory()->create(['lab_order_id' => $order->id, 'lab_test_id' => $test->id]);
+
+        $startAction = new StartLabOrderAction;
+        $order = $startAction->execute($order);
+
+        LabResult::factory()->create(['lab_order_item_id' => $item->id, 'lab_test_id' => $test->id]);
+
+        $queueService = app(QueueService::class);
+        $completeAction = new CompleteLabOrderAction($queueService);
+        $order = $completeAction->execute($order);
+
+        $queueEntry = QueueEntry::where('visit_id', $visit->id)
+            ->where('department', 'consultation')
+            ->where('status', 'waiting')
+            ->first();
+
+        $this->assertNotNull($queueEntry);
+        $this->assertEquals('consultation', $queueEntry->department);
+    }
+
+    public function test_queue_item_points_to_existing_consultation()
+    {
+        $visit = Visit::factory()->create();
+        $doctor = User::factory()->create();
+        $consultation = Consultation::factory()->create(['visit_id' => $visit->id, 'provider_id' => $doctor->id]);
+        $test = LabTest::factory()->create();
+
+        $createAction = new CreateLabOrderAction;
+        $order = $createAction->execute([
+            'visit_id' => $visit->id,
+            'ordered_by' => $doctor->id,
+            'status' => 'ordered',
+            'tests' => [['lab_test_id' => $test->id]],
+        ]);
+
+        // Create lab order item manually
+        $item = LabOrderItem::factory()->create(['lab_order_id' => $order->id, 'lab_test_id' => $test->id]);
+
+        $startAction = new StartLabOrderAction;
+        $order = $startAction->execute($order);
+
+        LabResult::factory()->create(['lab_order_item_id' => $item->id, 'lab_test_id' => $test->id]);
+
+        $queueService = app(QueueService::class);
+        $completeAction = new CompleteLabOrderAction($queueService);
+        $order = $completeAction->execute($order);
+
+        $queueEntry = QueueEntry::where('visit_id', $visit->id)
+            ->where('department', 'consultation')
+            ->first();
+
+        $this->assertNotNull($queueEntry);
+        $this->assertEquals('continue_consultation', $queueEntry->metadata['action']);
+        $this->assertEquals($consultation->id, $queueEntry->metadata['consultation_id']);
+        $this->assertEquals($order->id, $queueEntry->metadata['lab_order_id']);
+    }
+
+    public function test_double_lab_completion_does_not_create_duplicate_queue_items()
+    {
+        $visit = Visit::factory()->create();
+        $doctor = User::factory()->create();
+        $consultation = Consultation::factory()->create(['visit_id' => $visit->id, 'provider_id' => $doctor->id]);
+        $test = LabTest::factory()->create();
+
+        $createAction = new CreateLabOrderAction;
+        $order = $createAction->execute([
+            'visit_id' => $visit->id,
+            'ordered_by' => $doctor->id,
+            'status' => 'ordered',
+            'tests' => [['lab_test_id' => $test->id]],
+        ]);
+
+        // Create lab order item manually
+        $item = LabOrderItem::factory()->create(['lab_order_id' => $order->id, 'lab_test_id' => $test->id]);
+
+        $startAction = new StartLabOrderAction;
+        $order = $startAction->execute($order);
+
+        LabResult::factory()->create(['lab_order_item_id' => $item->id, 'lab_test_id' => $test->id]);
+
+        $queueService = app(QueueService::class);
+        $completeAction = new CompleteLabOrderAction($queueService);
+        $order = $completeAction->execute($order);
+
+        $queueEntryCount = QueueEntry::where('visit_id', $visit->id)
+            ->where('department', 'consultation')
+            ->where('status', 'waiting')
+            ->count();
+
+        $this->assertEquals(1, $queueEntryCount);
+
+        // Try to complete again - should not create duplicate
+        try {
+            $completeAction->execute($order);
+        } catch (\Exception $e) {
+            // Expected to fail since order is already completed
+        }
+
+        $queueEntryCountAfter = QueueEntry::where('visit_id', $visit->id)
+            ->where('department', 'consultation')
+            ->where('status', 'waiting')
+            ->count();
+
+        $this->assertEquals(1, $queueEntryCountAfter);
+    }
+
+    public function test_partial_results_do_not_return_visit_to_doctor()
+    {
+        $visit = Visit::factory()->create();
+        $doctor = User::factory()->create();
+        $consultation = Consultation::factory()->create(['visit_id' => $visit->id, 'provider_id' => $doctor->id]);
+        $test1 = LabTest::factory()->create();
+        $test2 = LabTest::factory()->create();
+
+        $createAction = new CreateLabOrderAction;
+        $order = $createAction->execute([
+            'visit_id' => $visit->id,
+            'ordered_by' => $doctor->id,
+            'status' => 'ordered',
+            'tests' => [
+                ['lab_test_id' => $test1->id],
+                ['lab_test_id' => $test2->id],
+            ],
+        ]);
+
+        // Create lab order items manually
+        $item1 = LabOrderItem::factory()->create(['lab_order_id' => $order->id, 'lab_test_id' => $test1->id]);
+        $item2 = LabOrderItem::factory()->create(['lab_order_id' => $order->id, 'lab_test_id' => $test2->id]);
+
+        $startAction = new StartLabOrderAction;
+        $order = $startAction->execute($order);
+
+        // Add result for only one test
+        LabResult::factory()->create(['lab_order_item_id' => $item1->id, 'lab_test_id' => $test1->id]);
+
+        // Try to complete - should fail due to missing results
+        $queueService = app(QueueService::class);
+        $completeAction = new CompleteLabOrderAction($queueService);
+        $this->expectException(\RuntimeException::class);
+        $completeAction->execute($order);
+
+        // Verify no queue entry was created
+        $queueEntry = QueueEntry::where('visit_id', $visit->id)
+            ->where('department', 'consultation')
+            ->where('status', 'waiting')
+            ->first();
+
+        $this->assertNull($queueEntry);
     }
 }

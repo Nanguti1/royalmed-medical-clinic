@@ -4,6 +4,7 @@ namespace App\Actions\Laboratory;
 
 use App\Models\LabOrder;
 use App\Models\Visit;
+use App\Models\VisitStatus;
 use App\Support\Generators\NumberGenerator;
 use Illuminate\Support\Facades\Auth;
 
@@ -28,6 +29,12 @@ class CreateLabOrderAction
             $visit = Visit::find($data['visit_id']);
             if ($visit && $visit->consultation) {
                 $data['consultation_id'] = $visit->consultation->id;
+
+                // Transition visit to WAITING_FOR_LAB when lab is ordered from consultation
+                $waitingForLabStatus = VisitStatus::where('code', 'WAITING_FOR_LAB')->first();
+                if ($waitingForLabStatus) {
+                    $visit->update(['visit_status_id' => $waitingForLabStatus->id]);
+                }
             }
         }
 

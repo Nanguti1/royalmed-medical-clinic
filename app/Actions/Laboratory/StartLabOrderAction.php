@@ -4,6 +4,7 @@ namespace App\Actions\Laboratory;
 
 use App\Exceptions\InvalidLabOrderStatusException;
 use App\Models\LabOrder;
+use App\Models\VisitStatus;
 use Illuminate\Support\Facades\DB;
 
 class StartLabOrderAction
@@ -34,6 +35,12 @@ class StartLabOrderAction
                 'status' => 'in_progress',
                 'in_progress_at' => now(),
             ]);
+
+            // Transition visit to LAB_IN_PROGRESS when lab starts
+            $labInProgressStatus = VisitStatus::where('code', 'LAB_IN_PROGRESS')->first();
+            if ($labInProgressStatus && $order->visit) {
+                $order->visit->update(['visit_status_id' => $labInProgressStatus->id]);
+            }
 
             return $order;
         });
