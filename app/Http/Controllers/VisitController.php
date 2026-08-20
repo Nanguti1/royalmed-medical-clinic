@@ -89,6 +89,9 @@ class VisitController extends Controller
     {
         $visit->load(['patient.activeAlerts', 'patient.activeAllergies', 'patient.activeChronicConditions', 'vitalSign']);
 
+        // Start triage when entering triage screen
+        $this->visitService->startTriage($visit);
+
         return Inertia::render('visits/triage', [
             'visit' => $visit,
         ]);
@@ -97,6 +100,9 @@ class VisitController extends Controller
     public function captureVitals(CaptureVitalsRequest $request, Visit $visit)
     {
         $vital = $this->vitalService->capture(array_merge($request->validated(), ['visit_id' => $visit->id]));
+
+        // Complete triage and create consultation queue entry
+        $this->visitService->completeTriage($visit);
 
         return redirect()->route('visits.show', $visit)
             ->with('success', 'Vitals captured successfully.');

@@ -3,9 +3,14 @@
 namespace Tests\Feature;
 
 use App\Exceptions\InvalidQueueStateException;
+use App\Models\Patient;
+use App\Models\QueueEntry;
 use App\Models\User;
 use App\Models\Visit;
+use App\Models\VisitStatus;
 use App\Services\QueueService;
+use App\Services\VisitService;
+use Database\Seeders\VisitStatusSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
@@ -26,6 +31,195 @@ class TriageQueueVisitFlowWorkflowTest extends TestCase
 
         $this->user = User::factory()->create();
         $this->user->givePermissionTo(['visits.view', 'visits.create', 'visits.update']);
+
+        // Seed visit statuses
+        $this->seed(VisitStatusSeeder::class);
+    }
+
+    public function test_visit_creation_creates_triage_queue_work(): void
+    {
+        $patient = Patient::factory()->create();
+        $visitService = app(VisitService::class);
+
+        $visit = $visitService->create([
+            'patient_id' => $patient->id,
+            'visit_date' => now(),
+        ]);
+
+        // Check visit status is WAITING_FOR_TRIAGE
+        $waitingForTriageStatus = VisitStatus::where('code', 'WAITING_FOR_TRIAGE')->first();
+        $this->assertNotNull($waitingForTriageStatus);
+        $this->assertEquals($waitingForTriageStatus->id, $visit->visit_status_id);
+
+        // Check triage queue entry was created
+        $triageQueueEntry = QueueEntry::where('visit_id', $visit->id)
+            ->where('department', 'triage')
+            ->first();
+
+        $this->assertNotNull($triageQueueEntry);
+        $this->assertEquals('waiting', $triageQueueEntry->status);
+        $this->assertEquals('triage', $triageQueueEntry->department);
+    }
+
+    public function test_triage_start_sets_status_to_in_progress(): void
+    {
+        $patient = Patient::factory()->create();
+        $visitService = app(VisitService::class);
+
+        $visit = $visitService->create([
+            'patient_id' => $patient->id,
+            'visit_date' => now(),
+        ]);
+
+        // Start triage
+        $visitService->startTriage($visit);
+
+        // Check visit status is TRIAGE_IN_PROGRESS
+        $triageInProgressStatus = VisitStatus::where('code', 'TRIAGE_IN_PROGRESS')->first();
+        $this->assertNotNull($triageInProgressStatus);
+        $this->assertEquals($triageInProgressStatus->id, $visit->fresh()->visit_status_id);
+
+        // Check triage queue entry is in_progress
+        $triageQueueEntry = QueueEntry::where('visit_id', $visit->id)
+            ->where('department', 'triage')
+            ->first();
+
+        $this->assertNotNull($triageQueueEntry);
+        $this->assertEquals('in_progress', $triageQueueEntry->status);
+        $this->assertNotNull($triageQueueEntry->started_at);
+    }
+
+    public function test_triage_completion_removes_active_triage_queue_work(): void
+    {
+        $patient = Patient::factory()->create();
+        $visitService = app(VisitService::class);
+
+        $visit = $visitService->create([
+            'patient_id' => $patient->id,
+            'visit_date' => now(),
+        ]);
+
+        // Start and complete triage
+        $visitService->startTriage($visit);
+        $visitService->completeTriage($visit);
+
+        // Check visit status is WAITING_FOR_CONSULTATION
+        $waitingForConsultationStatus = VisitStatus::where('code', 'WAITING_FOR_CONSULTATION')->first();
+        $this->assertNotNull($waitingForConsultationStatus);
+        $this->assertEquals($waitingForConsultationStatus->id, $visit->fresh()->visit_status_id);
+
+        // Check triage queue entry is completed
+        $triageQueueEntry = QueueEntry::where('visit_id', $visit->id)
+            ->where('department', 'triage')
+            ->first();
+
+        $this->assertNotNull($triageQueueEntry);
+        $this->assertEquals('completed', $triageQueueEntry->status);
+        $this->assertNotNull($triageQueueEntry->completed_at);
+
+        // Check visit is no longer in active triage queue
+        $activeTriageEntries = QueueEntry::where('visit_id', $visit->id)
+            ->where('department', 'triage')
+            ->whereIn('status', ['waiting', 'called', 'in_progress'])
+            ->get();
+
+        $this->assertCount(0, $activeTriageEntries);
+    }
+
+    public function test_triage_completion_creates_consultation_queue_work(): void
+    {
+        $patient = Patient::factory()->create();
+        $visitService = app(VisitService::class);
+
+        $visit = $visitService->create([
+            'patient_id' => $patient->id,
+            'visit_date' => now(),
+        ]);
+
+        // Start and complete triage
+        $visitService->startTriage($visit);
+        $visitService->completeTriage($visit);
+
+        // Check consultation queue entry was created
+        $consultationQueueEntry = QueueEntry::where('visit_id', $visit->id)
+            ->where('department', 'consultation')
+            ->first();
+
+        $this->assertNotNull($consultationQueueEntry);
+        $this->assertEquals('waiting', $consultationQueueEntry->status);
+        $this->assertEquals('consultation', $consultationQueueEntry->department);
+    }
+
+    public function test_cancelled_visits_cannot_be_queued(): void
+    {
+        $patient = Patient::factory()->create();
+        $visitService = app(VisitService::class);
+        $queueService = app(QueueService::class);
+
+        $visit = $visitService->create([
+            'patient_id' => $patient->id,
+            'visit_date' => now(),
+        ]);
+
+        // Cancel the visit
+        $visitService->cancel($visit);
+
+        // Try to add to queue - should throw exception
+        $this->expectException(InvalidQueueStateException::class);
+
+        $queueService->add([
+            'visit_id' => $visit->id,
+            'department' => 'consultation',
+        ]);
+    }
+
+    public function test_completed_visits_cannot_be_queued(): void
+    {
+        $patient = Patient::factory()->create();
+        $visitService = app(VisitService::class);
+        $queueService = app(QueueService::class);
+
+        $visit = $visitService->create([
+            'patient_id' => $patient->id,
+            'visit_date' => now(),
+        ]);
+
+        // Complete the visit
+        $visitService->start($visit);
+        $visitService->complete($visit);
+
+        // Try to add to queue - should throw exception
+        $this->expectException(InvalidQueueStateException::class);
+
+        $queueService->add([
+            'visit_id' => $visit->id,
+            'department' => 'consultation',
+        ]);
+    }
+
+    public function test_double_submit_triage_does_not_create_duplicate_consultation_queue_items(): void
+    {
+        $patient = Patient::factory()->create();
+        $visitService = app(VisitService::class);
+
+        $visit = $visitService->create([
+            'patient_id' => $patient->id,
+            'visit_date' => now(),
+        ]);
+
+        // Start and complete triage
+        $visitService->startTriage($visit);
+        $visitService->completeTriage($visit);
+
+        // Try to complete triage again
+        $visitService->completeTriage($visit);
+
+        // Check only one consultation queue entry exists
+        $consultationQueueEntries = QueueEntry::where('visit_id', $visit->id)
+            ->where('department', 'consultation')
+            ->get();
+
+        $this->assertCount(1, $consultationQueueEntries);
     }
 
     public function test_triage_capture_stores_all_fields_and_calculates_bmi_and_news(): void

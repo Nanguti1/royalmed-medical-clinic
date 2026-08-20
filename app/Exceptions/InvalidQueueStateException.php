@@ -36,6 +36,11 @@ class InvalidQueueStateException extends Exception
         return new self("An active queue entry already exists for this visit in the {$department} department.");
     }
 
+    public static function cannotQueueInactiveVisit(): self
+    {
+        return new self('Cannot queue a visit that is cancelled or completed.');
+    }
+
     public static function invalidStatus(string $from, string $to): self
     {
         return new self("Invalid queue status transition from {$from} to {$to}");

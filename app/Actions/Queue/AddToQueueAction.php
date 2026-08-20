@@ -13,6 +13,12 @@ class AddToQueueAction
     {
         $department = $data['department'] ?? 'consultation';
 
+        // Check if visit is cancelled or completed
+        $visit = Visit::find($data['visit_id']);
+        if ($visit && ($visit->isCancelled() || $visit->isCompleted())) {
+            throw InvalidQueueStateException::cannotQueueInactiveVisit();
+        }
+
         // Check duplicate active queue entry in the same department
         $activeExists = QueueEntry::where('visit_id', $data['visit_id'])
             ->where('department', $department)
@@ -28,7 +34,9 @@ class AddToQueueAction
 
         // Auto-assign priority if normal/unspecified and patient vitals show critical NEWS score
         if (empty($data['priority']) || $data['priority'] === 'normal') {
-            $visit = Visit::with(['vitalSign', 'patient'])->find($data['visit_id']);
+            if (! $visit) {
+                $visit = Visit::with(['vitalSign', 'patient'])->find($data['visit_id']);
+            }
             if ($visit) {
                 $newsScore = $visit->vitalSign?->news_score;
                 if ($newsScore !== null && $newsScore >= 7) {
