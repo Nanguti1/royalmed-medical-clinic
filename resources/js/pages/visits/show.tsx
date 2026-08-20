@@ -2,7 +2,7 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Calendar, CheckCircle, DollarSign, FileText, Heart, Play, Stethoscope, Thermometer, Trash2, User, XCircle, Flask, Pill, CreditCard } from 'lucide-react';
+import { ArrowLeft, Calendar, CheckCircle, DollarSign, FileText, Heart, Play, Stethoscope, Thermometer, Trash2, User, XCircle, Flask, Pill, CreditCard, Clock } from 'lucide-react';
 import type { Visit } from '@/types/visit';
 import { PermissionGuard } from '@/components/permission-guard';
 
@@ -14,10 +14,18 @@ type PageProps = {
         permission: string | null;
     };
     userFacingStatus: string;
+    timeline: Array<{
+        id: number;
+        action: string;
+        description: string;
+        actor: string;
+        timestamp: string;
+        meta: any;
+    }>;
 };
 
 export default function VisitShow() {
-    const { visit, nextAction, userFacingStatus } = usePage<PageProps>().props;
+    const { visit, nextAction, userFacingStatus, timeline } = usePage<PageProps>().props;
 
     const patientName = visit.patient
         ? [visit.patient.first_name, visit.patient.other_names, visit.patient.last_name].filter(Boolean).join(' ')
@@ -500,6 +508,54 @@ export default function VisitShow() {
                         </CardContent>
                     </Card>
                 </div>
+
+                {/* Timeline Section */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <Clock className="h-5 w-5" />
+                            Visit Timeline
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        {timeline && timeline.length > 0 ? (
+                            <div className="space-y-4">
+                                {timeline.map((entry) => (
+                                    <div key={entry.id} className="flex gap-4 pb-4 border-b last:border-0">
+                                        <div className="flex-shrink-0 w-24 text-sm text-muted-foreground">
+                                            {new Date(entry.timestamp).toLocaleTimeString([], {
+                                                hour: '2-digit',
+                                                minute: '2-digit'
+                                            })}
+                                        </div>
+                                        <div className="flex-1">
+                                            <div className="flex items-center gap-2">
+                                                <span className="font-medium">{entry.description}</span>
+                                                <Badge variant="outline" className="text-xs">
+                                                    {entry.action}
+                                                </Badge>
+                                            </div>
+                                            <div className="text-sm text-muted-foreground mt-1">
+                                                By {entry.actor}
+                                            </div>
+                                            {entry.meta && Object.keys(entry.meta).length > 0 && (
+                                                <div className="text-xs text-muted-foreground mt-1">
+                                                    {Object.entries(entry.meta).map(([key, value]) => (
+                                                        <span key={key} className="mr-3">
+                                                            {key}: {String(value)}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <p className="text-muted-foreground">No timeline entries recorded.</p>
+                        )}
+                    </CardContent>
+                </Card>
             </div>
         </>
     );

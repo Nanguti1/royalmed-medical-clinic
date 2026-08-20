@@ -33,28 +33,40 @@ class VisitService
     public function create(array $data): Visit
     {
         return DB::transaction(function () use ($data) {
-            return $this->createAction->execute($data);
+            $visit = $this->createAction->execute($data);
+            $visit->logActivity('visit.created', ['patient_id' => $visit->patient_id]);
+
+            return $visit;
         });
     }
 
     public function complete(Visit $visit): Visit
     {
         return DB::transaction(function () use ($visit) {
-            return $this->completeAction->execute($visit);
+            $visit = $this->completeAction->execute($visit);
+            $visit->logActivity('visit.completed');
+
+            return $visit;
         });
     }
 
     public function start(Visit $visit): Visit
     {
         return DB::transaction(function () use ($visit) {
-            return $this->startAction->execute($visit);
+            $visit = $this->startAction->execute($visit);
+            $visit->logActivity('visit.started');
+
+            return $visit;
         });
     }
 
     public function cancel(Visit $visit): Visit
     {
         return DB::transaction(function () use ($visit) {
-            return $this->cancelAction->execute($visit);
+            $visit = $this->cancelAction->execute($visit);
+            $visit->logActivity('visit.cancelled');
+
+            return $visit;
         });
     }
 
@@ -79,6 +91,8 @@ class VisitService
                     'waiting_minutes' => $triageQueueEntry->created_at?->diffInMinutes(now()),
                 ]);
             }
+
+            $visit->logActivity('visit.triage_started');
 
             return $visit;
         });
@@ -107,6 +121,8 @@ class VisitService
 
             // Create consultation queue entry
             $this->createConsultationQueueEntry($visit);
+
+            $visit->logActivity('visit.triage_completed');
 
             return $visit;
         });

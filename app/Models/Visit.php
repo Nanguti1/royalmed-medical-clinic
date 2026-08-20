@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 
 class Visit extends Model
 {
@@ -76,6 +77,57 @@ class Visit extends Model
     public function cancelledBy()
     {
         return $this->belongsTo(User::class, 'cancelled_by');
+    }
+
+    public function activityLogs()
+    {
+        return $this->morphMany(ActivityLog::class, 'auditable')->orderBy('created_at', 'asc');
+    }
+
+    public function getTimeline(): array
+    {
+        return $this->activityLogs->map(function ($log) {
+            return [
+                'id' => $log->id,
+                'action' => $log->action,
+                'description' => $this->getTimelineDescription($log->action, $log->meta),
+                'actor' => $log->user ? $log->user->name : 'System',
+                'timestamp' => $log->created_at->toISOString(),
+                'meta' => $log->meta,
+            ];
+        })->toArray();
+    }
+
+    protected function getTimelineDescription(string $action, ?array $meta): string
+    {
+        return match ($action) {
+            'visit.created' => 'Visit created',
+            'visit.triage_started' => 'Triage started',
+            'visit.triage_completed' => 'Triage completed',
+            'visit.consultation_started' => 'Consultation started',
+            'visit.consultation_completed' => 'Consultation completed',
+            'visit.lab_ordered' => 'Lab tests ordered',
+            'visit.lab_completed' => 'Lab results completed',
+            'visit.prescription_finalized' => 'Prescription finalized',
+            'visit.prescription_dispensed' => 'Medicines dispensed',
+            'visit.invoice_generated' => 'Invoice generated',
+            'visit.payment_recorded' => 'Payment recorded',
+            'visit.paid' => 'Visit marked as paid',
+            'visit.completed' => 'Visit completed',
+            'visit.cancelled' => 'Visit cancelled',
+            default => ucfirst(str_replace('.', ' ', $action)),
+        };
+    }
+
+    public function logActivity(string $action, ?array $meta = null, ?int $userId = null): void
+    {
+        ActivityLog::create([
+            'user_id' => $userId ?? Auth::id(),
+            'action' => $action,
+            'auditable_type' => self::class,
+            'auditable_id' => $this->id,
+            'meta' => $meta,
+        ]);
     }
 
     public function isStarted(): bool

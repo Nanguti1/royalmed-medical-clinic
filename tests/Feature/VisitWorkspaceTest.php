@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\User;
 use App\Models\Visit;
 use App\Models\VisitStatus;
+use Database\Seeders\AuthorizationSeeder;
 use Database\Seeders\VisitStatusSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -19,6 +20,9 @@ class VisitWorkspaceTest extends TestCase
 
         // Seed visit statuses
         $this->seed(VisitStatusSeeder::class);
+
+        // Seed permissions
+        $this->seed(AuthorizationSeeder::class);
     }
 
     public function test_visit_workspace_exposes_correct_next_action_for_triage_states(): void
@@ -245,5 +249,112 @@ class VisitWorkspaceTest extends TestCase
         $this->assertEquals('Continue Consultation', $nextAction['label']);
         $this->assertEquals('continue_consultation', $nextAction['action']);
         $this->assertEquals('consultations.update', $nextAction['permission']);
+    }
+
+    public function test_workflow_transitions_create_timeline_entries(): void
+    {
+        $user = User::factory()->create();
+
+        // Create a visit and log activity
+        $visit = Visit::factory()->create();
+        $this->actingAs($user);
+        $visit->logActivity('visit.created', ['patient_id' => $visit->patient_id]);
+
+        // Verify timeline entry was created
+        $timeline = $visit->getTimeline();
+        $this->assertCount(1, $timeline);
+        $this->assertEquals('visit.created', $timeline[0]['action']);
+        $this->assertEquals('Visit created', $timeline[0]['description']);
+        $this->assertEquals($user->name, $timeline[0]['actor']);
+        $this->assertArrayHasKey('timestamp', $timeline[0]);
+        $this->assertArrayHasKey('meta', $timeline[0]);
+
+        // Start visit and log activity
+        $visit->logActivity('visit.started');
+        $visit->refresh();
+        $timeline = $visit->getTimeline();
+        $this->assertCount(2, $timeline);
+        $this->assertEquals('visit.started', $timeline[1]['action']);
+
+        // Complete visit and log activity
+        $visit->logActivity('visit.completed');
+        $visit->refresh();
+        $timeline = $visit->getTimeline();
+        $this->assertCount(3, $timeline);
+        $this->assertEquals('visit.completed', $timeline[2]['action']);
+    }
+
+    public function test_timeline_entries_are_in_chronological_order(): void
+    {
+        $user = User::factory()->create();
+        $visit = Visit::factory()->create();
+
+        $this->actingAs($user);
+
+        // Create multiple timeline entries
+        $visit->logActivity('visit.created');
+        $visit->logActivity('visit.started');
+        $visit->logActivity('visit.completed');
+        $visit->refresh();
+
+        $timeline = $visit->getTimeline();
+
+        // Verify chronological order
+        $this->assertCount(3, $timeline);
+        $this->assertEquals('visit.created', $timeline[0]['action']);
+        $this->assertEquals('visit.started', $timeline[1]['action']);
+        $this->assertEquals('visit.completed', $timeline[2]['action']);
+    }
+
+    public function test_timeline_entries_include_actor_action_and_timestamp(): void
+    {
+        $user = User::factory()->create(['name' => 'Test User']);
+        $visit = Visit::factory()->create();
+
+        $this->actingAs($user);
+        $visit->logActivity('visit.created', ['patient_id' => $visit->patient_id]);
+        $visit->refresh();
+
+        $timeline = $visit->getTimeline();
+
+        $this->assertCount(1, $timeline);
+        $entry = $timeline[0];
+
+        // Verify actor
+        $this->assertEquals('Test User', $entry['actor']);
+
+        // Verify action
+        $this->assertEquals('visit.created', $entry['action']);
+
+        // Verify timestamp
+        $this->assertArrayHasKey('timestamp', $entry);
+        $this->assertNotEmpty($entry['timestamp']);
+
+        // Verify meta data
+        $this->assertArrayHasKey('meta', $entry);
+        $this->assertEquals($visit->patient_id, $entry['meta']['patient_id']);
+    }
+
+    public function test_visit_workspace_renders_timeline_entries(): void
+    {
+        $user = User::factory()->create();
+        $user->givePermissionTo('visits.view');
+        $visit = Visit::factory()->create();
+
+        $this->actingAs($user);
+        $visit->logActivity('visit.created');
+        $visit->logActivity('visit.started');
+        $visit->refresh();
+
+        // Access visit show page
+        $response = $this->actingAs($user)
+            ->get("/visits/{$visit->id}");
+
+        $response->assertStatus(200);
+
+        // Check that the visit has timeline entries
+        $timeline = $visit->getTimeline();
+        $this->assertIsArray($timeline);
+        $this->assertNotEmpty($timeline);
     }
 }

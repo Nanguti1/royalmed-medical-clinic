@@ -78,12 +78,13 @@ class VisitController extends Controller
 
     public function show(Visit $visit): Response
     {
-        $visit->load(['patient.activeAlerts', 'patient.activeAllergies', 'patient.activeChronicConditions', 'vitalSign', 'queueEntry', 'consultation', 'prescriptions', 'invoice', 'invoice.status', 'invoice.payments', 'labOrders', 'status']);
+        $visit->load(['patient.activeAlerts', 'patient.activeAllergies', 'patient.activeChronicConditions', 'vitalSign', 'queueEntry', 'consultation', 'prescriptions', 'invoice', 'invoice.status', 'invoice.payments', 'labOrders', 'status', 'activityLogs.user']);
 
         return Inertia::render('visits/show', [
             'visit' => $visit,
             'nextAction' => $visit->getNextAction(),
             'userFacingStatus' => $visit->getUserFacingStatus(),
+            'timeline' => $visit->getTimeline(),
         ]);
     }
 

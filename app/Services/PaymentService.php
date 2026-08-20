@@ -77,8 +77,12 @@ class PaymentService
                     $paidStatus = VisitStatus::where('code', 'PAID')->first();
                     if ($paidStatus) {
                         $invoice->visit->update(['visit_status_id' => $paidStatus->id]);
+                        $invoice->visit->logActivity('visit.paid', ['payment_id' => $payment->id, 'amount' => $payment->amount], $userId);
                     }
                 }
+
+                // Log payment recorded
+                $invoice->visit->logActivity('visit.payment_recorded', ['payment_id' => $payment->id, 'amount' => $payment->amount], $userId);
             }
 
             Log::info('Payment recorded', ['payment_id' => $payment->id]);

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Actions\Billing\GenerateInvoiceAction;
 use App\Models\CreditNote;
 use App\Models\Deposit;
 use App\Models\Discount;
@@ -14,6 +15,27 @@ use Illuminate\Support\Facades\DB;
 
 class BillingService
 {
+    protected GenerateInvoiceAction $generateInvoiceAction;
+
+    public function __construct(GenerateInvoiceAction $generateInvoiceAction)
+    {
+        $this->generateInvoiceAction = $generateInvoiceAction;
+    }
+
+    public function createInvoice(array $data): Invoice
+    {
+        return DB::transaction(function () use ($data) {
+            $invoice = $this->generateInvoiceAction->execute($data);
+
+            // Log invoice generation for visit timeline
+            if ($invoice->visit) {
+                $invoice->visit->logActivity('visit.invoice_generated', ['invoice_id' => $invoice->id, 'amount' => $invoice->total_amount]);
+            }
+
+            return $invoice;
+        });
+    }
+
     public function createCreditNote(Invoice $invoice, array $data): CreditNote
     {
         return DB::transaction(function () use ($invoice, $data) {
