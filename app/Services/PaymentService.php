@@ -10,6 +10,7 @@ use App\Exceptions\InvoiceCancelledException;
 use App\Exceptions\OverpaymentException;
 use App\Models\Invoice;
 use App\Models\Payment;
+use App\Models\VisitStatus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -70,6 +71,14 @@ class PaymentService
             // update invoice balances and status using centralized resolver
             if ($invoice) {
                 $this->statusResolver->refreshStatus($invoice);
+
+                // Set visit status to PAID when invoice is fully paid
+                if ($this->statusResolver->isPaid($invoice) && $invoice->visit) {
+                    $paidStatus = VisitStatus::where('code', 'PAID')->first();
+                    if ($paidStatus) {
+                        $invoice->visit->update(['visit_status_id' => $paidStatus->id]);
+                    }
+                }
             }
 
             Log::info('Payment recorded', ['payment_id' => $payment->id]);

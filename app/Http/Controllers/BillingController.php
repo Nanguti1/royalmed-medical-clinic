@@ -56,6 +56,34 @@ class BillingController extends Controller
         ]);
     }
 
+    public function queue(Request $request): Response
+    {
+        $query = $request->input('search');
+
+        // Get visits with unpaid invoices
+        $visitsQuery = Visit::with(['patient', 'invoice.status', 'invoice.payments'])
+            ->whereHas('invoice', function ($query) {
+                $query->whereHas('status', function ($q) {
+                    $q->where('code', '!=', 'paid');
+                });
+            });
+
+        if ($query) {
+            $visitsQuery->whereHas('patient', function ($q) use ($query) {
+                $q->where('first_name', 'like', "%{$query}%")
+                    ->orWhere('last_name', 'like', "%{$query}%")
+                    ->orWhere('phone', 'like', "%{$query}%");
+            });
+        }
+
+        $visits = $visitsQuery->orderBy('created_at', 'asc')->paginate(20);
+
+        return Inertia::render('billing/queue', [
+            'visits' => $visits,
+            'search' => $query ?? '',
+        ]);
+    }
+
     public function create(Visit $visit): Response
     {
         // Check if visit already has an invoice
@@ -122,17 +150,21 @@ class BillingController extends Controller
             }
         }
 
-        // Dispensed medicines (based on prescriptions - actual dispensing would be tracked separately in a real system)
+        // Dispensed medicines (only bill what has actually been dispensed)
         foreach ($visit->prescriptions as $prescription) {
             foreach ($prescription->items as $item) {
                 if ($item->medicine) {
-                    $items[] = [
-                        'type' => 'pharmacy',
-                        'description' => $item->medicine->name,
-                        'quantity' => $item->quantity,
-                        'unit_price' => $item->medicine->unit_price ?? 0,
-                        'reference_id' => $item->id,
-                    ];
+                    // Use dispensed_quantity if available, otherwise use quantity
+                    $billableQuantity = $item->dispensed_quantity ?? $item->quantity;
+                    if ($billableQuantity > 0) {
+                        $items[] = [
+                            'type' => 'pharmacy',
+                            'description' => $item->medicine->name,
+                            'quantity' => $billableQuantity,
+                            'unit_price' => $item->medicine->unit_price ?? 0,
+                            'reference_id' => $item->id,
+                        ];
+                    }
                 }
             }
         }
