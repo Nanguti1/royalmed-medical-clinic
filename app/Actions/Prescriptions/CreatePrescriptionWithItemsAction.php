@@ -19,6 +19,13 @@ class CreatePrescriptionWithItemsAction
             ]));
         }
 
+        // Log prescription creation in visit timeline
+        if ($prescription->visit) {
+            $prescription->visit->logActivity('visit.prescription_created', [
+                'prescription_id' => $prescription->id,
+            ]);
+        }
+
         return $prescription->load('items');
     }
 }

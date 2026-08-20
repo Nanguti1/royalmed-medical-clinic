@@ -42,6 +42,16 @@ export default function ConsultationShow() {
         }
     };
 
+    const handleFinalizePrescription = (prescriptionId: number) => {
+        if (confirm('Are you sure you want to finalize this prescription? This will create a pharmacy queue entry and the prescription cannot be modified after finalization.')) {
+            router.post(`/prescriptions/${prescriptionId}/finalize`, {}, {
+                onSuccess: () => {
+                    window.location.reload();
+                },
+            });
+        }
+    };
+
     return (
         <>
             <Head title={`Consultation #${consultation.id} - ${patientName}`} />
@@ -221,13 +231,34 @@ export default function ConsultationShow() {
                                                         <p className="text-sm text-muted-foreground">
                                                             {new Date(prescription.created_at).toLocaleDateString()}
                                                         </p>
+                                                        <Badge className={
+                                                            prescription.finalized_at
+                                                                ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                                                                : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                                                        }>
+                                                            {prescription.finalized_at ? 'Finalized' : 'Draft'}
+                                                        </Badge>
                                                     </div>
-                                                    <Button variant="outline" size="sm" asChild>
-                                                        <a href={`/prescriptions/${prescription.id}`}>
-                                                            <FileText className="mr-2 h-4 w-4" />
-                                                            View
-                                                        </a>
-                                                    </Button>
+                                                    <div className="flex gap-2">
+                                                        {!prescription.finalized_at && (
+                                                            <PermissionGuard permission="consultations.create" fallback={null}>
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    onClick={() => handleFinalizePrescription(prescription.id)}
+                                                                >
+                                                                    <CheckCircle className="mr-2 h-4 w-4" />
+                                                                    Finalize
+                                                                </Button>
+                                                            </PermissionGuard>
+                                                        )}
+                                                        <Button variant="outline" size="sm" asChild>
+                                                            <a href={`/prescriptions/${prescription.id}`}>
+                                                                <FileText className="mr-2 h-4 w-4" />
+                                                                View
+                                                            </a>
+                                                        </Button>
+                                                    </div>
                                                 </div>
                                                 {prescription.items && prescription.items.length > 0 && (
                                                     <div className="space-y-1 text-sm">

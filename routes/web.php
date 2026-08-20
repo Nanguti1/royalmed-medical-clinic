@@ -254,6 +254,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->middleware('can:consultations.create');
         Route::get('/{prescription}', [PrescriptionController::class, 'show'])->name('prescriptions.show')
             ->middleware('can:consultations.view');
+        Route::post('/{prescription}/finalize', [PrescriptionController::class, 'finalize'])->name('prescriptions.finalize')
+            ->middleware('can:consultations.create');
     });
 
     Route::prefix('pharmacy')->group(function () {

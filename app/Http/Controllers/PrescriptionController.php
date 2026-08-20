@@ -22,7 +22,7 @@ class PrescriptionController extends Controller
     {
         $this->prescriptionService = $prescriptionService;
 
-        $this->middleware('permission:consultations.create')->only(['create', 'store']);
+        $this->middleware('permission:consultations.create')->only(['create', 'store', 'finalize']);
         $this->middleware('permission:consultations.view')->only(['index', 'show']);
     }
 
@@ -88,5 +88,25 @@ class PrescriptionController extends Controller
         return Inertia::render('prescriptions/show', [
             'prescription' => $prescription,
         ]);
+    }
+
+    public function finalize(Prescription $prescription)
+    {
+        try {
+            $prescription = $this->prescriptionService->finalize($prescription);
+
+            $prescription->load('visit.consultation');
+
+            if ($prescription->visit->consultation) {
+                return redirect()->route('consultations.show', $prescription->visit->consultation)
+                    ->with('success', 'Prescription finalized successfully. Pharmacy queue has been created.');
+            }
+
+            return redirect()->route('visits.show', $prescription->visit)
+                ->with('success', 'Prescription finalized successfully. Pharmacy queue has been created.');
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', $e->getMessage());
+        }
     }
 }

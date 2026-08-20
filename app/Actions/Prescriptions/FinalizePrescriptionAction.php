@@ -41,6 +41,14 @@ class FinalizePrescriptionAction
 
             event(new PrescriptionFinalized($prescription));
 
+            // Log prescription finalization in visit timeline
+            if ($prescription->visit) {
+                $prescription->visit->logActivity('visit.prescription_finalized', [
+                    'prescription_id' => $prescription->id,
+                    'prescription_number' => $prescription->prescription_number,
+                ]);
+            }
+
             return $prescription;
         });
     }
