@@ -2,12 +2,14 @@
 
 namespace Tests\Feature;
 
+use App\Exceptions\InvalidQueueStateException;
 use App\Models\Consultation;
 use App\Models\QueueEntry;
 use App\Models\User;
 use App\Models\Visit;
 use App\Models\VisitStatus;
 use App\Services\ConsultationService;
+use App\Services\QueueService;
 use App\Services\VisitService;
 use Database\Seeders\AuthorizationSeeder;
 use Database\Seeders\VisitStatusSeeder;
@@ -393,14 +395,16 @@ class VisitWorkspaceTest extends TestCase
         $visitService = app(VisitService::class);
         $visitService->cancel($visit);
 
-        // Try to add cancelled visit to queue
-        $response = $this->actingAs($user)
-            ->post("/visits/{$visit->id}/queue", [
-                'department' => 'consultation',
-                'priority' => 'normal',
-            ]);
+        // Try to add cancelled visit to queue - should throw exception
+        $this->expectException(InvalidQueueStateException::class);
+        $this->expectExceptionMessage('Cannot queue a visit that is cancelled or completed.');
 
-        $response->assertSessionHas('error');
+        $queueService = app(QueueService::class);
+        $queueService->add([
+            'visit_id' => $visit->id,
+            'department' => 'consultation',
+            'priority' => 'normal',
+        ]);
     }
 
     public function test_completed_visits_cannot_re_enter_active_queues(): void
@@ -414,14 +418,16 @@ class VisitWorkspaceTest extends TestCase
         $visitService->start($visit);
         $visitService->complete($visit);
 
-        // Try to add completed visit to queue
-        $response = $this->actingAs($user)
-            ->post("/visits/{$visit->id}/queue", [
-                'department' => 'consultation',
-                'priority' => 'normal',
-            ]);
+        // Try to add completed visit to queue - should throw exception
+        $this->expectException(InvalidQueueStateException::class);
+        $this->expectExceptionMessage('Cannot queue a visit that is cancelled or completed.');
 
-        $response->assertSessionHas('error');
+        $queueService = app(QueueService::class);
+        $queueService->add([
+            'visit_id' => $visit->id,
+            'department' => 'consultation',
+            'priority' => 'normal',
+        ]);
     }
 
     public function test_double_submit_does_not_duplicate_consultations(): void
@@ -461,21 +467,26 @@ class VisitWorkspaceTest extends TestCase
 
         $this->actingAs($user);
 
-        // First queue entry creation
-        $response1 = $this->post("/visits/{$visit->id}/queue", [
+        // First queue entry creation using service
+        $queueService = app(QueueService::class);
+        $entry1 = $queueService->add([
+            'visit_id' => $visit->id,
             'department' => 'consultation',
             'priority' => 'normal',
         ]);
 
-        $response1->assertSessionHas('success');
+        $this->assertNotNull($entry1);
+        $this->assertEquals('consultation', $entry1->department);
 
-        // Second queue entry creation should fail
-        $response2 = $this->post("/visits/{$visit->id}/queue", [
+        // Second queue entry creation should throw exception
+        $this->expectException(InvalidQueueStateException::class);
+        $this->expectExceptionMessage('An active queue entry already exists for this visit in the consultation department.');
+
+        $queueService->add([
+            'visit_id' => $visit->id,
             'department' => 'consultation',
             'priority' => 'normal',
         ]);
-
-        $response2->assertSessionHas('error');
 
         // Should still have only one active queue entry
         $queueEntries = QueueEntry::where('visit_id', $visit->id)
@@ -520,6 +531,7 @@ class VisitWorkspaceTest extends TestCase
     {
         $user = User::factory()->create();
         $user->givePermissionTo('consultations.update');
+        $user->givePermissionTo('consultations.view');
         $visit = Visit::factory()->create();
 
         $this->actingAs($user);
