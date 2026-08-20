@@ -13,16 +13,27 @@ use App\Models\InventoryBatch;
 use App\Models\Medicine;
 use App\Models\Prescription;
 use App\Models\PrescriptionItem;
+use App\Models\QueueEntry;
 use App\Models\StockMovement;
 use App\Models\User;
 use App\Models\Visit;
+use App\Models\VisitStatus;
 use App\Services\InventoryService;
+use Database\Seeders\VisitStatusSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class PrescriptionWorkflowTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Seed visit statuses
+        $this->seed(VisitStatusSeeder::class);
+    }
 
     public function test_prescription_can_be_created_with_items()
     {
@@ -431,5 +442,137 @@ class PrescriptionWorkflowTest extends TestCase
 
         $this->assertTrue($prescription->isPartiallyDispensed());
         $this->assertFalse($prescription->isFullyDispensed());
+    }
+
+    public function test_finalized_prescription_appears_in_pharmacy_queue(): void
+    {
+        $visit = Visit::factory()->create();
+        $medicine = Medicine::factory()->create();
+
+        $prescription = Prescription::factory()
+            ->has(PrescriptionItem::factory()->state([
+                'medicine_id' => $medicine->id,
+                'quantity' => 10.0,
+            ]), 'items')
+            ->create(['visit_id' => $visit->id, 'finalized_at' => null]);
+
+        $action = new FinalizePrescriptionAction;
+        $finalized = $action->execute($prescription);
+
+        // Check visit status is WAITING_FOR_PHARMACY
+        $waitingForPharmacyStatus = VisitStatus::where('code', 'WAITING_FOR_PHARMACY')->first();
+        $this->assertNotNull($waitingForPharmacyStatus);
+        $this->assertEquals($waitingForPharmacyStatus->id, $visit->fresh()->visit_status_id);
+
+        // Check pharmacy queue entry was created
+        $pharmacyQueueEntry = QueueEntry::where('visit_id', $visit->id)
+            ->where('department', 'pharmacy')
+            ->first();
+
+        $this->assertNotNull($pharmacyQueueEntry);
+        $this->assertEquals('waiting', $pharmacyQueueEntry->status);
+        $this->assertEquals('pharmacy', $pharmacyQueueEntry->department);
+        $this->assertEquals($finalized->id, $pharmacyQueueEntry->metadata['prescription_id'] ?? null);
+    }
+
+    public function test_dispensed_prescription_disappears_from_pharmacy_queue(): void
+    {
+        $visit = Visit::factory()->create();
+        $medicine = Medicine::factory()->create();
+        $batch = InventoryBatch::factory()->create([
+            'medicine_id' => $medicine->id,
+            'quantity' => 50,
+            'expiry_date' => now()->addDays(30),
+        ]);
+
+        $prescription = Prescription::factory()
+            ->has(PrescriptionItem::factory()->state([
+                'medicine_id' => $medicine->id,
+                'quantity' => 10.0,
+            ]), 'items')
+            ->create(['visit_id' => $visit->id, 'finalized_at' => null]);
+
+        // Finalize prescription
+        $finalizeAction = new FinalizePrescriptionAction;
+        $finalizeAction->execute($prescription);
+
+        // Dispense prescription
+        $dispenseAction = new DispensePrescriptionAction(app(InventoryService::class));
+        $dispenseAction->execute($prescription);
+
+        // Check pharmacy queue entry is completed
+        $pharmacyQueueEntry = QueueEntry::where('visit_id', $visit->id)
+            ->where('department', 'pharmacy')
+            ->first();
+
+        $this->assertNotNull($pharmacyQueueEntry);
+        $this->assertEquals('completed', $pharmacyQueueEntry->status);
+        $this->assertNotNull($pharmacyQueueEntry->completed_at);
+
+        // Check visit is no longer in active pharmacy queue
+        $activePharmacyEntries = QueueEntry::where('visit_id', $visit->id)
+            ->where('department', 'pharmacy')
+            ->whereIn('status', ['waiting', 'called', 'in_progress'])
+            ->get();
+
+        $this->assertCount(0, $activePharmacyEntries);
+    }
+
+    public function test_dispensing_transitions_visit_to_billing_ready_state(): void
+    {
+        $visit = Visit::factory()->create();
+        $medicine = Medicine::factory()->create();
+        $batch = InventoryBatch::factory()->create([
+            'medicine_id' => $medicine->id,
+            'quantity' => 50,
+            'expiry_date' => now()->addDays(30),
+        ]);
+
+        $prescription = Prescription::factory()
+            ->has(PrescriptionItem::factory()->state([
+                'medicine_id' => $medicine->id,
+                'quantity' => 10.0,
+            ]), 'items')
+            ->create(['visit_id' => $visit->id, 'finalized_at' => null]);
+
+        // Finalize prescription
+        $finalizeAction = new FinalizePrescriptionAction;
+        $finalizeAction->execute($prescription);
+
+        // Dispense prescription
+        $dispenseAction = new DispensePrescriptionAction(app(InventoryService::class));
+        $dispenseAction->execute($prescription);
+
+        // Check visit status is WAITING_FOR_BILLING
+        $waitingForBillingStatus = VisitStatus::where('code', 'WAITING_FOR_BILLING')->first();
+        $this->assertNotNull($waitingForBillingStatus);
+        $this->assertEquals($waitingForBillingStatus->id, $visit->fresh()->visit_status_id);
+    }
+
+    public function test_double_finalization_does_not_create_duplicate_pharmacy_queue_entries(): void
+    {
+        $visit = Visit::factory()->create();
+        $medicine = Medicine::factory()->create();
+
+        $prescription = Prescription::factory()
+            ->has(PrescriptionItem::factory()->state([
+                'medicine_id' => $medicine->id,
+                'quantity' => 10.0,
+            ]), 'items')
+            ->create(['visit_id' => $visit->id, 'finalized_at' => null]);
+
+        $action = new FinalizePrescriptionAction;
+        $action->execute($prescription);
+
+        // Try to finalize again - should fail
+        $this->expectException(InvalidPrescriptionStatusException::class);
+        $action->execute($prescription);
+
+        // Check only one pharmacy queue entry exists
+        $pharmacyQueueEntries = QueueEntry::where('visit_id', $visit->id)
+            ->where('department', 'pharmacy')
+            ->get();
+
+        $this->assertCount(1, $pharmacyQueueEntries);
     }
 }

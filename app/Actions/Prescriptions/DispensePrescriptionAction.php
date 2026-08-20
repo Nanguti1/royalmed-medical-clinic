@@ -7,6 +7,8 @@ use App\Exceptions\InvalidDispenseQuantityException;
 use App\Exceptions\InvalidPrescriptionStatusException;
 use App\Exceptions\PatientAllergyException;
 use App\Models\Prescription;
+use App\Models\QueueEntry;
+use App\Models\VisitStatus;
 use App\Services\InventoryService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -109,6 +111,9 @@ class DispensePrescriptionAction
             if ($prescription->isFullyDispensed()) {
                 $prescription->dispensed_at = now();
                 $prescription->save();
+
+                // Remove from pharmacy queue and transition to billing if applicable
+                $this->handlePostDispenseWorkflow($prescription);
             }
 
             $prescription->load('items');
@@ -118,5 +123,49 @@ class DispensePrescriptionAction
 
             return $results;
         });
+    }
+
+    protected function handlePostDispenseWorkflow(Prescription $prescription): void
+    {
+        // Complete pharmacy queue entry
+        $pharmacyQueueEntry = QueueEntry::where('visit_id', $prescription->visit_id)
+            ->where('department', 'pharmacy')
+            ->whereIn('status', ['waiting', 'called', 'in_progress'])
+            ->first();
+
+        if ($pharmacyQueueEntry) {
+            $pharmacyQueueEntry->update([
+                'status' => 'completed',
+                'completed_at' => now(),
+            ]);
+        }
+
+        // Transition visit to WAITING_FOR_BILLING if visit has billable items
+        if ($prescription->visit && $this->visitHasBillableItems($prescription->visit)) {
+            $waitingForBillingStatus = VisitStatus::where('code', 'WAITING_FOR_BILLING')->first();
+            if ($waitingForBillingStatus) {
+                $prescription->visit->update(['visit_status_id' => $waitingForBillingStatus->id]);
+            }
+        }
+    }
+
+    protected function visitHasBillableItems($visit): bool
+    {
+        // Check if visit has invoice with outstanding balance
+        if ($visit->invoice && ! $visit->invoice->isPaid()) {
+            return true;
+        }
+
+        // Check if visit has lab orders that might be billable
+        if ($visit->labOrders()->where('status', 'completed')->exists()) {
+            return true;
+        }
+
+        // Check if visit has dispensed prescriptions (already billable)
+        if ($visit->prescriptions()->whereNotNull('dispensed_at')->exists()) {
+            return true;
+        }
+
+        return false;
     }
 }
