@@ -35,7 +35,7 @@ class ConsultationController extends Controller
 
         $this->middleware('permission:consultations.view')->only(['index', 'show']);
         $this->middleware('permission:consultations.create')->only(['create', 'store']);
-        $this->middleware('permission:consultations.update')->only(['edit', 'update', 'reassignProvider']);
+        $this->middleware('permission:consultations.update')->only(['edit', 'update', 'reassignProvider', 'completeConsultation']);
     }
 
     public function index(): Response
@@ -162,6 +162,19 @@ class ConsultationController extends Controller
 
         return redirect()->route('visits.show', $visit)
             ->with('success', 'Visit completed successfully.');
+    }
+
+    public function completeConsultation(Visit $visit)
+    {
+        try {
+            $this->visitService->completeConsultation($visit);
+
+            return redirect()->route('prescriptions.create', $visit)
+                ->with('success', 'Consultation completed successfully. You can now create a prescription.');
+        } catch (\RuntimeException $e) {
+            return redirect()->back()
+                ->with('error', $e->getMessage());
+        }
     }
 
     public function reassignProvider(Request $request, Consultation $consultation)

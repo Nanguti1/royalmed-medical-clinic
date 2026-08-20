@@ -203,4 +203,40 @@ class VisitService
             ]);
         }
     }
+
+    public function completeConsultation(Visit $visit): Visit
+    {
+        return DB::transaction(function () use ($visit) {
+            // Prevent completing consultation for completed or cancelled visits
+            if ($visit->isCompleted()) {
+                throw new \RuntimeException('Cannot complete consultation for a completed visit.');
+            }
+
+            if ($visit->isCancelled()) {
+                throw new \RuntimeException('Cannot complete consultation for a cancelled visit.');
+            }
+
+            $waitingForPrescriptionStatus = VisitStatus::where('code', 'WAITING_FOR_PRESCRIPTION')->first();
+            if ($waitingForPrescriptionStatus) {
+                $visit->update(['visit_status_id' => $waitingForPrescriptionStatus->id]);
+            }
+
+            // Complete consultation queue entry
+            $consultationQueueEntry = QueueEntry::where('visit_id', $visit->id)
+                ->where('department', 'consultation')
+                ->whereIn('status', ['waiting', 'called', 'in_progress'])
+                ->first();
+
+            if ($consultationQueueEntry) {
+                $consultationQueueEntry->update([
+                    'status' => 'completed',
+                    'completed_at' => now(),
+                ]);
+            }
+
+            $visit->logActivity('visit.consultation_completed');
+
+            return $visit;
+        });
+    }
 }

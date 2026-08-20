@@ -197,6 +197,11 @@ class Visit extends Model
                 'action' => 'complete_consultation',
                 'permission' => 'consultations.update',
             ],
+            'WAITING_FOR_PRESCRIPTION' => [
+                'label' => 'Create Prescription',
+                'action' => 'create_prescription',
+                'permission' => 'consultations.create',
+            ],
             'WAITING_FOR_LAB' => [
                 'label' => 'Process Lab Order',
                 'action' => 'process_lab',
@@ -257,6 +262,7 @@ class Visit extends Model
             'TRIAGE_IN_PROGRESS' => 'Triage in Progress',
             'WAITING_FOR_CONSULTATION' => 'Waiting for Consultation',
             'CONSULTATION_IN_PROGRESS' => 'Consultation in Progress',
+            'WAITING_FOR_PRESCRIPTION' => 'Waiting for Prescription',
             'WAITING_FOR_LAB' => 'Waiting for Lab Results',
             'LAB_IN_PROGRESS' => 'Lab Processing',
             'LAB_RESULTS_READY' => 'Lab Results Ready',

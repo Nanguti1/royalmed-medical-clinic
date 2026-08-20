@@ -15,6 +15,7 @@ class VisitStatusSeeder extends Seeder
             ['code' => 'TRIAGE_IN_PROGRESS', 'name' => 'Triage In Progress'],
             ['code' => 'WAITING_FOR_CONSULTATION', 'name' => 'Waiting For Consultation'],
             ['code' => 'CONSULTATION_IN_PROGRESS', 'name' => 'Consultation In Progress'],
+            ['code' => 'WAITING_FOR_PRESCRIPTION', 'name' => 'Waiting For Prescription'],
             ['code' => 'WAITING_FOR_LAB', 'name' => 'Waiting For Lab'],
             ['code' => 'LAB_IN_PROGRESS', 'name' => 'Lab In Progress'],
             ['code' => 'LAB_RESULTS_READY', 'name' => 'Lab Results Ready'],

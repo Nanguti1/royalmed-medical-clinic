@@ -241,6 +241,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->middleware('can:visits.update');
         Route::post('/visits/{visit}/complete', [ConsultationController::class, 'completeVisit'])->name('consultations.completeVisit')
             ->middleware('can:visits.update');
+        Route::post('/visits/{visit}/complete-consultation', [ConsultationController::class, 'completeConsultation'])->name('consultations.completeConsultation')
+            ->middleware('can:consultations.update');
     });
 
     Route::prefix('prescriptions')->group(function () {

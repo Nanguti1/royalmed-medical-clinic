@@ -32,6 +32,16 @@ export default function ConsultationShow() {
         }
     };
 
+    const handleCompleteConsultation = () => {
+        if (confirm('Are you sure you want to complete this consultation? This will transition the visit to prescription creation.')) {
+            router.post(`/consultations/visits/${consultation.visit_id}/complete-consultation`, {}, {
+                onSuccess: () => {
+                    window.location.href = `/prescriptions/create/${consultation.visit_id}`;
+                },
+            });
+        }
+    };
+
     return (
         <>
             <Head title={`Consultation #${consultation.id} - ${patientName}`} />
@@ -58,6 +68,12 @@ export default function ConsultationShow() {
                                     <FileText className="mr-2 h-4 w-4" />
                                     Edit
                                 </a>
+                            </Button>
+                        </PermissionGuard>
+                        <PermissionGuard permission="consultations.update" fallback={null}>
+                            <Button variant="outline" onClick={handleCompleteConsultation}>
+                                <CheckCircle className="mr-2 h-4 w-4" />
+                                Complete Consultation
                             </Button>
                         </PermissionGuard>
                         <PermissionGuard permission="visits.update" fallback={null}>
