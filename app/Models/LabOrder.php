@@ -4,12 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class LabOrder extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['visit_id', 'ordered_by', 'order_date', 'status', 'notes', 'accession_number', 'in_progress_at', 'completed_at', 'priority', 'sample_collected_at', 'sample_collected_by'];
+    protected $fillable = ['visit_id', 'ordered_by', 'order_date', 'status', 'notes', 'accession_number', 'in_progress_at', 'completed_at', 'priority', 'sample_collected_at', 'sample_collected_by', 'consultation_id'];
 
     protected $casts = [
         'order_date' => 'datetime',
@@ -18,22 +20,27 @@ class LabOrder extends Model
         'sample_collected_at' => 'datetime',
     ];
 
-    public function visit()
+    public function visit(): BelongsTo
     {
         return $this->belongsTo(Visit::class);
     }
 
-    public function orderedBy()
+    public function orderedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'ordered_by');
     }
 
-    public function sampleCollectedBy()
+    public function consultation(): BelongsTo
+    {
+        return $this->belongsTo(Consultation::class);
+    }
+
+    public function sampleCollectedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'sample_collected_by');
     }
 
-    public function items()
+    public function items(): HasMany
     {
         return $this->hasMany(LabOrderItem::class);
     }

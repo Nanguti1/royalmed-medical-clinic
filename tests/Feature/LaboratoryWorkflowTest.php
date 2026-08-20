@@ -8,6 +8,7 @@ use App\Actions\Laboratory\CreateLabOrderAction;
 use App\Actions\Laboratory\RecordLabResultAction;
 use App\Actions\Laboratory\StartLabOrderAction;
 use App\Exceptions\InvalidLabOrderStatusException;
+use App\Models\Consultation;
 use App\Models\LabOrder;
 use App\Models\LabOrderItem;
 use App\Models\LabResult;
@@ -433,5 +434,85 @@ class LaboratoryWorkflowTest extends TestCase
 
         $this->assertCount(1, $history->items());
         $this->assertEquals($result1->id, $history->items()[0]->id);
+    }
+
+    public function test_lab_order_from_visit_with_consultation_stores_consultation_id()
+    {
+        $visit = Visit::factory()->create();
+        $consultation = Consultation::factory()->create(['visit_id' => $visit->id]);
+        $test = LabTest::factory()->create();
+
+        $action = new CreateLabOrderAction;
+        $order = $action->execute([
+            'visit_id' => $visit->id,
+            'tests' => [['lab_test_id' => $test->id]],
+        ]);
+
+        $this->assertEquals($consultation->id, $order->consultation_id);
+        $this->assertDatabaseHas('lab_orders', [
+            'id' => $order->id,
+            'visit_id' => $visit->id,
+            'consultation_id' => $consultation->id,
+        ]);
+    }
+
+    public function test_lab_order_from_visit_without_consultation_stores_null_consultation_id()
+    {
+        $visit = Visit::factory()->create();
+        $test = LabTest::factory()->create();
+
+        $action = new CreateLabOrderAction;
+        $order = $action->execute([
+            'visit_id' => $visit->id,
+            'tests' => [['lab_test_id' => $test->id]],
+        ]);
+
+        $this->assertNull($order->consultation_id);
+        $this->assertDatabaseHas('lab_orders', [
+            'id' => $order->id,
+            'visit_id' => $visit->id,
+            'consultation_id' => null,
+        ]);
+    }
+
+    public function test_consultation_can_have_multiple_lab_orders()
+    {
+        $visit = Visit::factory()->create();
+        $consultation = Consultation::factory()->create(['visit_id' => $visit->id]);
+        $test1 = LabTest::factory()->create();
+        $test2 = LabTest::factory()->create();
+
+        $action = new CreateLabOrderAction;
+        $order1 = $action->execute([
+            'visit_id' => $visit->id,
+            'tests' => [['lab_test_id' => $test1->id]],
+        ]);
+
+        $order2 = $action->execute([
+            'visit_id' => $visit->id,
+            'tests' => [['lab_test_id' => $test2->id]],
+        ]);
+
+        $this->assertCount(2, $consultation->labOrders);
+        $this->assertEquals($consultation->id, $order1->consultation_id);
+        $this->assertEquals($consultation->id, $order2->consultation_id);
+    }
+
+    public function test_explicit_consultation_id_overrides_automatic_population()
+    {
+        $visit = Visit::factory()->create();
+        $consultation1 = Consultation::factory()->create(['visit_id' => $visit->id]);
+        $consultation2 = Consultation::factory()->create(['visit_id' => $visit->id]);
+        $test = LabTest::factory()->create();
+
+        $action = new CreateLabOrderAction;
+        $order = $action->execute([
+            'visit_id' => $visit->id,
+            'consultation_id' => $consultation2->id,
+            'tests' => [['lab_test_id' => $test->id]],
+        ]);
+
+        $this->assertEquals($consultation2->id, $order->consultation_id);
+        $this->assertNotEquals($consultation1->id, $order->consultation_id);
     }
 }

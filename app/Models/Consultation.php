@@ -52,6 +52,11 @@ class Consultation extends Model
         return $this->hasMany(ClinicalAttachment::class);
     }
 
+    public function labOrders(): HasMany
+    {
+        return $this->hasMany(LabOrder::class);
+    }
+
     public function getSubjectiveAttribute(): ?string
     {
         return $this->attributes['subjective'] ?? $this->attributes['history'] ?? null;

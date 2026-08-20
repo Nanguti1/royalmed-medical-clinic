@@ -16,6 +16,7 @@ class CreateLabOrderRequest extends FormRequest
         return [
             'visit_id' => 'required|exists:visits,id',
             'ordered_by' => 'nullable|exists:users,id',
+            'consultation_id' => 'nullable|exists:consultations,id',
             'tests' => 'nullable|array',
             'tests.*.lab_test_id' => 'required_with:tests|exists:lab_tests,id',
         ];
