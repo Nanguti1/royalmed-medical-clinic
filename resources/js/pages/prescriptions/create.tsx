@@ -142,7 +142,7 @@ export default function PrescriptionCreate() {
                 {/* Header */}
                 <div className="flex items-center gap-4">
                     <Button variant="ghost" size="icon" asChild>
-                        <a href={`/visits/${visit.id}`}>
+                        <a href={visit.consultation_id ? `/consultations/${visit.consultation_id}` : `/visits/${visit.id}`}>
                             <ArrowLeft className="h-5 w-5" />
                         </a>
                     </Button>
@@ -267,15 +267,15 @@ export default function PrescriptionCreate() {
                                                         <div className="space-y-2">
                                                             <Label>Medicine *</Label>
                                                             <select
-                                                                value={item.medicine_id}
-                                                                onChange={(e) => updateItem(index, 'medicine_id', parseInt(e.target.value))}
+                                                                value={item.medicine_id === 0 ? '' : item.medicine_id.toString()}
+                                                                onChange={(e) => updateItem(index, 'medicine_id', e.target.value ? parseInt(e.target.value) : 0)}
                                                                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                                                             >
-                                                                <option value={0}>Select medicine</option>
+                                                                <option value="">Select medicine</option>
                                                                 {medicines.map((med) => (
-                                                                    <option 
-                                                                        key={med.id} 
-                                                                        value={med.id}
+                                                                    <option
+                                                                        key={med.id}
+                                                                        value={med.id.toString()}
                                                                         disabled={!med.is_available}
                                                                         className={!med.is_available ? 'text-muted-foreground' : ''}
                                                                     >
@@ -395,7 +395,7 @@ export default function PrescriptionCreate() {
 
                                 <div className="flex justify-end gap-4">
                                     <Button type="button" variant="outline" asChild>
-                                        <a href={`/visits/${visit.id}`}>Cancel</a>
+                                        <a href={visit.consultation_id ? `/consultations/${visit.consultation_id}` : `/visits/${visit.id}`}>Cancel</a>
                                     </Button>
                                     <PermissionGuard permission="consultations.create" fallback={null}>
                                         <Button type="submit" disabled={processing || data.items.length === 0}>

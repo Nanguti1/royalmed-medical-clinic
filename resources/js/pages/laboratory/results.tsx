@@ -16,7 +16,6 @@ export default function LaboratoryResults() {
     const { order } = usePage<PageProps>().props;
 
     const { data, setData, post, processing, errors } = useForm({
-        lab_test_id: 0,
         lab_order_item_id: 0,
         result_value: '',
         units: '',

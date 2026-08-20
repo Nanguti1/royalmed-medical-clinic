@@ -12,7 +12,7 @@ class RecordLabResultAction
 {
     public function execute(array $data): LabResult
     {
-        $orderItem = LabOrderItem::with(['order', 'result'])->findOrFail($data['lab_order_item_id']);
+        $orderItem = LabOrderItem::with(['order', 'result', 'test'])->findOrFail($data['lab_order_item_id']);
         $order = $orderItem->order;
 
         // Validate order is in progress
@@ -33,10 +33,8 @@ class RecordLabResultAction
             throw new \RuntimeException('A result already exists for this lab order item.');
         }
 
-        // Validate lab test matches
-        if ($orderItem->lab_test_id != $data['lab_test_id']) {
-            throw new \InvalidArgumentException('Lab test does not match the order item.');
-        }
+        // Set lab_test_id from the order item
+        $data['lab_test_id'] = $orderItem->lab_test_id;
 
         // Set recorded by if not provided
         if (! isset($data['recorded_by']) && Auth::check()) {

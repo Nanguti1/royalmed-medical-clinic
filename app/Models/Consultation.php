@@ -47,11 +47,6 @@ class Consultation extends Model
         return $this->hasMany(Diagnosis::class)->where('diagnosis_type', 'differential')->orderBy('rank');
     }
 
-    public function prescriptions(): HasMany
-    {
-        return $this->hasMany(Prescription::class);
-    }
-
     public function attachments(): HasMany
     {
         return $this->hasMany(ClinicalAttachment::class);

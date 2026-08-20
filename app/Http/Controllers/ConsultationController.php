@@ -73,7 +73,7 @@ class ConsultationController extends Controller
         $consultation->load([
             'visit.patient.activeAlerts', 'visit.patient.activeAllergies', 'visit.patient.activeChronicConditions',
             'visit.vitalSign', 'visit.queueEntry', 'visit.labOrders.items.test', 'visit.labOrders.items.result',
-            'diagnoses', 'primaryDiagnoses', 'differentialDiagnoses', 'prescriptions', 'attachments',
+            'visit.prescriptions', 'diagnoses', 'primaryDiagnoses', 'differentialDiagnoses', 'attachments',
         ]);
 
         $clinicalSummary = $this->consultationService->getClinicalSummary($consultation->visit->patient);
@@ -88,7 +88,7 @@ class ConsultationController extends Controller
     {
         $consultation->load([
             'visit.patient.activeAlerts', 'visit.patient.activeAllergies', 'visit.patient.activeChronicConditions',
-            'visit.vitalSign', 'diagnoses', 'primaryDiagnoses', 'differentialDiagnoses', 'prescriptions', 'attachments',
+            'visit.vitalSign', 'visit.prescriptions', 'diagnoses', 'primaryDiagnoses', 'differentialDiagnoses', 'attachments',
         ]);
 
         $clinicalSummary = $this->consultationService->getClinicalSummary($consultation->visit->patient);
@@ -134,7 +134,7 @@ class ConsultationController extends Controller
     {
         $this->visitService->complete($visit);
 
-        return redirect()->route('consultations.index')
+        return redirect()->route('visits.show', $visit)
             ->with('success', 'Visit completed successfully.');
     }
 }

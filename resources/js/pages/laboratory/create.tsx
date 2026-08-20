@@ -59,7 +59,7 @@ export default function LaboratoryCreate() {
                 {/* Header */}
                 <div className="flex items-center gap-4">
                     <Button variant="ghost" size="icon" asChild>
-                        <a href={`/visits/${visit.id}`}>
+                        <a href={visit.consultation_id ? `/consultations/${visit.consultation_id}` : `/visits/${visit.id}`}>
                             <ArrowLeft className="h-5 w-5" />
                         </a>
                     </Button>
@@ -177,7 +177,7 @@ export default function LaboratoryCreate() {
 
                                 <div className="flex justify-end gap-4">
                                     <Button type="button" variant="outline" asChild>
-                                        <a href={`/visits/${visit.id}`}>Cancel</a>
+                                        <a href={visit.consultation_id ? `/consultations/${visit.consultation_id}` : `/visits/${visit.id}`}>Cancel</a>
                                     </Button>
                                     <PermissionGuard permission="laboratory.order" fallback={null}>
                                         <Button type="submit" disabled={processing || data.tests.length === 0}>

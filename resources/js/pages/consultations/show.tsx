@@ -26,7 +26,7 @@ export default function ConsultationShow() {
         if (confirm('Are you sure you want to complete this visit? This action cannot be undone.')) {
             router.post(`/consultations/visits/${consultation.visit_id}/complete`, {}, {
                 onSuccess: () => {
-                    window.location.href = '/consultations';
+                    window.location.href = `/visits/${consultation.visit_id}`;
                 },
             });
         }
@@ -40,7 +40,7 @@ export default function ConsultationShow() {
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <Button variant="ghost" size="icon" asChild>
-                            <a href="/consultations">
+                            <a href={`/visits/${consultation.visit_id}`}>
                                 <ArrowLeft className="h-5 w-5" />
                             </a>
                         </Button>

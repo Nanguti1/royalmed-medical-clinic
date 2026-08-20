@@ -68,7 +68,7 @@ export default function LaboratoryIndex() {
                     <>
                         <div className="grid gap-4">
                             {orders.data.map((order) => (
-                                <LabOrderCard key={order.id} order={order} getStatusBadge={getStatusBadge} />
+                                <LabOrderCard key={order.id} order={order} getStatusBadge={getStatusBadge} getPriorityBadge={getPriorityBadge} />
                             ))}
                         </div>
                         {/* Pagination */}
@@ -95,7 +95,7 @@ export default function LaboratoryIndex() {
     );
 }
 
-function LabOrderCard({ order, getStatusBadge }: { order: LabOrder; getStatusBadge: (status: string) => any }) {
+function LabOrderCard({ order, getStatusBadge, getPriorityBadge }: { order: LabOrder; getStatusBadge: (status: string) => any; getPriorityBadge: (priority: string) => any }) {
     const patientName = order.visit?.patient
         ? [order.visit.patient.first_name, order.visit.patient.other_names, order.visit.patient.last_name]
             .filter(Boolean)

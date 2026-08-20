@@ -818,7 +818,7 @@
     "isEntry": true
   },
   "resources/js/app.tsx": {
-    "file": "assets/app-Bz3zjn2M.js",
+    "file": "assets/app-BgIdznJI.js",
     "name": "app",
     "src": "resources/js/app.tsx",
     "isEntry": true,
@@ -1772,7 +1772,7 @@
     ]
   },
   "resources/js/pages/consultations/show.tsx": {
-    "file": "assets/show-BvGiH2Xm.js",
+    "file": "assets/show-DYnejcxS.js",
     "name": "show",
     "src": "resources/js/pages/consultations/show.tsx",
     "isDynamicEntry": true,
@@ -2544,7 +2544,7 @@
     ]
   },
   "resources/js/pages/laboratory/create.tsx": {
-    "file": "assets/create-BIMe3oLf.js",
+    "file": "assets/create-CgOsRlaG.js",
     "name": "create",
     "src": "resources/js/pages/laboratory/create.tsx",
     "isDynamicEntry": true,
@@ -2581,7 +2581,7 @@
     ]
   },
   "resources/js/pages/laboratory/index.tsx": {
-    "file": "assets/laboratory-DY2Q-C_J.js",
+    "file": "assets/laboratory-BHA7Rjcs.js",
     "name": "laboratory",
     "src": "resources/js/pages/laboratory/index.tsx",
     "isDynamicEntry": true,
@@ -2625,7 +2625,7 @@
     ]
   },
   "resources/js/pages/laboratory/results.tsx": {
-    "file": "assets/results-C1WMu3G3.js",
+    "file": "assets/results-BQLF6JVu.js",
     "name": "results",
     "src": "resources/js/pages/laboratory/results.tsx",
     "isDynamicEntry": true,
@@ -3725,7 +3725,7 @@
     ]
   },
   "resources/js/pages/prescriptions/create.tsx": {
-    "file": "assets/create-D4TDSbLj.js",
+    "file": "assets/create-BWt3flCa.js",
     "name": "create",
     "src": "resources/js/pages/prescriptions/create.tsx",
     "isDynamicEntry": true,

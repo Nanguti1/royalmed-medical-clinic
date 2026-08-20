@@ -89,7 +89,6 @@ class LaboratoryWorkflowTest extends TestCase
 
         $action = new RecordLabResultAction;
         $result = $action->execute([
-            'lab_test_id' => $test->id,
             'lab_order_item_id' => $item->id,
             'result_value' => 'Normal',
         ]);
@@ -97,6 +96,7 @@ class LaboratoryWorkflowTest extends TestCase
         $this->assertDatabaseHas('lab_results', [
             'id' => $result->id,
             'lab_order_item_id' => $item->id,
+            'lab_test_id' => $test->id,
         ]);
     }
 
@@ -110,7 +110,6 @@ class LaboratoryWorkflowTest extends TestCase
 
         $action = new RecordLabResultAction;
         $action->execute([
-            'lab_test_id' => $test->id,
             'lab_order_item_id' => $item->id,
             'result_value' => 'Normal',
         ]);
@@ -126,7 +125,6 @@ class LaboratoryWorkflowTest extends TestCase
 
         $action = new RecordLabResultAction;
         $action->execute([
-            'lab_test_id' => $test->id,
             'lab_order_item_id' => $item->id,
             'result_value' => 'Normal',
         ]);
@@ -149,24 +147,6 @@ class LaboratoryWorkflowTest extends TestCase
         // Try to create duplicate
         $action = new RecordLabResultAction;
         $action->execute([
-            'lab_test_id' => $test->id,
-            'lab_order_item_id' => $item->id,
-            'result_value' => 'Normal',
-        ]);
-    }
-
-    public function test_result_must_match_order_item_lab_test()
-    {
-        $this->expectException(\InvalidArgumentException::class);
-
-        $order = LabOrder::factory()->create(['status' => 'in_progress']);
-        $test1 = LabTest::factory()->create();
-        $test2 = LabTest::factory()->create();
-        $item = LabOrderItem::factory()->create(['lab_order_id' => $order->id, 'lab_test_id' => $test1->id]);
-
-        $action = new RecordLabResultAction;
-        $action->execute([
-            'lab_test_id' => $test2->id, // Different test
             'lab_order_item_id' => $item->id,
             'result_value' => 'Normal',
         ]);
@@ -347,7 +327,6 @@ class LaboratoryWorkflowTest extends TestCase
 
         $action = new RecordLabResultAction;
         $result = $action->execute([
-            'lab_test_id' => $test->id,
             'lab_order_item_id' => $item->id,
             'result_value' => 'Critical High',
             'is_critical' => true,
@@ -364,6 +343,22 @@ class LaboratoryWorkflowTest extends TestCase
         $this->assertDatabaseHas('activity_logs', [
             'action' => 'critical_lab_result_alert',
         ]);
+    }
+
+    public function test_lab_test_id_is_automatically_set_from_order_item()
+    {
+        $order = LabOrder::factory()->create(['status' => 'in_progress']);
+        $test = LabTest::factory()->create();
+        $item = LabOrderItem::factory()->create(['lab_order_id' => $order->id, 'lab_test_id' => $test->id]);
+
+        $action = new RecordLabResultAction;
+        $result = $action->execute([
+            'lab_order_item_id' => $item->id,
+            'result_value' => 'Normal',
+        ]);
+
+        $this->assertEquals($test->id, $result->lab_test_id);
+        $this->assertEquals($item->lab_test_id, $result->lab_test_id);
     }
 
     public function test_result_verification_permission_is_enforced()

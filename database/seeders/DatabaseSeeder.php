@@ -28,6 +28,12 @@ class DatabaseSeeder extends Seeder
             MedicineFormSeeder::class,
             MedicineStrengthSeeder::class,
             MedicineSeeder::class,
+            DosageUnitSeeder::class,
+            FrequencySeeder::class,
+            RouteSeeder::class,
+            DurationUnitSeeder::class,
+            LabTestCategorySeeder::class,
+            LabTestSeeder::class,
         ]);
 
         $superAdmin = User::firstOrCreate(

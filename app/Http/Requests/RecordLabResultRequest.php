@@ -14,7 +14,6 @@ class RecordLabResultRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'lab_test_id' => 'required|exists:lab_tests,id',
             'lab_order_item_id' => 'required|exists:lab_order_items,id',
             'result_value' => 'required|string',
             'units' => 'nullable|string',
