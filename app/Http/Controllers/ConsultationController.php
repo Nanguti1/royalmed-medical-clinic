@@ -35,7 +35,7 @@ class ConsultationController extends Controller
 
         $this->middleware('permission:consultations.view')->only(['index', 'show']);
         $this->middleware('permission:consultations.create')->only(['create', 'store']);
-        $this->middleware('permission:consultations.update')->only(['edit', 'update']);
+        $this->middleware('permission:consultations.update')->only(['edit', 'update', 'reassignProvider']);
     }
 
     public function index(): Response
@@ -133,6 +133,17 @@ class ConsultationController extends Controller
                 ->with('info', 'This visit already has a consultation. Continue the existing consultation.');
         }
 
+        // Prevent starting consultation for completed or cancelled visits
+        if ($visit->isCompleted()) {
+            return redirect()->back()
+                ->with('error', 'Cannot start consultation for a completed visit.');
+        }
+
+        if ($visit->isCancelled()) {
+            return redirect()->back()
+                ->with('error', 'Cannot start consultation for a cancelled visit.');
+        }
+
         if ($visit->canStart()) {
             $this->visitService->start($visit);
         }
@@ -151,5 +162,22 @@ class ConsultationController extends Controller
 
         return redirect()->route('visits.show', $visit)
             ->with('success', 'Visit completed successfully.');
+    }
+
+    public function reassignProvider(Request $request, Consultation $consultation)
+    {
+        $request->validate([
+            'new_provider_id' => 'required|exists:users,id',
+        ]);
+
+        try {
+            $this->consultationService->reassignProvider($consultation, $request->input('new_provider_id'));
+
+            return redirect()->route('consultations.show', $consultation)
+                ->with('success', 'Consultation reassigned successfully.');
+        } catch (\RuntimeException $e) {
+            return redirect()->back()
+                ->with('error', $e->getMessage());
+        }
     }
 }

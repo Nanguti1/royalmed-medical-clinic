@@ -8,6 +8,7 @@ use App\Models\ClinicalAttachment;
 use App\Models\Consultation;
 use App\Models\ConsultationTemplate;
 use App\Models\Patient;
+use App\Models\Visit;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -27,6 +28,12 @@ class ConsultationService
     {
         return DB::transaction(function () use ($data) {
             $data['provider_id'] ??= Auth::id();
+
+            // Check if visit is completed or cancelled
+            $visit = Visit::find($data['visit_id']);
+            if ($visit && ($visit->isCompleted() || $visit->isCancelled())) {
+                throw new \RuntimeException('Cannot start consultation for a completed or cancelled visit.');
+            }
 
             return $this->startAction->execute($data);
         });
@@ -147,5 +154,28 @@ class ConsultationService
         $attachmentData['uploaded_by'] ??= Auth::id();
 
         return ClinicalAttachment::create($attachmentData);
+    }
+
+    public function reassignProvider(Consultation $consultation, int $newProviderId): Consultation
+    {
+        return DB::transaction(function () use ($consultation, $newProviderId) {
+            $oldProviderId = $consultation->provider_id;
+
+            if ($oldProviderId === $newProviderId) {
+                throw new \RuntimeException('Consultation is already assigned to this provider.');
+            }
+
+            // Update consultation provider
+            $consultation->update(['provider_id' => $newProviderId]);
+
+            // Log the reassignment
+            $consultation->visit->logActivity('consultation.reassigned', [
+                'consultation_id' => $consultation->id,
+                'old_provider_id' => $oldProviderId,
+                'new_provider_id' => $newProviderId,
+            ]);
+
+            return $consultation->refresh();
+        });
     }
 }

@@ -235,6 +235,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->middleware('can:consultations.update');
         Route::put('/{consultation}', [ConsultationController::class, 'update'])->name('consultations.update')
             ->middleware('can:consultations.update');
+        Route::post('/{consultation}/reassign', [ConsultationController::class, 'reassignProvider'])->name('consultations.reassignProvider')
+            ->middleware('can:consultations.update');
         Route::post('/visits/{visit}/start', [ConsultationController::class, 'startConsultation'])->name('consultations.startConsultation')
             ->middleware('can:visits.update');
         Route::post('/visits/{visit}/complete', [ConsultationController::class, 'completeVisit'])->name('consultations.completeVisit')

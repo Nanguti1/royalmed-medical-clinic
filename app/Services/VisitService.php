@@ -43,6 +43,15 @@ class VisitService
     public function complete(Visit $visit): Visit
     {
         return DB::transaction(function () use ($visit) {
+            // Prevent completing already completed or cancelled visits
+            if ($visit->isCompleted()) {
+                throw new \RuntimeException('Visit is already completed.');
+            }
+
+            if ($visit->isCancelled()) {
+                throw new \RuntimeException('Cannot complete a cancelled visit.');
+            }
+
             $visit = $this->completeAction->execute($visit);
             $visit->logActivity('visit.completed');
 
@@ -53,6 +62,19 @@ class VisitService
     public function start(Visit $visit): Visit
     {
         return DB::transaction(function () use ($visit) {
+            // Prevent starting already completed or cancelled visits
+            if ($visit->isCompleted()) {
+                throw new \RuntimeException('Cannot start a completed visit.');
+            }
+
+            if ($visit->isCancelled()) {
+                throw new \RuntimeException('Cannot start a cancelled visit.');
+            }
+
+            if ($visit->isStarted()) {
+                throw new \RuntimeException('Visit is already started.');
+            }
+
             $visit = $this->startAction->execute($visit);
             $visit->logActivity('visit.started');
 
@@ -63,6 +85,15 @@ class VisitService
     public function cancel(Visit $visit): Visit
     {
         return DB::transaction(function () use ($visit) {
+            // Prevent cancelling already completed or cancelled visits
+            if ($visit->isCompleted()) {
+                throw new \RuntimeException('Cannot cancel a completed visit.');
+            }
+
+            if ($visit->isCancelled()) {
+                throw new \RuntimeException('Visit is already cancelled.');
+            }
+
             $visit = $this->cancelAction->execute($visit);
             $visit->logActivity('visit.cancelled');
 
@@ -73,6 +104,15 @@ class VisitService
     public function startTriage(Visit $visit): Visit
     {
         return DB::transaction(function () use ($visit) {
+            // Prevent triage on completed or cancelled visits
+            if ($visit->isCompleted()) {
+                throw new \RuntimeException('Cannot start triage on a completed visit.');
+            }
+
+            if ($visit->isCancelled()) {
+                throw new \RuntimeException('Cannot start triage on a cancelled visit.');
+            }
+
             $triageInProgressStatus = VisitStatus::where('code', 'TRIAGE_IN_PROGRESS')->first();
             if ($triageInProgressStatus) {
                 $visit->update(['visit_status_id' => $triageInProgressStatus->id]);
@@ -101,6 +141,15 @@ class VisitService
     public function completeTriage(Visit $visit): Visit
     {
         return DB::transaction(function () use ($visit) {
+            // Prevent completing triage on completed or cancelled visits
+            if ($visit->isCompleted()) {
+                throw new \RuntimeException('Cannot complete triage on a completed visit.');
+            }
+
+            if ($visit->isCancelled()) {
+                throw new \RuntimeException('Cannot complete triage on a cancelled visit.');
+            }
+
             $waitingForConsultationStatus = VisitStatus::where('code', 'WAITING_FOR_CONSULTATION')->first();
             if ($waitingForConsultationStatus) {
                 $visit->update(['visit_status_id' => $waitingForConsultationStatus->id]);
@@ -130,6 +179,11 @@ class VisitService
 
     protected function createConsultationQueueEntry(Visit $visit): void
     {
+        // Prevent creating queue entries for completed or cancelled visits
+        if ($visit->isCompleted() || $visit->isCancelled()) {
+            return;
+        }
+
         // Check if there's already an active consultation queue entry
         $existingEntry = QueueEntry::where('visit_id', $visit->id)
             ->where('department', 'consultation')

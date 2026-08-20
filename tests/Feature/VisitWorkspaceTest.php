@@ -2,9 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Models\Consultation;
+use App\Models\QueueEntry;
 use App\Models\User;
 use App\Models\Visit;
 use App\Models\VisitStatus;
+use App\Services\ConsultationService;
+use App\Services\VisitService;
 use Database\Seeders\AuthorizationSeeder;
 use Database\Seeders\VisitStatusSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -356,5 +360,184 @@ class VisitWorkspaceTest extends TestCase
         $timeline = $visit->getTimeline();
         $this->assertIsArray($timeline);
         $this->assertNotEmpty($timeline);
+    }
+
+    public function test_unauthorized_users_cannot_perform_workflow_actions(): void
+    {
+        $user = User::factory()->create();
+        $visit = Visit::factory()->create();
+
+        // Test unauthorized visit start
+        $response = $this->actingAs($user)
+            ->post("/visits/{$visit->id}/start");
+        $response->assertStatus(403);
+
+        // Test unauthorized visit complete
+        $response = $this->actingAs($user)
+            ->post("/visits/{$visit->id}/complete");
+        $response->assertStatus(403);
+
+        // Test unauthorized visit cancel
+        $response = $this->actingAs($user)
+            ->post("/visits/{$visit->id}/cancel");
+        $response->assertStatus(403);
+    }
+
+    public function test_cancelled_visits_cannot_re_enter_active_queues(): void
+    {
+        $user = User::factory()->create();
+        $user->givePermissionTo('visits.update');
+        $visit = Visit::factory()->create();
+
+        $this->actingAs($user);
+        $visitService = app(VisitService::class);
+        $visitService->cancel($visit);
+
+        // Try to add cancelled visit to queue
+        $response = $this->actingAs($user)
+            ->post("/visits/{$visit->id}/queue", [
+                'department' => 'consultation',
+                'priority' => 'normal',
+            ]);
+
+        $response->assertSessionHas('error');
+    }
+
+    public function test_completed_visits_cannot_re_enter_active_queues(): void
+    {
+        $user = User::factory()->create();
+        $user->givePermissionTo('visits.update');
+        $visit = Visit::factory()->create();
+
+        $this->actingAs($user);
+        $visitService = app(VisitService::class);
+        $visitService->start($visit);
+        $visitService->complete($visit);
+
+        // Try to add completed visit to queue
+        $response = $this->actingAs($user)
+            ->post("/visits/{$visit->id}/queue", [
+                'department' => 'consultation',
+                'priority' => 'normal',
+            ]);
+
+        $response->assertSessionHas('error');
+    }
+
+    public function test_double_submit_does_not_duplicate_consultations(): void
+    {
+        $user = User::factory()->create();
+        $user->givePermissionTo('consultations.create');
+        $visit = Visit::factory()->create();
+
+        $this->actingAs($user);
+
+        // First consultation creation
+        $response1 = $this->post('/consultations', [
+            'visit_id' => $visit->id,
+            'chief_complaint' => 'Headache',
+        ]);
+
+        $response1->assertRedirect();
+
+        // Second consultation creation should redirect to existing
+        $response2 = $this->post('/consultations', [
+            'visit_id' => $visit->id,
+            'chief_complaint' => 'Fever',
+        ]);
+
+        $response2->assertRedirect();
+
+        // Should still have only one consultation
+        $consultations = Consultation::where('visit_id', $visit->id)->get();
+        $this->assertCount(1, $consultations);
+    }
+
+    public function test_double_submit_does_not_duplicate_queue_entries(): void
+    {
+        $user = User::factory()->create();
+        $user->givePermissionTo('visits.update');
+        $visit = Visit::factory()->create();
+
+        $this->actingAs($user);
+
+        // First queue entry creation
+        $response1 = $this->post("/visits/{$visit->id}/queue", [
+            'department' => 'consultation',
+            'priority' => 'normal',
+        ]);
+
+        $response1->assertSessionHas('success');
+
+        // Second queue entry creation should fail
+        $response2 = $this->post("/visits/{$visit->id}/queue", [
+            'department' => 'consultation',
+            'priority' => 'normal',
+        ]);
+
+        $response2->assertSessionHas('error');
+
+        // Should still have only one active queue entry
+        $queueEntries = QueueEntry::where('visit_id', $visit->id)
+            ->where('department', 'consultation')
+            ->whereIn('status', ['waiting', 'called', 'in_progress'])
+            ->get();
+        $this->assertCount(1, $queueEntries);
+    }
+
+    public function test_authorized_doctor_reassignment_preserves_consultation_history(): void
+    {
+        $user = User::factory()->create();
+        $user->givePermissionTo('consultations.update');
+        $newProvider = User::factory()->create();
+
+        $visit = Visit::factory()->create();
+        $consultation = Consultation::factory()->create([
+            'visit_id' => $visit->id,
+            'provider_id' => $user->id,
+        ]);
+
+        $this->actingAs($user);
+
+        // Reassign consultation
+        $consultationService = app(ConsultationService::class);
+        $updatedConsultation = $consultationService->reassignProvider($consultation, $newProvider->id);
+
+        // Verify provider changed
+        $this->assertEquals($newProvider->id, $updatedConsultation->provider_id);
+
+        // Verify consultation history is preserved
+        $this->assertEquals($consultation->id, $updatedConsultation->id);
+        $this->assertEquals($visit->id, $updatedConsultation->visit_id);
+
+        // Verify reassignment was logged
+        $timeline = $visit->getTimeline();
+        $reassignmentEntry = collect($timeline)->firstWhere('action', 'consultation.reassigned');
+        $this->assertNotNull($reassignmentEntry);
+    }
+
+    public function test_same_doctor_continuation_still_passes(): void
+    {
+        $user = User::factory()->create();
+        $user->givePermissionTo('consultations.update');
+        $visit = Visit::factory()->create();
+
+        $this->actingAs($user);
+
+        // Create consultation with doctor
+        $consultation = Consultation::factory()->create([
+            'visit_id' => $visit->id,
+            'provider_id' => $user->id,
+        ]);
+
+        // Same doctor should be able to continue
+        $response = $this->get("/consultations/{$consultation->id}");
+        $response->assertStatus(200);
+
+        // Same doctor should be able to update
+        $response = $this->put("/consultations/{$consultation->id}", [
+            'chief_complaint' => 'Updated complaint',
+        ]);
+        $response->assertRedirect();
     }
 }

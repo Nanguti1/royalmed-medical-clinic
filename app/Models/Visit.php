@@ -115,6 +115,7 @@ class Visit extends Model
             'visit.paid' => 'Visit marked as paid',
             'visit.completed' => 'Visit completed',
             'visit.cancelled' => 'Visit cancelled',
+            'consultation.reassigned' => 'Consultation reassigned to different provider',
             default => ucfirst(str_replace('.', ' ', $action)),
         };
     }

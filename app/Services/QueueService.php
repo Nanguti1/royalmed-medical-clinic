@@ -8,6 +8,7 @@ use App\Actions\Queue\RemoveFromQueueAction;
 use App\Actions\Queue\ServeQueueEntryAction;
 use App\Exceptions\InvalidQueueStateException;
 use App\Models\QueueEntry;
+use App\Models\Visit;
 use Illuminate\Support\Facades\DB;
 
 class QueueService
@@ -31,6 +32,14 @@ class QueueService
     public function add(array $data): QueueEntry
     {
         return DB::transaction(function () use ($data) {
+            // Additional check for cancelled/completed visits
+            if (isset($data['visit_id'])) {
+                $visit = Visit::find($data['visit_id']);
+                if ($visit && ($visit->isCompleted() || $visit->isCancelled())) {
+                    throw InvalidQueueStateException::cannotQueueInactiveVisit();
+                }
+            }
+
             return $this->addAction->execute($data);
         });
     }

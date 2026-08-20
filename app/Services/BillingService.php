@@ -25,6 +25,14 @@ class BillingService
     public function createInvoice(array $data): Invoice
     {
         return DB::transaction(function () use ($data) {
+            // Check if visit already has an invoice
+            if (isset($data['visit_id'])) {
+                $existingInvoice = Invoice::where('visit_id', $data['visit_id'])->first();
+                if ($existingInvoice) {
+                    throw new \RuntimeException('This visit already has an invoice.');
+                }
+            }
+
             $invoice = $this->generateInvoiceAction->execute($data);
 
             // Log invoice generation for visit timeline

@@ -12,6 +12,7 @@ use App\Models\LabOrder;
 use App\Models\LabOrderItem;
 use App\Models\LabResult;
 use App\Models\PatientAlert;
+use App\Models\Visit;
 use App\Support\Generators\NumberGenerator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -46,6 +47,14 @@ class LabService
     public function createOrder(array $data): LabOrder
     {
         return DB::transaction(function () use ($data) {
+            // Check if visit is completed or cancelled
+            if (isset($data['visit_id'])) {
+                $visit = Visit::find($data['visit_id']);
+                if ($visit && ($visit->isCompleted() || $visit->isCancelled())) {
+                    throw new \RuntimeException('Cannot create lab order for a completed or cancelled visit.');
+                }
+            }
+
             $order = $this->createAction->execute($data);
             Log::info('Lab order created', ['lab_order_id' => $order->id]);
 

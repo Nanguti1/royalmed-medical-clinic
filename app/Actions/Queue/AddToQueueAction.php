@@ -13,19 +13,20 @@ class AddToQueueAction
     {
         $department = $data['department'] ?? 'consultation';
 
-        // Check if visit is cancelled or completed
-        $visit = Visit::find($data['visit_id']);
+        // Check if visit is cancelled or completed with lock
+        $visit = Visit::lockForUpdate()->find($data['visit_id']);
         if ($visit && ($visit->isCancelled() || $visit->isCompleted())) {
             throw InvalidQueueStateException::cannotQueueInactiveVisit();
         }
 
-        // Check duplicate active queue entry in the same department
-        $activeExists = QueueEntry::where('visit_id', $data['visit_id'])
+        // Check duplicate active queue entry in the same department with lock
+        $activeEntry = QueueEntry::where('visit_id', $data['visit_id'])
             ->where('department', $department)
             ->whereIn('status', ['waiting', 'called', 'in_progress'])
-            ->exists();
+            ->lockForUpdate()
+            ->first();
 
-        if ($activeExists) {
+        if ($activeEntry) {
             throw InvalidQueueStateException::activeEntryExists($department);
         }
 

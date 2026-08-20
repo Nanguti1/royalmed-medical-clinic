@@ -12,6 +12,7 @@ use App\Models\Medicine;
 use App\Models\Patient;
 use App\Models\PatientAllergy;
 use App\Models\Prescription;
+use App\Models\Visit;
 use Illuminate\Support\Facades\DB;
 
 class PrescriptionService
@@ -50,6 +51,14 @@ class PrescriptionService
     public function createWithItems(array $data): Prescription
     {
         return DB::transaction(function () use ($data) {
+            // Check if visit is completed or cancelled
+            if (isset($data['visit_id'])) {
+                $visit = Visit::find($data['visit_id']);
+                if ($visit && ($visit->isCompleted() || $visit->isCancelled())) {
+                    throw new \RuntimeException('Cannot create prescription for a completed or cancelled visit.');
+                }
+            }
+
             // Validate medicine availability before creating prescription
             if (isset($data['items']) && is_array($data['items'])) {
                 foreach ($data['items'] as $item) {
