@@ -1,11 +1,13 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import InputError from '@/components/input-error';
 import AlertError from '@/components/alert-error';
-import { ArrowLeft, FileText, Save } from 'lucide-react';
+import { ArrowLeft, FileText, Save, CheckCircle, AlertTriangle, ChevronRight } from 'lucide-react';
 import type { Consultation } from '@/types/visit';
+import { PermissionGuard } from '@/components/permission-guard';
 
 type PageProps = {
     consultation: Consultation;
@@ -24,7 +26,45 @@ export default function ConsultationEdit() {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        put(`/consultations/${consultation.id}`);
+        put(`/consultations/${consultation.id}`, {
+            onSuccess: () => {
+                window.location.href = `/consultations/${consultation.id}`;
+            },
+        });
+    };
+
+    const handleCompleteConsultation = () => {
+        if (showValidationWarning) {
+            alert('Please complete chief complaint and history before completing the consultation.');
+            return;
+        }
+        if (confirm('Are you sure you want to complete this consultation? This will transition the visit to prescription creation.')) {
+            window.location.href = `/consultations/visits/${consultation.visit_id}/complete-consultation`;
+        }
+    };
+
+    const handleContinueToPrescription = () => {
+        window.location.href = `/prescriptions/create/${consultation.visit_id}`;
+    };
+
+    const visitStatus = consultation.visit?.status?.code;
+    const hasPrescriptions = consultation.prescriptions && consultation.prescriptions.length > 0;
+    const hasFinalizedPrescription = consultation.prescriptions?.some(p => p.finalized_at);
+    const showValidationWarning = !data.chief_complaint || !data.history;
+
+    const getWorkflowStatus = () => {
+        if (visitStatus === 'WAITING_FOR_PRESCRIPTION') {
+            return 'Waiting for prescription creation';
+        } else if (visitStatus === 'WAITING_FOR_PHARMACY') {
+            return 'Waiting for pharmacy processing';
+        } else if (visitStatus === 'WAITING_FOR_BILLING') {
+            return 'Waiting for billing';
+        } else if (hasPrescriptions && !hasFinalizedPrescription) {
+            return 'Draft prescription - needs finalization';
+        } else if (hasFinalizedPrescription) {
+            return 'Prescription finalized';
+        }
+        return 'Consultation in progress';
     };
 
     return (
@@ -45,6 +85,47 @@ export default function ConsultationEdit() {
                         </p>
                     </div>
                 </div>
+
+                {/* Workflow Status */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="text-lg">Workflow Status</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-muted-foreground">Current Status</p>
+                                <Badge className="mt-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                                    {getWorkflowStatus()}
+                                </Badge>
+                            </div>
+                            <div className="flex gap-2">
+                                <PermissionGuard permission="consultations.update" fallback={null}>
+                                    <Button variant="outline" onClick={handleCompleteConsultation}>
+                                        <CheckCircle className="mr-2 h-4 w-4" />
+                                        Complete Consultation
+                                    </Button>
+                                </PermissionGuard>
+                                <PermissionGuard permission="consultations.create" fallback={null}>
+                                    <Button onClick={handleContinueToPrescription} className="bg-blue-600 hover:bg-blue-700">
+                                        <ChevronRight className="mr-2 h-4 w-4" />
+                                        Continue to Prescription
+                                    </Button>
+                                </PermissionGuard>
+                            </div>
+                        </div>
+                        {showValidationWarning && (
+                            <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg dark:bg-yellow-950 dark:border-yellow-800">
+                                <div className="flex items-center gap-2">
+                                    <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+                                    <span className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+                                        Please complete chief complaint and history before proceeding
+                                    </span>
+                                </div>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
 
                 {/* Consultation Form */}
                 <Card>

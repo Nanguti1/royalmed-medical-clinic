@@ -132,7 +132,16 @@ export default function PrescriptionCreate() {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        post('/prescriptions');
+        post('/prescriptions', {
+            onSuccess: () => {
+                // After successful prescription creation, navigate back to consultation
+                if (visit.consultation_id) {
+                    window.location.href = `/consultations/${visit.consultation_id}`;
+                } else {
+                    window.location.href = `/visits/${visit.id}`;
+                }
+            },
+        });
     };
 
     return (

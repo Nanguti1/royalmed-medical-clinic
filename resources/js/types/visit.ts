@@ -23,6 +23,11 @@ export type Visit = {
     prescriptions?: Prescription[];
     labOrders?: any[];
     invoice?: any;
+    status?: {
+        id: number;
+        code: string;
+        name: string;
+    };
     created_at: string;
     updated_at: string;
 };
@@ -86,6 +91,11 @@ export type Consultation = {
         };
         vitalSign?: VitalSign;
         queueEntry?: QueueEntry;
+        status?: {
+            id: number;
+            code: string;
+            name: string;
+        };
     };
     diagnoses?: Diagnosis[];
     prescriptions?: Prescription[];

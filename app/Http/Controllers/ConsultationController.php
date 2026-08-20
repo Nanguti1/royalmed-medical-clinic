@@ -80,7 +80,7 @@ class ConsultationController extends Controller
         $consultation->load([
             'visit.patient.activeAlerts', 'visit.patient.activeAllergies', 'visit.patient.activeChronicConditions',
             'visit.vitalSign', 'visit.queueEntry', 'visit.labOrders.items.test', 'visit.labOrders.items.result',
-            'visit.prescriptions', 'diagnoses', 'primaryDiagnoses', 'differentialDiagnoses', 'attachments',
+            'visit.prescriptions', 'visit.status', 'diagnoses', 'primaryDiagnoses', 'differentialDiagnoses', 'attachments',
         ]);
 
         $clinicalSummary = $this->consultationService->getClinicalSummary($consultation->visit->patient);
@@ -95,7 +95,7 @@ class ConsultationController extends Controller
     {
         $consultation->load([
             'visit.patient.activeAlerts', 'visit.patient.activeAllergies', 'visit.patient.activeChronicConditions',
-            'visit.vitalSign', 'visit.prescriptions', 'diagnoses', 'primaryDiagnoses', 'differentialDiagnoses', 'attachments',
+            'visit.vitalSign', 'visit.prescriptions', 'visit.status', 'diagnoses', 'primaryDiagnoses', 'differentialDiagnoses', 'attachments',
         ]);
 
         $clinicalSummary = $this->consultationService->getClinicalSummary($consultation->visit->patient);
