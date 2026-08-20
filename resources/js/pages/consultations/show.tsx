@@ -283,18 +283,32 @@ export default function ConsultationShow() {
                                                     </Badge>
                                                 </div>
                                                 {labOrder.items && labOrder.items.length > 0 && (
-                                                    <div className="space-y-1 text-sm">
-                                                        {labOrder.items.slice(0, 3).map((item) => (
-                                                            <p key={item.id} className="text-muted-foreground">
-                                                                • {item.test?.name}
-                                                                {item.result && ` - ${item.result.result_value}`}
-                                                            </p>
+                                                    <div className="space-y-2">
+                                                        {labOrder.items.map((item) => (
+                                                            <div key={item.id} className="flex justify-between items-start text-sm">
+                                                                <div className="flex-1">
+                                                                    <p className="font-medium">{item.test?.name}</p>
+                                                                    {item.result && (
+                                                                        <div className="mt-1">
+                                                                            <span className="font-semibold text-primary">
+                                                                                {item.result.result_value}
+                                                                            </span>
+                                                                            {item.result.units && <span className="text-muted-foreground ml-1">{item.result.units}</span>}
+                                                                            {item.result.is_abnormal && (
+                                                                                <Badge className="ml-2 bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 text-xs">
+                                                                                    Abnormal
+                                                                                </Badge>
+                                                                            )}
+                                                                            {item.result.is_critical && (
+                                                                                <Badge className="ml-2 bg-red-600 text-white text-xs">
+                                                                                    Critical
+                                                                                </Badge>
+                                                                            )}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            </div>
                                                         ))}
-                                                        {labOrder.items.length > 3 && (
-                                                            <p className="text-muted-foreground">
-                                                                ... and {labOrder.items.length - 3} more tests
-                                                            </p>
-                                                        )}
                                                     </div>
                                                 )}
                                                 <Button variant="outline" size="sm" asChild>

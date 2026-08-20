@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/empty-state';
-import { Play, RefreshCw, Stethoscope, User } from 'lucide-react';
+import { Play, RefreshCw, Stethoscope, User, FlaskConical } from 'lucide-react';
 import type { QueueEntry } from '@/types/visit';
 import { PermissionGuard } from '@/components/permission-guard';
 
@@ -24,6 +24,10 @@ export default function ConsultationIndex() {
                 router.reload();
             },
         });
+    };
+
+    const handleContinueConsultation = (consultationId: number) => {
+        router.visit(`/consultations/${consultationId}`);
     };
 
     return (
@@ -66,6 +70,7 @@ export default function ConsultationIndex() {
                                 key={entry.id}
                                 entry={entry}
                                 onStartConsultation={handleStartConsultation}
+                                onContinueConsultation={handleContinueConsultation}
                             />
                         ))}
                     </div>
@@ -75,7 +80,7 @@ export default function ConsultationIndex() {
     );
 }
 
-function QueueCard({ entry, onStartConsultation }: { entry: QueueEntry; onStartConsultation: (visitId: number) => void }) {
+function QueueCard({ entry, onStartConsultation, onContinueConsultation }: { entry: QueueEntry; onStartConsultation: (visitId: number) => void; onContinueConsultation: (consultationId: number) => void }) {
     const patientName = entry.visit?.patient
         ? [entry.visit.patient.first_name, entry.visit.patient.other_names, entry.visit.patient.last_name]
             .filter(Boolean)
@@ -85,6 +90,9 @@ function QueueCard({ entry, onStartConsultation }: { entry: QueueEntry; onStartC
     const arrivalTime = new Date(entry.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
     const hasVitals = entry.visit?.vitalSign !== null;
+
+    const isLabReturn = entry.metadata?.action === 'continue_consultation';
+    const consultationId = entry.metadata?.consultation_id;
 
     const getStatusColor = (status: string) => {
         switch (status) {
@@ -123,11 +131,24 @@ function QueueCard({ entry, onStartConsultation }: { entry: QueueEntry; onStartC
                                 Vitals Captured
                             </Badge>
                         )}
+                        {isLabReturn && (
+                            <Badge className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
+                                <FlaskConical className="mr-1 h-3 w-3" />
+                                Lab Results Ready
+                            </Badge>
+                        )}
                         <PermissionGuard permission="consultations.create" fallback={null}>
-                            <Button onClick={() => onStartConsultation(entry.visit_id)}>
-                                <Play className="mr-2 h-4 w-4" />
-                                Start Consultation
-                            </Button>
+                            {isLabReturn && consultationId ? (
+                                <Button onClick={() => onContinueConsultation(consultationId)}>
+                                    <Play className="mr-2 h-4 w-4" />
+                                    Continue Consultation
+                                </Button>
+                            ) : (
+                                <Button onClick={() => onStartConsultation(entry.visit_id)}>
+                                    <Play className="mr-2 h-4 w-4" />
+                                    Start Consultation
+                                </Button>
+                            )}
                         </PermissionGuard>
                     </div>
                 </div>

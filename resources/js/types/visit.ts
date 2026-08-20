@@ -47,6 +47,11 @@ export type QueueEntry = {
     status: 'waiting' | 'called' | 'in_progress' | 'completed';
     called_at: string | null;
     served_at: string | null;
+    metadata?: {
+        action?: string;
+        consultation_id?: number;
+        lab_order_id?: number;
+    };
     visit?: {
         id: number;
         patient?: {
