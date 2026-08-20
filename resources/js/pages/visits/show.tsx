@@ -75,6 +75,33 @@ export default function VisitShow() {
         window.location.href = `/visits/${visit.id}/triage`;
     };
 
+    const handleCompleteConsultation = () => {
+        if (confirm('Are you sure you want to complete this consultation? This will transition the visit to prescription creation.')) {
+            router.post(`/consultations/visits/${visit.id}/complete-consultation`, {}, {
+                onSuccess: () => {
+                    router.reload();
+                },
+            });
+        }
+    };
+
+    const handleFinalizePrescription = () => {
+        const draftPrescription = visit.prescriptions?.find((p: any) => !p.finalized_at && p.items && p.items.length > 0);
+        if (draftPrescription) {
+            if (confirm('Are you sure you want to finalize this prescription? This will create a pharmacy queue entry and the prescription cannot be modified after finalization.')) {
+                router.post(`/prescriptions/${draftPrescription.id}/finalize`, {}, {
+                    onSuccess: () => {
+                        router.reload();
+                    },
+                });
+            }
+        }
+    };
+
+    const handleCreatePrescription = () => {
+        window.location.href = `/prescriptions/create/${visit.id}`;
+    };
+
     const isStarted = visit.started_at !== null;
     const isCompleted = visit.completed_at !== null;
     const isCancelled = visit.cancelled_at !== null;
@@ -168,6 +195,30 @@ export default function VisitShow() {
                                         <Button variant="outline" onClick={handleAddToQueue}>
                                             <User className="mr-2 h-4 w-4" />
                                             Add to Queue
+                                        </Button>
+                                    </PermissionGuard>
+                                )}
+                                {visit.consultation && nextAction.action === 'complete_consultation' && (
+                                    <PermissionGuard permission="consultations.update" fallback={null}>
+                                        <Button variant="outline" onClick={handleCompleteConsultation}>
+                                            <CheckCircle className="mr-2 h-4 w-4" />
+                                            Complete Consultation
+                                        </Button>
+                                    </PermissionGuard>
+                                )}
+                                {nextAction.action === 'create_prescription' && (
+                                    <PermissionGuard permission="consultations.create" fallback={null}>
+                                        <Button variant="outline" onClick={handleCreatePrescription}>
+                                            <Pill className="mr-2 h-4 w-4" />
+                                            Create Prescription
+                                        </Button>
+                                    </PermissionGuard>
+                                )}
+                                {nextAction.action === 'finalize_prescription' && (
+                                    <PermissionGuard permission="consultations.create" fallback={null}>
+                                        <Button variant="outline" onClick={handleFinalizePrescription}>
+                                            <CheckCircle className="mr-2 h-4 w-4" />
+                                            Finalize Prescription
                                         </Button>
                                     </PermissionGuard>
                                 )}
@@ -381,6 +432,11 @@ export default function VisitShow() {
                                     <div className="text-sm text-muted-foreground">
                                         {visit.consultation.chief_complaint && `Chief Complaint: ${visit.consultation.chief_complaint}`}
                                     </div>
+                                    {visit.status?.code === 'WAITING_FOR_PRESCRIPTION' && (
+                                        <div className="text-xs text-blue-600 dark:text-blue-400">
+                                            Consultation completed - awaiting prescription
+                                        </div>
+                                    )}
                                 </div>
                             ) : (
                                 <div className="flex items-center gap-2">
@@ -435,8 +491,13 @@ export default function VisitShow() {
                                         <span className="text-sm font-medium">{visit.prescriptions.length} Prescription(s)</span>
                                     </div>
                                     <div className="text-sm text-muted-foreground">
-                                        {visit.prescriptions.filter((p: any) => p.status === 'finalized').length} finalized
+                                        {visit.prescriptions.filter((p: any) => p.finalized_at).length} finalized • {visit.prescriptions.filter((p: any) => !p.finalized_at).length} draft
                                     </div>
+                                    {visit.prescriptions.filter((p: any) => !p.finalized_at).length > 0 && (
+                                        <div className="text-xs text-yellow-600 dark:text-yellow-400">
+                                            {visit.prescriptions.filter((p: any) => !p.finalized_at).length} prescription(s) need finalization
+                                        </div>
+                                    )}
                                 </div>
                             ) : (
                                 <div className="flex items-center gap-2">
@@ -456,14 +517,14 @@ export default function VisitShow() {
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            {visit.prescriptions && visit.prescriptions.length > 0 ? (
+                            {visit.prescriptions && visit.prescriptions.filter((p: any) => p.finalized_at).length > 0 ? (
                                 <div className="space-y-2">
                                     <div className="flex items-center gap-2">
                                         <CheckCircle className="h-4 w-4 text-green-600" />
                                         <span className="text-sm font-medium">Items ready for dispensing</span>
                                     </div>
                                     <div className="text-sm text-muted-foreground">
-                                        {visit.prescriptions.filter((p: any) => p.status === 'finalized').length} pending dispensing
+                                        {visit.prescriptions.filter((p: any) => p.finalized_at && !p.dispensed_at).length} pending dispensing
                                     </div>
                                 </div>
                             ) : (

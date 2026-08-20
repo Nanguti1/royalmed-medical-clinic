@@ -172,6 +172,20 @@ class Visit extends Model
             ];
         }
 
+        // Check if there's a draft prescription that needs finalization
+        $hasDraftPrescription = $this->prescriptions()
+            ->whereNull('finalized_at')
+            ->whereHas('items')
+            ->exists();
+
+        if ($hasDraftPrescription) {
+            return [
+                'label' => 'Finalize Prescription',
+                'action' => 'finalize_prescription',
+                'permission' => 'consultations.create',
+            ];
+        }
+
         return match ($this->status->code) {
             'REGISTERED' => [
                 'label' => 'Start Triage',
