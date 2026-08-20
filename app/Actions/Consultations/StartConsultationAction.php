@@ -11,6 +11,12 @@ class StartConsultationAction
         $diagnoses = $data['diagnoses'] ?? [];
         $consultationData = array_diff_key($data, ['diagnoses' => []]);
 
+        $existingConsultation = Consultation::where('visit_id', $consultationData['visit_id'])->first();
+
+        if ($existingConsultation) {
+            return $existingConsultation;
+        }
+
         $consultation = Consultation::create($consultationData);
 
         foreach ($diagnoses as $rank => $diag) {

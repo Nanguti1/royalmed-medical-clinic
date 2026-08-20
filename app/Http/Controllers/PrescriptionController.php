@@ -70,9 +70,10 @@ class PrescriptionController extends Controller
     {
         $prescription = $this->prescriptionService->createWithItems($request->validated());
 
-        // Redirect back to consultation if it exists, otherwise to visit page
-        if ($prescription->visit->consultation_id) {
-            return redirect()->route('consultations.show', $prescription->visit->consultation_id)
+        $prescription->load('visit.consultation');
+
+        if ($prescription->visit->consultation) {
+            return redirect()->route('consultations.show', $prescription->visit->consultation)
                 ->with('success', 'Prescription created successfully.');
         }
 
