@@ -107,4 +107,112 @@ class Visit extends Model
     {
         return ! $this->isCompleted() && ! $this->isCancelled();
     }
+
+    public function getNextAction(): array
+    {
+        if (! $this->status) {
+            return [
+                'label' => 'Start Visit',
+                'action' => 'start',
+                'permission' => 'visits.update',
+            ];
+        }
+
+        return match ($this->status->code) {
+            'REGISTERED' => [
+                'label' => 'Start Triage',
+                'action' => 'triage',
+                'permission' => 'visits.update',
+            ],
+            'WAITING_FOR_TRIAGE' => [
+                'label' => 'Start Triage',
+                'action' => 'triage',
+                'permission' => 'visits.update',
+            ],
+            'TRIAGE_IN_PROGRESS' => [
+                'label' => 'Complete Triage',
+                'action' => 'complete_triage',
+                'permission' => 'visits.update',
+            ],
+            'WAITING_FOR_CONSULTATION' => [
+                'label' => 'Start Consultation',
+                'action' => 'start_consultation',
+                'permission' => 'consultations.create',
+            ],
+            'CONSULTATION_IN_PROGRESS' => [
+                'label' => 'Complete Consultation',
+                'action' => 'complete_consultation',
+                'permission' => 'consultations.update',
+            ],
+            'WAITING_FOR_LAB' => [
+                'label' => 'Process Lab Order',
+                'action' => 'process_lab',
+                'permission' => 'lab_orders.update',
+            ],
+            'LAB_IN_PROGRESS' => [
+                'label' => 'Complete Lab Processing',
+                'action' => 'complete_lab',
+                'permission' => 'lab_orders.update',
+            ],
+            'LAB_RESULTS_READY' => [
+                'label' => 'Continue Consultation',
+                'action' => 'continue_consultation',
+                'permission' => 'consultations.update',
+            ],
+            'WAITING_FOR_PHARMACY' => [
+                'label' => 'Process Prescription',
+                'action' => 'process_pharmacy',
+                'permission' => 'pharmacy.update',
+            ],
+            'WAITING_FOR_BILLING' => [
+                'label' => 'Process Payment',
+                'action' => 'process_payment',
+                'permission' => 'billing.update',
+            ],
+            'PAID' => [
+                'label' => 'Complete Visit',
+                'action' => 'complete_visit',
+                'permission' => 'visits.update',
+            ],
+            'VISIT_COMPLETED' => [
+                'label' => 'Visit Completed',
+                'action' => null,
+                'permission' => null,
+            ],
+            'CANCELLED' => [
+                'label' => 'Visit Cancelled',
+                'action' => null,
+                'permission' => null,
+            ],
+            default => [
+                'label' => 'Unknown Status',
+                'action' => null,
+                'permission' => null,
+            ],
+        };
+    }
+
+    public function getUserFacingStatus(): string
+    {
+        if (! $this->status) {
+            return 'Unknown';
+        }
+
+        return match ($this->status->code) {
+            'REGISTERED' => 'Registered',
+            'WAITING_FOR_TRIAGE' => 'Waiting for Triage',
+            'TRIAGE_IN_PROGRESS' => 'Triage in Progress',
+            'WAITING_FOR_CONSULTATION' => 'Waiting for Consultation',
+            'CONSULTATION_IN_PROGRESS' => 'Consultation in Progress',
+            'WAITING_FOR_LAB' => 'Waiting for Lab Results',
+            'LAB_IN_PROGRESS' => 'Lab Processing',
+            'LAB_RESULTS_READY' => 'Lab Results Ready',
+            'WAITING_FOR_PHARMACY' => 'Waiting for Pharmacy',
+            'WAITING_FOR_BILLING' => 'Waiting for Payment',
+            'PAID' => 'Paid',
+            'VISIT_COMPLETED' => 'Completed',
+            'CANCELLED' => 'Cancelled',
+            default => $this->status->name,
+        };
+    }
 }

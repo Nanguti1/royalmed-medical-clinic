@@ -2,16 +2,22 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Calendar, CheckCircle, DollarSign, FileText, Heart, Play, Stethoscope, Thermometer, Trash2, User, XCircle } from 'lucide-react';
+import { ArrowLeft, Calendar, CheckCircle, DollarSign, FileText, Heart, Play, Stethoscope, Thermometer, Trash2, User, XCircle, Flask, Pill, CreditCard } from 'lucide-react';
 import type { Visit } from '@/types/visit';
 import { PermissionGuard } from '@/components/permission-guard';
 
 type PageProps = {
     visit: Visit;
+    nextAction: {
+        label: string;
+        action: string | null;
+        permission: string | null;
+    };
+    userFacingStatus: string;
 };
 
 export default function VisitShow() {
-    const { visit } = usePage<PageProps>().props;
+    const { visit, nextAction, userFacingStatus } = usePage<PageProps>().props;
 
     const patientName = visit.patient
         ? [visit.patient.first_name, visit.patient.other_names, visit.patient.last_name].filter(Boolean).join(' ')
@@ -87,20 +93,15 @@ export default function VisitShow() {
                         </div>
                     </div>
                     <div className="flex gap-2">
-                        {isCancelled ? (
-                            <Badge variant="destructive">Cancelled</Badge>
-                        ) : isCompleted ? (
-                            <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                                Completed
-                            </Badge>
-                        ) : isStarted ? (
-                            <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                                In Progress
-                            </Badge>
-                        ) : (
-                            <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
-                                Pending
-                            </Badge>
+                        <Badge variant="outline" className="bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-950 dark:border-blue-800 dark:text-blue-300">
+                            {userFacingStatus}
+                        </Badge>
+                        {nextAction.action && nextAction.permission && (
+                            <PermissionGuard permission={nextAction.permission} fallback={null}>
+                                <Badge className="bg-green-50 border-green-200 text-green-700 dark:bg-green-950 dark:border-green-800 dark:text-green-300">
+                                    Next: {nextAction.label}
+                                </Badge>
+                            </PermissionGuard>
                         )}
                     </div>
                 </div>
@@ -318,6 +319,183 @@ export default function VisitShow() {
                                 </>
                             ) : (
                                 <p className="text-muted-foreground">Not in queue.</p>
+                            )}
+                        </CardContent>
+                    </Card>
+                </div>
+
+                {/* Workflow Sections */}
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                    {/* Triage Section */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Thermometer className="h-5 w-5" />
+                                Triage
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            {visit.vital_sign ? (
+                                <div className="space-y-2">
+                                    <div className="flex items-center gap-2">
+                                        <CheckCircle className="h-4 w-4 text-green-600" />
+                                        <span className="text-sm font-medium">Vitals Captured</span>
+                                    </div>
+                                    <div className="text-sm text-muted-foreground">
+                                        {visit.vital_sign.temperature_c && `Temp: ${visit.vital_sign.temperature_c}°C`}
+                                        {visit.vital_sign.blood_pressure && ` • BP: ${visit.vital_sign.blood_pressure}`}
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="flex items-center gap-2">
+                                    <XCircle className="h-4 w-4 text-red-600" />
+                                    <span className="text-sm text-muted-foreground">No vitals recorded</span>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+
+                    {/* Consultation Section */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Stethoscope className="h-5 w-5" />
+                                Consultation
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            {visit.consultation ? (
+                                <div className="space-y-2">
+                                    <div className="flex items-center gap-2">
+                                        <CheckCircle className="h-4 w-4 text-green-600" />
+                                        <span className="text-sm font-medium">Consultation Started</span>
+                                    </div>
+                                    <div className="text-sm text-muted-foreground">
+                                        {visit.consultation.chief_complaint && `Chief Complaint: ${visit.consultation.chief_complaint}`}
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="flex items-center gap-2">
+                                    <XCircle className="h-4 w-4 text-red-600" />
+                                    <span className="text-sm text-muted-foreground">No consultation started</span>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+
+                    {/* Laboratory Section */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Flask className="h-5 w-5" />
+                                Laboratory
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            {visit.lab_orders && visit.lab_orders.length > 0 ? (
+                                <div className="space-y-2">
+                                    <div className="flex items-center gap-2">
+                                        <CheckCircle className="h-4 w-4 text-green-600" />
+                                        <span className="text-sm font-medium">{visit.lab_orders.length} Lab Order(s)</span>
+                                    </div>
+                                    <div className="text-sm text-muted-foreground">
+                                        {visit.lab_orders.filter((lo: any) => lo.status === 'completed').length} completed
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="flex items-center gap-2">
+                                    <XCircle className="h-4 w-4 text-red-600" />
+                                    <span className="text-sm text-muted-foreground">No lab orders</span>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+
+                    {/* Prescriptions Section */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <FileText className="h-5 w-5" />
+                                Prescriptions
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            {visit.prescriptions && visit.prescriptions.length > 0 ? (
+                                <div className="space-y-2">
+                                    <div className="flex items-center gap-2">
+                                        <CheckCircle className="h-4 w-4 text-green-600" />
+                                        <span className="text-sm font-medium">{visit.prescriptions.length} Prescription(s)</span>
+                                    </div>
+                                    <div className="text-sm text-muted-foreground">
+                                        {visit.prescriptions.filter((p: any) => p.status === 'finalized').length} finalized
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="flex items-center gap-2">
+                                    <XCircle className="h-4 w-4 text-red-600" />
+                                    <span className="text-sm text-muted-foreground">No prescriptions</span>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+
+                    {/* Pharmacy Section */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Pill className="h-5 w-5" />
+                                Pharmacy
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            {visit.prescriptions && visit.prescriptions.length > 0 ? (
+                                <div className="space-y-2">
+                                    <div className="flex items-center gap-2">
+                                        <CheckCircle className="h-4 w-4 text-green-600" />
+                                        <span className="text-sm font-medium">Items ready for dispensing</span>
+                                    </div>
+                                    <div className="text-sm text-muted-foreground">
+                                        {visit.prescriptions.filter((p: any) => p.status === 'finalized').length} pending dispensing
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="flex items-center gap-2">
+                                    <XCircle className="h-4 w-4 text-red-600" />
+                                    <span className="text-sm text-muted-foreground">No pharmacy items</span>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+
+                    {/* Billing Section */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <CreditCard className="h-5 w-5" />
+                                Billing
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            {visit.invoice ? (
+                                <div className="space-y-2">
+                                    <div className="flex items-center gap-2">
+                                        <CheckCircle className="h-4 w-4 text-green-600" />
+                                        <span className="text-sm font-medium">Invoice Generated</span>
+                                    </div>
+                                    <div className="text-sm text-muted-foreground">
+                                        Total: {visit.invoice.total_amount} • Due: {visit.invoice.due_amount}
+                                    </div>
+                                    {visit.invoice.status && (
+                                        <Badge variant="outline" className="text-xs">
+                                            {visit.invoice.status.name}
+                                        </Badge>
+                                    )}
+                                </div>
+                            ) : (
+                                <div className="flex items-center gap-2">
+                                    <XCircle className="h-4 w-4 text-red-600" />
+                                    <span className="text-sm text-muted-foreground">No invoice generated</span>
+                                </div>
                             )}
                         </CardContent>
                     </Card>
