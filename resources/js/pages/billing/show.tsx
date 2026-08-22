@@ -63,15 +63,13 @@ export default function BillingShow() {
                     </div>
                     <div className="flex items-center gap-3">
                         {invoice.status && getStatusBadge(invoice.status.code)}
-                        {invoice.status && invoice.status.code !== 'paid' && invoice.status.code !== 'cancelled' && (
-                            <PermissionGuard permission="billing.create" fallback={null}>
-                                <Button asChild>
-                                    <a href={`/payments/create/${invoice.id}`}>
-                                        <DollarSign className="mr-2 h-4 w-4" />
-                                        Record Payment
-                                    </a>
-                                </Button>
-                            </PermissionGuard>
+                        {(invoice.due_amount > 0) && (
+                            <Button className="bg-green-600 hover:bg-green-700" asChild>
+                                <a href={`/payments/create/${invoice.id}`}>
+                                    <DollarSign className="mr-2 h-4 w-4" />
+                                    Pay Invoice
+                                </a>
+                            </Button>
                         )}
                     </div>
                 </div>

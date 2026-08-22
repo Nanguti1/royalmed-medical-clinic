@@ -30,7 +30,7 @@ class PaymentTest extends TestCase
         $user = $this->createUserWithPermission('billing.create');
         $invoice = $this->createInvoiceWithBalance(1000);
 
-        $cashMethod = PaymentMethod::where('name', 'cash')->first();
+        $cashMethod = PaymentMethod::where('name', 'Cash')->first();
 
         $response = $this->actingAs($user)
             ->post('/payments', [
@@ -57,7 +57,7 @@ class PaymentTest extends TestCase
         $user = $this->createUserWithPermission('billing.create');
         $invoice = $this->createInvoiceWithBalance(1000);
 
-        $cashMethod = PaymentMethod::where('name', 'cash')->first();
+        $cashMethod = PaymentMethod::where('name', 'Cash')->first();
 
         $this->actingAs($user)
             ->post('/payments', [
@@ -77,7 +77,7 @@ class PaymentTest extends TestCase
         $user = $this->createUserWithPermission('billing.create');
         $invoice = $this->createInvoiceWithBalance(1000);
 
-        $cashMethod = PaymentMethod::where('name', 'cash')->first();
+        $cashMethod = PaymentMethod::where('name', 'Cash')->first();
 
         $this->actingAs($user)
             ->post('/payments', [
@@ -97,7 +97,7 @@ class PaymentTest extends TestCase
         $user = $this->createUserWithPermission('billing.create');
         $invoice = $this->createInvoiceWithBalance(500);
 
-        $cashMethod = PaymentMethod::where('name', 'cash')->first();
+        $cashMethod = PaymentMethod::where('name', 'Cash')->first();
 
         $response = $this->actingAs($user)
             ->post('/payments', [
@@ -122,7 +122,7 @@ class PaymentTest extends TestCase
         $user = $this->createUserWithPermission('billing.create');
         $invoice = $this->createInvoiceWithBalance(1000);
 
-        $cashMethod = PaymentMethod::where('name', 'cash')->first();
+        $cashMethod = PaymentMethod::where('name', 'Cash')->first();
 
         // Pay in full
         $this->actingAs($user)
@@ -150,7 +150,7 @@ class PaymentTest extends TestCase
         $user = $this->createUserWithPermission('billing.create');
         $invoice = $this->createInvoiceWithBalance(1000);
 
-        $mpesaMethod = PaymentMethod::where('name', 'mpesa')->first();
+        $mpesaMethod = PaymentMethod::where('name', 'M-Pesa')->first();
 
         $response = $this->actingAs($user)
             ->post('/payments', [
@@ -172,7 +172,7 @@ class PaymentTest extends TestCase
         $user = $this->createUserWithPermission('billing.create');
         $invoice = $this->createInvoiceWithBalance(1000);
 
-        $mpesaMethod = PaymentMethod::where('name', 'mpesa')->first();
+        $mpesaMethod = PaymentMethod::where('name', 'M-Pesa')->first();
 
         $response = $this->actingAs($user)
             ->post('/payments', [
@@ -205,7 +205,7 @@ class PaymentTest extends TestCase
         $invoice1 = $this->createInvoiceWithBalance(1000);
         $invoice2 = $this->createInvoiceWithBalance(1000);
 
-        $mpesaMethod = PaymentMethod::where('name', 'mpesa')->first();
+        $mpesaMethod = PaymentMethod::where('name', 'M-Pesa')->first();
 
         // First payment
         $this->actingAs($user)
@@ -247,8 +247,8 @@ class PaymentTest extends TestCase
         $user = $this->createUserWithPermission('billing.create');
         $invoice = $this->createInvoiceWithBalance(1000);
 
-        $cashMethod = PaymentMethod::where('name', 'cash')->first();
-        $mpesaMethod = PaymentMethod::where('name', 'mpesa')->first();
+        $cashMethod = PaymentMethod::where('name', 'Cash')->first();
+        $mpesaMethod = PaymentMethod::where('name', 'M-Pesa')->first();
 
         // Cash payment
         $this->actingAs($user)
@@ -286,7 +286,7 @@ class PaymentTest extends TestCase
         $user = $this->createUserWithoutPermission('billing.create');
         $invoice = $this->createInvoiceWithBalance(1000);
 
-        $cashMethod = PaymentMethod::where('name', 'cash')->first();
+        $cashMethod = PaymentMethod::where('name', 'Cash')->first();
 
         $response = $this->actingAs($user)
             ->post('/payments', [
@@ -306,7 +306,7 @@ class PaymentTest extends TestCase
         // Initially unpaid
         $this->assertEquals('unpaid', $invoice->status->code);
 
-        $cashMethod = PaymentMethod::where('name', 'cash')->first();
+        $cashMethod = PaymentMethod::where('name', 'Cash')->first();
         $user = $this->createUserWithPermission('billing.create');
 
         // Partial payment
@@ -339,7 +339,7 @@ class PaymentTest extends TestCase
         $user = $this->createUserWithPermission('billing.create');
         $invoice = $this->createInvoiceWithBalance(1000);
 
-        $cashMethod = PaymentMethod::where('name', 'cash')->first();
+        $cashMethod = PaymentMethod::where('name', 'Cash')->first();
 
         $response = $this->actingAs($user)
             ->post('/payments', [
@@ -357,7 +357,7 @@ class PaymentTest extends TestCase
         $user = $this->createUserWithPermission('billing.create');
         $invoice = $this->createCancelledInvoice();
 
-        $cashMethod = PaymentMethod::where('name', 'cash')->first();
+        $cashMethod = PaymentMethod::where('name', 'Cash')->first();
 
         $response = $this->actingAs($user)
             ->post('/payments', [
@@ -375,7 +375,7 @@ class PaymentTest extends TestCase
         $user = $this->createUserWithPermission('billing.create');
         $invoice = $this->createInvoiceWithBalance(1000);
 
-        $cashMethod = PaymentMethod::where('name', 'cash')->first();
+        $cashMethod = PaymentMethod::where('name', 'Cash')->first();
 
         $response = $this->actingAs($user)
             ->post('/payments', [
@@ -399,7 +399,7 @@ class PaymentTest extends TestCase
         $user = $this->createUserWithPermission('billing.create');
         $invoice = $this->createInvoiceWithBalance(1000);
 
-        $cashMethod = PaymentMethod::where('name', 'cash')->first();
+        $cashMethod = PaymentMethod::where('name', 'Cash')->first();
 
         $this->actingAs($user)
             ->post('/payments', [
@@ -418,7 +418,7 @@ class PaymentTest extends TestCase
         $user = $this->createUserWithPermission('billing.create');
         $invoice = $this->createInvoiceWithBalance(1000);
 
-        $cashMethod = PaymentMethod::where('name', 'cash')->first();
+        $cashMethod = PaymentMethod::where('name', 'Cash')->first();
 
         // Record initial payment count
         $initialPaymentCount = Payment::count();
@@ -458,7 +458,7 @@ class PaymentTest extends TestCase
         });
 
         // Create a payment first
-        $cashMethod = PaymentMethod::where('name', 'cash')->first();
+        $cashMethod = PaymentMethod::where('name', 'Cash')->first();
         $payment = Payment::create([
             'invoice_id' => $invoice->id,
             'payment_method_id' => $cashMethod->id,
@@ -483,7 +483,7 @@ class PaymentTest extends TestCase
 
         $payment = Payment::create([
             'invoice_id' => $this->createInvoiceWithBalance(1000)->id,
-            'payment_method_id' => PaymentMethod::where('name', 'cash')->first()->id,
+            'payment_method_id' => PaymentMethod::where('name', 'Cash')->first()->id,
             'amount' => 500,
             'paid_at' => now(),
             'received_by' => $this->createUserWithPermission('billing.create')->id,
@@ -503,7 +503,7 @@ class PaymentTest extends TestCase
 
         $payment = Payment::create([
             'invoice_id' => $invoice1->id,
-            'payment_method_id' => PaymentMethod::where('name', 'cash')->first()->id,
+            'payment_method_id' => PaymentMethod::where('name', 'Cash')->first()->id,
             'amount' => 500,
             'paid_at' => now(),
             'received_by' => $this->createUserWithPermission('billing.create')->id,
@@ -520,7 +520,7 @@ class PaymentTest extends TestCase
 
         $payment = Payment::create([
             'invoice_id' => $this->createInvoiceWithBalance(1000)->id,
-            'payment_method_id' => PaymentMethod::where('name', 'cash')->first()->id,
+            'payment_method_id' => PaymentMethod::where('name', 'Cash')->first()->id,
             'amount' => 500,
             'paid_at' => now(),
             'received_by' => $this->createUserWithPermission('billing.create')->id,
@@ -540,7 +540,7 @@ class PaymentTest extends TestCase
 
         $payment = Payment::create([
             'invoice_id' => $this->createInvoiceWithBalance(1000)->id,
-            'payment_method_id' => PaymentMethod::where('name', 'cash')->first()->id,
+            'payment_method_id' => PaymentMethod::where('name', 'Cash')->first()->id,
             'amount' => 500,
             'paid_at' => now(),
             'received_by' => $user1->id,
@@ -557,7 +557,7 @@ class PaymentTest extends TestCase
 
         $payment = Payment::create([
             'invoice_id' => $this->createInvoiceWithBalance(1000)->id,
-            'payment_method_id' => PaymentMethod::where('name', 'cash')->first()->id,
+            'payment_method_id' => PaymentMethod::where('name', 'Cash')->first()->id,
             'amount' => 500,
             'paid_at' => now(),
             'received_by' => $this->createUserWithPermission('billing.create')->id,
@@ -572,8 +572,8 @@ class PaymentTest extends TestCase
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Payment field \'payment_method_id\' cannot be modified after payment creation');
 
-        $cashMethod = PaymentMethod::where('name', 'cash')->first();
-        $mpesaMethod = PaymentMethod::where('name', 'mpesa')->first();
+        $cashMethod = PaymentMethod::where('name', 'Cash')->first();
+        $mpesaMethod = PaymentMethod::where('name', 'M-Pesa')->first();
 
         $payment = Payment::create([
             'invoice_id' => $this->createInvoiceWithBalance(1000)->id,
@@ -592,7 +592,7 @@ class PaymentTest extends TestCase
         $user = $this->createUserWithPermission('billing.create');
         $invoice = $this->createInvoiceWithBalance(1000);
 
-        $cashMethod = PaymentMethod::where('name', 'cash')->first();
+        $cashMethod = PaymentMethod::where('name', 'Cash')->first();
 
         $response = $this->actingAs($user)
             ->post('/payments', [
@@ -610,7 +610,7 @@ class PaymentTest extends TestCase
         $user = $this->createUserWithPermission('billing.create');
         $invoice = $this->createInvoiceWithBalance(1000);
 
-        $mpesaMethod = PaymentMethod::where('name', 'mpesa')->first();
+        $mpesaMethod = PaymentMethod::where('name', 'M-Pesa')->first();
 
         $response = $this->actingAs($user)
             ->post('/payments', [
@@ -689,5 +689,44 @@ class PaymentTest extends TestCase
     protected function createUserWithoutPermission(string $permission)
     {
         return User::factory()->create();
+    }
+
+    public function test_complete_billing_payment_flow()
+    {
+        $user = $this->createUserWithPermission('billing.create');
+        $user->givePermissionTo('billing.view');
+        $invoice = $this->createInvoiceWithBalance(1000);
+
+        $cashMethod = PaymentMethod::where('name', 'Cash')->first();
+
+        // Record payment
+        $response = $this->actingAs($user)
+            ->post('/payments', [
+                'invoice_id' => $invoice->id,
+                'payment_method_id' => $cashMethod->id,
+                'amount' => 1000,
+                'paid_at' => now()->toDateString(),
+            ]);
+
+        $response->assertRedirect();
+
+        // Verify payment was recorded
+        $payment = Payment::where('invoice_id', $invoice->id)->first();
+        $this->assertNotNull($payment);
+        $this->assertEquals(1000, $payment->amount);
+
+        // Verify invoice status was updated to paid
+        $invoice->refresh();
+        $this->assertEquals('paid', $invoice->status->code);
+        $this->assertEquals(0, $invoice->due_amount);
+
+        // Verify payment is visible in payments index
+        $response = $this->actingAs($user)
+            ->get('/payments');
+
+        $response->assertStatus(200);
+        $response->assertInertia(function ($page) {
+            $page->component('payments/index');
+        });
     }
 }

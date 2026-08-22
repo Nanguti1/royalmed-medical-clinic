@@ -229,7 +229,7 @@ export default function PaymentReceipt() {
                 </div>
             </div>
 
-            <style jsx global>{`
+            <style>{`
                 @media print {
                     .no-print {
                         display: none !important;

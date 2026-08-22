@@ -61,7 +61,7 @@ class PaymentService
             }
 
             // If mpesa data present, create transaction first
-            if (! empty($data['mpesa']) && is_array($data['mpesa'])) {
+            if (! empty($data['mpesa']) && is_array($data['mpesa']) && ! empty($data['mpesa']['transaction_id'])) {
                 $mpesa = app(RecordMpesaPaymentAction::class)->execute($data['mpesa']);
                 $data['mpesa_transaction_id'] = $mpesa->id;
             }

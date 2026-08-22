@@ -40,7 +40,7 @@ class StorePaymentRequest extends FormRequest
             // Require M-Pesa transaction_id when M-Pesa payment method is selected
             if ($paymentMethodId) {
                 $paymentMethod = PaymentMethod::find($paymentMethodId);
-                if ($paymentMethod && strtolower($paymentMethod->name) === 'mpesa') {
+                if ($paymentMethod && (strtolower($paymentMethod->name) === 'mpesa' || strtolower($paymentMethod->name) === 'm-pesa')) {
                     if (empty($this->input('mpesa.transaction_id'))) {
                         $validator->errors()->add('mpesa.transaction_id', 'M-Pesa transaction reference is required for M-Pesa payments.');
                     }

@@ -8,6 +8,13 @@ import { PermissionGuard } from '@/components/permission-guard';
 
 type PageProps = {
     consultation: Consultation;
+    auth?: {
+        user?: {
+            id?: number;
+            email?: string;
+            roles?: string[];
+        };
+    };
 };
 
 type WorkflowStep = {
@@ -95,31 +102,50 @@ function getNextActionMessage(consultation: Consultation): string | null {
     const hasPrescriptions = consultation.prescriptions && consultation.prescriptions.length > 0;
     const hasFinalizedPrescription = consultation.prescriptions?.some(p => p.finalized_at);
     const visitStatus = consultation.visit?.status?.code;
-    
+
     if (!hasPrescriptions) {
         return 'Create a prescription to continue the workflow';
     }
-    
+
     if (!hasFinalizedPrescription) {
         return 'Finalize the prescription to send it to pharmacy';
     }
-    
+
     if (visitStatus === 'WAITING_FOR_PHARMACY') {
-        return 'Prescription is being processed by pharmacy';
+        return 'Prescription has been sent to pharmacy for dispensing';
     }
-    
+
     if (visitStatus === 'WAITING_FOR_BILLING') {
         return 'Waiting for payment processing';
     }
-    
+
     return null;
 }
 
+function isSuperAdmin(auth?: PageProps['auth']): boolean {
+    return auth?.user?.roles?.some((role: string) => 
+        role.toLowerCase() === 'super admin' || role === 'Super Admin'
+    ) || false;
+}
+
+function shouldShowPharmacyButton(consultation: Consultation, auth?: PageProps['auth']): boolean {
+    const hasFinalizedPrescription = consultation.prescriptions?.some(p => p.finalized_at);
+    const visitStatus = consultation.visit?.status?.code;
+    return hasFinalizedPrescription && visitStatus === 'WAITING_FOR_PHARMACY' && isSuperAdmin(auth);
+}
+
+function shouldHideContinueButton(consultation: Consultation): boolean {
+    const hasFinalizedPrescription = consultation.prescriptions?.some(p => p.finalized_at);
+    const visitStatus = consultation.visit?.status?.code;
+    return hasFinalizedPrescription && visitStatus === 'WAITING_FOR_PHARMACY';
+}
+
 export default function ConsultationShow() {
-    const { consultation } = usePage<PageProps>().props;
+    const { consultation, auth } = usePage<PageProps>().props;
 
     const workflowSteps = getWorkflowSteps(consultation);
     const nextActionMessage = getNextActionMessage(consultation);
+    const showPharmacyButton = shouldShowPharmacyButton(consultation, auth);
 
     const patientName = consultation.visit?.patient
         ? [consultation.visit.patient.first_name, consultation.visit.patient.other_names, consultation.visit.patient.last_name]
@@ -129,6 +155,8 @@ export default function ConsultationShow() {
 
     const hasVitals = consultation.visit?.vital_sign !== null;
     const hasPrescriptions = consultation.prescriptions && consultation.prescriptions.length > 0;
+    const hasFinalizedPrescription = consultation.prescriptions?.some(p => p.finalized_at);
+    const visitStatus = consultation.visit?.status?.code;
 
     const handleCompleteVisit = () => {
         if (confirm('Are you sure you want to complete this visit? This action cannot be undone.')) {
@@ -174,13 +202,15 @@ export default function ConsultationShow() {
             if (prescriptionSection) {
                 prescriptionSection.scrollIntoView({ behavior: 'smooth' });
             }
-        } else if (visitStatus === 'WAITING_FOR_PHARMACY') {
-            // Navigate to visit workspace
-            window.location.href = `/visits/${consultation.visit_id}`;
         } else if (visitStatus === 'WAITING_FOR_BILLING') {
             // Navigate to billing
             window.location.href = `/billing/create/${consultation.visit_id}`;
         }
+        // Remove the WAITING_FOR_PHARMACY case - no longer redirecting
+    };
+
+    const handleGoToPharmacy = () => {
+        window.location.href = '/pharmacy';
     };
 
     return (
@@ -217,12 +247,20 @@ export default function ConsultationShow() {
                                 Complete Consultation
                             </Button>
                         </PermissionGuard>
-                        <PermissionGuard permission="consultations.create" fallback={null}>
-                            <Button onClick={handleContinueToNextStep} className="bg-blue-600 hover:bg-blue-700">
-                                <ChevronRight className="mr-2 h-4 w-4" />
-                                Continue to Next Step
+                        {!shouldHideContinueButton(consultation) && (
+                            <PermissionGuard permission="consultations.create" fallback={null}>
+                                <Button onClick={handleContinueToNextStep} className="bg-blue-600 hover:bg-blue-700">
+                                    <ChevronRight className="mr-2 h-4 w-4" />
+                                    Continue to Next Step
+                                </Button>
+                            </PermissionGuard>
+                        )}
+                        {showPharmacyButton && (
+                            <Button onClick={handleGoToPharmacy} className="bg-green-600 hover:bg-green-700">
+                                <FlaskConical className="mr-2 h-4 w-4" />
+                                Go to Pharmacy
                             </Button>
-                        </PermissionGuard>
+                        )}
                         <PermissionGuard permission="visits.update" fallback={null}>
                             <Button onClick={handleCompleteVisit}>
                                 <CheckCircle className="mr-2 h-4 w-4" />

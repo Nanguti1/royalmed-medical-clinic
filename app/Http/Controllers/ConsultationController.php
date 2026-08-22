@@ -88,6 +88,13 @@ class ConsultationController extends Controller
         return Inertia::render('consultations/show', [
             'consultation' => $consultation,
             'clinical_summary' => $clinicalSummary,
+            'auth' => [
+                'user' => [
+                    'id' => auth()->id(),
+                    'email' => auth()->user() ? auth()->user()->email : null,
+                    'roles' => auth()->user() ? auth()->user()->getRoleNames()->toArray() : [],
+                ],
+            ],
         ]);
     }
 

@@ -66,6 +66,14 @@ class PharmacyController extends Controller
     {
         $results = $this->prescriptionService->dispense($prescription);
 
+        // Check if visit has invoice waiting for billing
+        $visit = $prescription->visit->fresh();
+        if ($visit->invoice && $visit->invoice->status &&
+            ($visit->invoice->status->code === 'unpaid' || $visit->invoice->status->code === 'partial')) {
+            return redirect()->route('billing.show', $visit->invoice)
+                ->with('success', 'Prescription dispensed successfully. Proceed to payment.');
+        }
+
         return redirect()->route('visits.show', $prescription->visit_id)
             ->with('success', 'Prescription dispensed successfully.');
     }

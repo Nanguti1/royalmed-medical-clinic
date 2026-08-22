@@ -64,17 +64,24 @@ export default function PaymentCreate() {
         },
     });
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        post('/payments');
-    };
-
     const patientName = invoice.visit.patient
         ? [invoice.visit.patient.first_name, invoice.visit.patient.other_names, invoice.visit.patient.last_name].filter(Boolean).join(' ')
         : 'Unknown Patient';
 
     const selectedPaymentMethod = paymentMethods.find((pm) => pm.id === Number(data.payment_method_id));
-    const isMpesa = selectedPaymentMethod?.name.toLowerCase() === 'mpesa';
+    const isMpesa = selectedPaymentMethod?.name.toLowerCase() === 'mpesa' || selectedPaymentMethod?.name.toLowerCase() === 'm-pesa';
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        
+        // Only include mpesa data if M-Pesa is selected and transaction_id is provided
+        const submitData = { ...data };
+        if (!isMpesa || !data.mpesa.transaction_id) {
+            delete submitData.mpesa;
+        }
+        
+        post('/payments', submitData);
+    };
 
     const getStatusBadge = (statusCode: string) => {
         switch (statusCode) {
