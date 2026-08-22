@@ -27,7 +27,7 @@ export default function PharmacyDispense() {
     };
 
     const getStockStatus = (medicine: any) => {
-        const availableStock = medicine.batches?.reduce((sum: number, batch: any) => sum + batch.quantity, 0) || 0;
+        const availableStock = medicine.batches?.reduce((sum: number, batch: any) => sum + parseFloat(batch.quantity || 0), 0) || 0;
         const requiredQuantity = prescription.items?.find((item) => item.medicine_id === medicine.id)?.quantity || 0;
 
         if (availableStock < requiredQuantity) {
@@ -42,7 +42,7 @@ export default function PharmacyDispense() {
     const canDispense = prescription.items?.every((item) => {
         const medicine = item.medicine;
         if (!medicine) return false;
-        const availableStock = medicine.batches?.reduce((sum: number, batch: any) => sum + batch.quantity, 0) || 0;
+        const availableStock = medicine.batches?.reduce((sum: number, batch: any) => sum + parseFloat(batch.quantity || 0), 0) || 0;
         return availableStock >= item.quantity;
     });
 
@@ -121,7 +121,7 @@ export default function PharmacyDispense() {
                                         const medicine = item.medicine;
                                         if (!medicine) return null;
 
-                                        const availableStock = medicine.batches?.reduce((sum: number, batch: any) => sum + batch.quantity, 0) || 0;
+                                        const availableStock = medicine.batches?.reduce((sum: number, batch: any) => sum + parseFloat(batch.quantity || 0), 0) || 0;
                                         const stockStatus = getStockStatus(medicine);
 
                                         return (

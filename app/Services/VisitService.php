@@ -150,6 +150,11 @@ class VisitService
                 throw new \RuntimeException('Cannot complete triage on a cancelled visit.');
             }
 
+            // Start the visit if not already started
+            if (! $visit->isStarted()) {
+                $this->start($visit);
+            }
+
             $waitingForConsultationStatus = VisitStatus::where('code', 'WAITING_FOR_CONSULTATION')->first();
             if ($waitingForConsultationStatus) {
                 $visit->update(['visit_status_id' => $waitingForConsultationStatus->id]);

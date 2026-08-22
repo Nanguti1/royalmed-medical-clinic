@@ -66,7 +66,7 @@ class PharmacyController extends Controller
     {
         $results = $this->prescriptionService->dispense($prescription);
 
-        return redirect()->route('pharmacy.index')
+        return redirect()->route('visits.show', $prescription->visit_id)
             ->with('success', 'Prescription dispensed successfully.');
     }
 

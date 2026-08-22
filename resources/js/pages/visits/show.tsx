@@ -87,14 +87,20 @@ export default function VisitShow() {
 
     const handleFinalizePrescription = () => {
         const draftPrescription = visit.prescriptions?.find((p: any) => !p.finalized_at && p.items && p.items.length > 0);
-        if (draftPrescription) {
-            if (confirm('Are you sure you want to finalize this prescription? This will create a pharmacy queue entry and the prescription cannot be modified after finalization.')) {
-                router.post(`/prescriptions/${draftPrescription.id}/finalize`, {}, {
-                    onSuccess: () => {
-                        router.reload();
-                    },
-                });
-            }
+        if (!draftPrescription) {
+            alert('No draft prescription with items found to finalize.');
+            return;
+        }
+        if (confirm('Are you sure you want to finalize this prescription? This will create a pharmacy queue entry and the prescription cannot be modified after finalization.')) {
+            router.post(`/prescriptions/${draftPrescription.id}/finalize`, {}, {
+                onSuccess: () => {
+                    router.reload();
+                },
+                onError: (errors) => {
+                    console.error('Failed to finalize prescription:', errors);
+                    alert('Failed to finalize prescription: ' + (errors.message || 'Unknown error'));
+                }
+            });
         }
     };
 
@@ -487,7 +493,11 @@ export default function VisitShow() {
                             {visit.prescriptions && visit.prescriptions.length > 0 ? (
                                 <div className="space-y-2">
                                     <div className="flex items-center gap-2">
-                                        <CheckCircle className="h-4 w-4 text-green-600" />
+                                        {visit.prescriptions.every((p: any) => p.finalized_at) ? (
+                                            <CheckCircle className="h-4 w-4 text-green-600" />
+                                        ) : (
+                                            <Clock className="h-4 w-4 text-yellow-600" />
+                                        )}
                                         <span className="text-sm font-medium">{visit.prescriptions.length} Prescription(s)</span>
                                     </div>
                                     <div className="text-sm text-muted-foreground">

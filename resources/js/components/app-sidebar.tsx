@@ -16,6 +16,7 @@ import {
     BarChart3,
     FileCheck,
     FilePlus,
+    User,
 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavMain } from '@/components/nav-main';
@@ -63,6 +64,12 @@ const mainNavItems: NavItem[] = [
         icon: Stethoscope,
         permission: null, // Group header, individual items have permissions
         items: [
+            {
+                title: 'Visits',
+                href: '/visits',
+                icon: User,
+                permission: 'visits.view',
+            },
             {
                 title: 'Waiting Queue',
                 href: '/visits/queue',
@@ -120,7 +127,7 @@ const mainNavItems: NavItem[] = [
         permission: null, // Group header, individual items have permissions
         items: [
             {
-                title: 'Invoices',
+                title: 'Bills',
                 href: '/billing',
                 icon: DollarSign,
                 permission: 'billing.view',

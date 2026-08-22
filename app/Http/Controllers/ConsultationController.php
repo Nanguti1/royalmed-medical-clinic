@@ -34,13 +34,13 @@ class ConsultationController extends Controller
         $this->queueService = $queueService;
 
         $this->middleware('permission:consultations.view')->only(['index', 'show']);
-        $this->middleware('permission:consultations.create')->only(['create', 'store']);
+        $this->middleware('permission:consultations.create')->only(['create', 'store', 'startConsultation']);
         $this->middleware('permission:consultations.update')->only(['edit', 'update', 'reassignProvider', 'completeConsultation']);
     }
 
     public function index(): Response
     {
-        $entries = $this->queueService->getWorklist(null, ['waiting', 'called']);
+        $entries = $this->queueService->getWorklist('consultation', ['waiting', 'called']);
         $entries->load(['visit.patient', 'visit.vitalSign']);
 
         return Inertia::render('consultations/index', [
@@ -126,7 +126,7 @@ class ConsultationController extends Controller
 
     public function startConsultation(Visit $visit)
     {
-        $visit->loadMissing(['consultation', 'queueEntry']);
+        $visit->loadMissing(['consultation', 'queueEntry', 'status']);
 
         if ($visit->consultation) {
             return redirect()->route('consultations.show', $visit->consultation)
@@ -144,11 +144,13 @@ class ConsultationController extends Controller
                 ->with('error', 'Cannot start consultation for a cancelled visit.');
         }
 
+        // Start the visit if not already started
         if ($visit->canStart()) {
             $this->visitService->start($visit);
         }
 
-        if ($visit->queueEntry && ! $visit->queueEntry->isInProgress()) {
+        // Update queue entry status
+        if ($visit->queueEntry && ! $visit->queueEntry->isInProgress() && ! $visit->queueEntry->isServed()) {
             $this->queueService->start($visit->queueEntry);
         }
 

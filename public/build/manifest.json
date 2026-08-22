@@ -825,7 +825,7 @@
     "isEntry": true
   },
   "resources/js/app.tsx": {
-    "file": "assets/app-DyQoGckn.js",
+    "file": "assets/app-B2pqpuMF.js",
     "name": "app",
     "src": "resources/js/app.tsx",
     "isEntry": true,
@@ -852,6 +852,7 @@
       "_pill-BU74sHJC.js",
       "_shield-B2__xxqP.js",
       "_stethoscope-C8-RToHt.js",
+      "_user-Ce4dyEsO.js",
       "_users-G32NGwwa.js",
       "_x-B_3WRdx3.js",
       "_button-CJQ5X1ir.js",
@@ -1435,7 +1436,7 @@
     ]
   },
   "resources/js/pages/billing/create.tsx": {
-    "file": "assets/create-ZQXnwzZi.js",
+    "file": "assets/create-Cs6ysaNw.js",
     "name": "create",
     "src": "resources/js/pages/billing/create.tsx",
     "isDynamicEntry": true,
@@ -1765,7 +1766,7 @@
     ]
   },
   "resources/js/pages/consultations/index.tsx": {
-    "file": "assets/consultations-Njk9820E.js",
+    "file": "assets/consultations-DSH6fsHq.js",
     "name": "consultations",
     "src": "resources/js/pages/consultations/index.tsx",
     "isDynamicEntry": true,
@@ -3187,7 +3188,7 @@
     ]
   },
   "resources/js/pages/pharmacy/dispense.tsx": {
-    "file": "assets/dispense-DF2fnpab.js",
+    "file": "assets/dispense-Cd7J_tvW.js",
     "name": "dispense",
     "src": "resources/js/pages/pharmacy/dispense.tsx",
     "isDynamicEntry": true,
@@ -4399,7 +4400,7 @@
     ]
   },
   "resources/js/pages/visits/show.tsx": {
-    "file": "assets/show-BteeT_J9.js",
+    "file": "assets/show-ZjkCuYqg.js",
     "name": "show",
     "src": "resources/js/pages/visits/show.tsx",
     "isDynamicEntry": true,

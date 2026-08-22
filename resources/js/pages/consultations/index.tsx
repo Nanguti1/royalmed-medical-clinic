@@ -23,6 +23,9 @@ export default function ConsultationIndex() {
             onSuccess: () => {
                 router.reload();
             },
+            onError: (errors) => {
+                console.error('Error starting consultation:', errors);
+            },
         });
     };
 

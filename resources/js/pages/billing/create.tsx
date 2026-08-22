@@ -13,6 +13,7 @@ type PageProps = {
         quantity: number;
         unit_price: number;
         reference_id: number;
+        tax?: number;
     }>;
 };
 
@@ -25,6 +26,7 @@ export default function BillingCreate() {
             description: item.description,
             quantity: item.quantity,
             unit_price: item.unit_price,
+            tax: item.quantity * item.unit_price * 0.16, // 16% tax
         })),
     });
 
@@ -46,7 +48,7 @@ export default function BillingCreate() {
     };
 
     const calculateTax = () => {
-        return calculateSubtotal() * 0.16; // 16% tax rate
+        return billableItems.reduce((sum, item) => sum + (item.quantity * item.unit_price * 0.16), 0); // 16% tax rate
     };
 
     const calculateGrandTotal = () => {
@@ -120,18 +122,24 @@ export default function BillingCreate() {
                                                         <th className="text-left p-3">Description</th>
                                                         <th className="text-right p-3">Qty</th>
                                                         <th className="text-right p-3">Unit Price</th>
+                                                        <th className="text-right p-3">Tax</th>
                                                         <th className="text-right p-3">Total</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    {billableItems.map((item, index) => (
-                                                        <tr key={index} className="border-b">
-                                                            <td className="p-3">{item.description}</td>
-                                                            <td className="p-3 text-right">{item.quantity}</td>
-                                                            <td className="p-3 text-right">{Number(item.unit_price).toFixed(2)}</td>
-                                                            <td className="p-3 text-right">{Number(item.quantity * item.unit_price).toFixed(2)}</td>
-                                                        </tr>
-                                                    ))}
+                                                    {billableItems.map((item, index) => {
+                                                        const itemTax = item.quantity * item.unit_price * 0.16;
+                                                        const itemTotal = item.quantity * item.unit_price + itemTax;
+                                                        return (
+                                                            <tr key={index} className="border-b">
+                                                                <td className="p-3">{item.description}</td>
+                                                                <td className="p-3 text-right">{item.quantity}</td>
+                                                                <td className="p-3 text-right">{Number(item.unit_price).toFixed(2)}</td>
+                                                                <td className="p-3 text-right">{Number(itemTax).toFixed(2)}</td>
+                                                                <td className="p-3 text-right">{Number(itemTotal).toFixed(2)}</td>
+                                                            </tr>
+                                                        );
+                                                    })}
                                                 </tbody>
                                             </table>
                                         </div>
@@ -140,15 +148,15 @@ export default function BillingCreate() {
                                         <div className="space-y-2 pt-4 border-t">
                                             <div className="flex justify-between">
                                                 <span className="text-muted-foreground">Subtotal</span>
-                                                <span className="font-medium">{Number(calculateSubtotal()).toFixed(2)}</span>
+                                                <span className="font-medium">KES {Number(calculateSubtotal()).toFixed(2)}</span>
                                             </div>
                                             <div className="flex justify-between">
                                                 <span className="text-muted-foreground">Tax (16%)</span>
-                                                <span className="font-medium">{Number(calculateTax()).toFixed(2)}</span>
+                                                <span className="font-medium">KES {Number(calculateTax()).toFixed(2)}</span>
                                             </div>
                                             <div className="flex justify-between text-lg font-bold">
                                                 <span>Total</span>
-                                                <span>{Number(calculateGrandTotal()).toFixed(2)}</span>
+                                                <span>KES {Number(calculateGrandTotal()).toFixed(2)}</span>
                                             </div>
                                         </div>
 
