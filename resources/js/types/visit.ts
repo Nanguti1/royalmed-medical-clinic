@@ -65,6 +65,12 @@ export type QueueEntry = {
             last_name: string;
             other_names: string | null;
         };
+        consultation?: Consultation;
+        status?: {
+            id: number;
+            code: string;
+            name: string;
+        };
     };
     created_at: string;
     updated_at: string;
@@ -99,6 +105,7 @@ export type Consultation = {
     };
     diagnoses?: Diagnosis[];
     prescriptions?: Prescription[];
+    labOrders?: LabOrder[];
     created_at: string;
     updated_at: string;
 };
@@ -420,6 +427,7 @@ export type LabTestReferenceRange = {
 export type LabOrder = {
     id: number;
     visit_id: number;
+    consultation_id: number | null;
     ordered_by: number | null;
     order_date: string;
     status: 'ordered' | 'in_progress' | 'completed';

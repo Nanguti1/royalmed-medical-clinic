@@ -25,13 +25,17 @@ type WorkflowStep = {
 };
 
 function getWorkflowSteps(consultation: Consultation): WorkflowStep[] {
-    const hasPrescriptions = consultation.prescriptions && consultation.prescriptions.length > 0;
-    const hasFinalizedPrescription = consultation.prescriptions?.some(p => p.finalized_at);
-    const visitStatus = consultation.visit?.visit_status_id;
+    const hasPrescriptions = consultation.visit?.prescriptions && consultation.visit.prescriptions.length > 0;
+    const hasFinalizedPrescription = consultation.visit?.prescriptions?.some(p => p.finalized_at);
+    const hasLabOrders = consultation.labOrders && consultation.labOrders.length > 0;
+    const visitStatus = consultation.visit?.status?.code;
     
     // Determine workflow state based on visit status and prescription state
-    const isWaitingForPrescription = visitStatus && consultation.visit?.status?.code === 'WAITING_FOR_PRESCRIPTION';
-    const isWaitingForPharmacy = visitStatus && consultation.visit?.status?.code === 'WAITING_FOR_PHARMACY';
+    const isWaitingForPrescription = visitStatus === 'WAITING_FOR_PRESCRIPTION';
+    const isWaitingForPharmacy = visitStatus === 'WAITING_FOR_PHARMACY';
+    const isWaitingForLab = visitStatus === 'WAITING_FOR_LAB';
+    const isLabInProgress = visitStatus === 'LAB_IN_PROGRESS';
+    const isLabResultsReady = visitStatus === 'LAB_RESULTS_READY';
     
     const steps: WorkflowStep[] = [
         {
@@ -39,6 +43,12 @@ function getWorkflowSteps(consultation: Consultation): WorkflowStep[] {
             label: 'Consultation',
             status: 'completed',
             icon: <FileText className="h-4 w-4" />,
+        },
+        {
+            id: 'lab',
+            label: 'Lab Tests',
+            status: 'pending',
+            icon: <FlaskConical className="h-4 w-4" />,
         },
         {
             id: 'prescription',
@@ -66,25 +76,40 @@ function getWorkflowSteps(consultation: Consultation): WorkflowStep[] {
         },
     ];
 
+    // Update lab step status
+    if (hasLabOrders) {
+        if (isLabResultsReady) {
+            steps[1].status = 'completed';
+        } else if (isLabInProgress) {
+            steps[1].status = 'current';
+        } else if (isWaitingForLab) {
+            steps[1].status = 'current';
+        } else {
+            steps[1].status = 'completed';
+        }
+    } else if (isWaitingForLab) {
+        steps[1].status = 'current';
+    }
+
     // Update prescription step status
     if (hasPrescriptions) {
-        steps[1].status = 'completed';
+        steps[2].status = 'completed';
     } else if (isWaitingForPrescription) {
-        steps[1].status = 'current';
+        steps[2].status = 'current';
     }
 
     // Update finalization step status
     if (hasFinalizedPrescription) {
-        steps[2].status = 'completed';
+        steps[3].status = 'completed';
     } else if (hasPrescriptions && !hasFinalizedPrescription) {
-        steps[2].status = 'current';
+        steps[3].status = 'current';
     }
 
     // Update pharmacy step status
     if (isWaitingForPharmacy && hasFinalizedPrescription) {
-        steps[3].status = 'current';
+        steps[4].status = 'current';
     } else if (hasFinalizedPrescription) {
-        steps[3].status = 'completed';
+        steps[4].status = 'completed';
     }
 
     // Set the first pending step as current if no current step is set
@@ -99,9 +124,14 @@ function getWorkflowSteps(consultation: Consultation): WorkflowStep[] {
 }
 
 function getNextActionMessage(consultation: Consultation): string | null {
-    const hasPrescriptions = consultation.prescriptions && consultation.prescriptions.length > 0;
-    const hasFinalizedPrescription = consultation.prescriptions?.some(p => p.finalized_at);
+    const hasPrescriptions = consultation.visit?.prescriptions && consultation.visit.prescriptions.length > 0;
+    const hasFinalizedPrescription = consultation.visit?.prescriptions?.some(p => p.finalized_at);
     const visitStatus = consultation.visit?.status?.code;
+    const hasLabOrders = consultation.labOrders && consultation.labOrders.length > 0;
+
+    if (visitStatus === 'WAITING_FOR_LAB') {
+        return 'Waiting for lab results';
+    }
 
     if (!hasPrescriptions) {
         return 'Create a prescription to continue the workflow';
@@ -112,7 +142,7 @@ function getNextActionMessage(consultation: Consultation): string | null {
     }
 
     if (visitStatus === 'WAITING_FOR_PHARMACY') {
-        return 'Prescription has been sent to pharmacy for dispensing';
+        return 'Go to pharmacy for dispensing';
     }
 
     if (visitStatus === 'WAITING_FOR_BILLING') {
@@ -129,15 +159,77 @@ function isSuperAdmin(auth?: PageProps['auth']): boolean {
 }
 
 function shouldShowPharmacyButton(consultation: Consultation, auth?: PageProps['auth']): boolean {
-    const hasFinalizedPrescription = consultation.prescriptions?.some(p => p.finalized_at);
+    const hasFinalizedPrescription = consultation.visit?.prescriptions?.some(p => p.finalized_at);
     const visitStatus = consultation.visit?.status?.code;
-    return hasFinalizedPrescription && visitStatus === 'WAITING_FOR_PHARMACY' && isSuperAdmin(auth);
+    return hasFinalizedPrescription && visitStatus === 'WAITING_FOR_PHARMACY';
 }
 
 function shouldHideContinueButton(consultation: Consultation): boolean {
-    const hasFinalizedPrescription = consultation.prescriptions?.some(p => p.finalized_at);
+    const hasFinalizedPrescription = consultation.visit?.prescriptions?.some(p => p.finalized_at);
     const visitStatus = consultation.visit?.status?.code;
-    return hasFinalizedPrescription && visitStatus === 'WAITING_FOR_PHARMACY';
+    const hasLabOrders = consultation.labOrders && consultation.labOrders.length > 0;
+    
+    // Hide continue button when waiting for lab results
+    if (visitStatus === 'WAITING_FOR_LAB' || visitStatus === 'LAB_IN_PROGRESS') {
+        return true;
+    }
+    
+    return false;
+}
+
+function shouldDisableCompleteVisit(consultation: Consultation): boolean {
+    const visitStatus = consultation.visit?.status?.code;
+    const hasLabOrders = consultation.labOrders && consultation.labOrders.length > 0;
+    
+    // Disable complete visit when waiting for lab results
+    if (visitStatus === 'WAITING_FOR_LAB' || visitStatus === 'LAB_IN_PROGRESS') {
+        return true;
+    }
+    
+    return false;
+}
+
+function shouldDisableCompleteConsultation(consultation: Consultation): boolean {
+    const visitStatus = consultation.visit?.status?.code;
+    
+    // Disable complete consultation when waiting for lab results
+    if (visitStatus === 'WAITING_FOR_LAB' || visitStatus === 'LAB_IN_PROGRESS') {
+        return true;
+    }
+    
+    return false;
+}
+
+function shouldDisableCreatePrescription(consultation: Consultation): boolean {
+    const visitStatus = consultation.visit?.status?.code;
+    const hasFinalizedPrescription = consultation.visit?.prescriptions?.some(p => p.finalized_at);
+    
+    // Disable create prescription when waiting for lab results or when prescription is finalized
+    if (visitStatus === 'WAITING_FOR_LAB' || visitStatus === 'LAB_IN_PROGRESS') {
+        return true;
+    }
+    
+    if (hasFinalizedPrescription) {
+        return true;
+    }
+    
+    return false;
+}
+
+function shouldDisableCreateLabOrder(consultation: Consultation): boolean {
+    const visitStatus = consultation.visit?.status?.code;
+    const hasFinalizedPrescription = consultation.visit?.prescriptions?.some(p => p.finalized_at);
+    
+    // Disable create lab order when waiting for lab results or when prescription is finalized
+    if (visitStatus === 'WAITING_FOR_LAB' || visitStatus === 'LAB_IN_PROGRESS') {
+        return true;
+    }
+    
+    if (hasFinalizedPrescription) {
+        return true;
+    }
+    
+    return false;
 }
 
 export default function ConsultationShow() {
@@ -146,6 +238,11 @@ export default function ConsultationShow() {
     const workflowSteps = getWorkflowSteps(consultation);
     const nextActionMessage = getNextActionMessage(consultation);
     const showPharmacyButton = shouldShowPharmacyButton(consultation, auth);
+    const hideContinueButton = shouldHideContinueButton(consultation);
+    const disableCompleteVisit = shouldDisableCompleteVisit(consultation);
+    const disableCompleteConsultation = shouldDisableCompleteConsultation(consultation);
+    const disableCreatePrescription = shouldDisableCreatePrescription(consultation);
+    const disableCreateLabOrder = shouldDisableCreateLabOrder(consultation);
 
     const patientName = consultation.visit?.patient
         ? [consultation.visit.patient.first_name, consultation.visit.patient.other_names, consultation.visit.patient.last_name]
@@ -154,8 +251,8 @@ export default function ConsultationShow() {
         : 'Unknown Patient';
 
     const hasVitals = consultation.visit?.vital_sign !== null;
-    const hasPrescriptions = consultation.prescriptions && consultation.prescriptions.length > 0;
-    const hasFinalizedPrescription = consultation.prescriptions?.some(p => p.finalized_at);
+    const hasPrescriptions = consultation.visit?.prescriptions && consultation.visit.prescriptions.length > 0;
+    const hasFinalizedPrescription = consultation.visit?.prescriptions?.some(p => p.finalized_at);
     const visitStatus = consultation.visit?.status?.code;
 
     const handleCompleteVisit = () => {
@@ -189,8 +286,8 @@ export default function ConsultationShow() {
     };
 
     const handleContinueToNextStep = () => {
-        const hasPrescriptions = consultation.prescriptions && consultation.prescriptions.length > 0;
-        const hasFinalizedPrescription = consultation.prescriptions?.some(p => p.finalized_at);
+        const hasPrescriptions = consultation.visit?.prescriptions && consultation.visit.prescriptions.length > 0;
+        const hasFinalizedPrescription = consultation.visit?.prescriptions?.some(p => p.finalized_at);
         const visitStatus = consultation.visit?.status?.code;
 
         if (!hasPrescriptions) {
@@ -202,11 +299,13 @@ export default function ConsultationShow() {
             if (prescriptionSection) {
                 prescriptionSection.scrollIntoView({ behavior: 'smooth' });
             }
+        } else if (visitStatus === 'WAITING_FOR_PHARMACY') {
+            // Navigate to pharmacy
+            window.location.href = '/pharmacy';
         } else if (visitStatus === 'WAITING_FOR_BILLING') {
             // Navigate to billing
             window.location.href = `/billing/create/${consultation.visit_id}`;
         }
-        // Remove the WAITING_FOR_PHARMACY case - no longer redirecting
     };
 
     const handleGoToPharmacy = () => {
@@ -242,12 +341,12 @@ export default function ConsultationShow() {
                             </Button>
                         </PermissionGuard>
                         <PermissionGuard permission="consultations.update" fallback={null}>
-                            <Button variant="outline" onClick={handleCompleteConsultation}>
+                            <Button variant="outline" onClick={handleCompleteConsultation} disabled={disableCompleteConsultation}>
                                 <CheckCircle className="mr-2 h-4 w-4" />
                                 Complete Consultation
                             </Button>
                         </PermissionGuard>
-                        {!shouldHideContinueButton(consultation) && (
+                        {!hideContinueButton && (
                             <PermissionGuard permission="consultations.create" fallback={null}>
                                 <Button onClick={handleContinueToNextStep} className="bg-blue-600 hover:bg-blue-700">
                                     <ChevronRight className="mr-2 h-4 w-4" />
@@ -262,7 +361,7 @@ export default function ConsultationShow() {
                             </Button>
                         )}
                         <PermissionGuard permission="visits.update" fallback={null}>
-                            <Button onClick={handleCompleteVisit}>
+                            <Button onClick={handleCompleteVisit} disabled={disableCompleteVisit}>
                                 <CheckCircle className="mr-2 h-4 w-4" />
                                 Complete Visit
                             </Button>
@@ -458,11 +557,18 @@ export default function ConsultationShow() {
                         <CardContent>
                             {hasPrescriptions ? (
                                 <div className="space-y-4">
-                                    <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                                        {consultation.prescriptions?.length} Prescription(s) Created
-                                    </Badge>
+                                    {hasFinalizedPrescription ? (
+                                        <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg dark:bg-green-950 dark:border-green-800">
+                                            <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+                                            <p className="text-sm font-medium text-green-800 dark:text-green-200">Prescription finalized and sent to pharmacy</p>
+                                        </div>
+                                    ) : (
+                                        <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                            {consultation.visit?.prescriptions?.length} Prescription(s) Created
+                                        </Badge>
+                                    )}
                                     <div className="space-y-2">
-                                        {consultation.prescriptions?.map((prescription) => (
+                                        {consultation.visit?.prescriptions?.map((prescription) => (
                                             <Card key={prescription.id} className="p-4">
                                                 <div className="flex justify-between items-center mb-2">
                                                     <div>
@@ -522,12 +628,19 @@ export default function ConsultationShow() {
                                 <div className="flex items-center justify-between">
                                     <p className="text-muted-foreground">No prescriptions created yet.</p>
                                     <PermissionGuard permission="consultations.create" fallback={null}>
-                                        <Button variant="outline" asChild>
-                                            <a href={`/prescriptions/create/${consultation.visit_id}`}>
+                                        {disableCreatePrescription ? (
+                                            <Button variant="outline" disabled>
                                                 <Pill className="mr-2 h-4 w-4" />
                                                 Create Prescription
-                                            </a>
-                                        </Button>
+                                            </Button>
+                                        ) : (
+                                            <Button variant="outline" asChild>
+                                                <a href={`/prescriptions/create/${consultation.visit_id}`}>
+                                                    <Pill className="mr-2 h-4 w-4" />
+                                                    Create Prescription
+                                                </a>
+                                            </Button>
+                                        )}
                                     </PermissionGuard>
                                 </div>
                             )}
@@ -543,13 +656,25 @@ export default function ConsultationShow() {
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
-                            {consultation.visit?.labOrders && consultation.visit.labOrders.length > 0 ? (
+                            {consultation.labOrders && consultation.labOrders.length > 0 ? (
                                 <div className="space-y-4">
-                                    <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                                        {consultation.visit.labOrders.length} Laboratory Order(s) Created
-                                    </Badge>
+                                    {visitStatus === 'WAITING_FOR_LAB' || visitStatus === 'LAB_IN_PROGRESS' ? (
+                                        <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg dark:bg-blue-950 dark:border-blue-800">
+                                            <div className="h-2 w-2 bg-blue-500 rounded-full animate-pulse" />
+                                            <p className="text-sm font-medium text-blue-800 dark:text-blue-200">Waiting for lab results</p>
+                                        </div>
+                                    ) : visitStatus === 'LAB_RESULTS_READY' ? (
+                                        <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg dark:bg-green-950 dark:border-green-800">
+                                            <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+                                            <p className="text-sm font-medium text-green-800 dark:text-green-200">Lab tests completed</p>
+                                        </div>
+                                    ) : (
+                                        <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                            {consultation.labOrders.length} Laboratory Order(s) Created
+                                        </Badge>
+                                    )}
                                     <div className="space-y-2">
-                                        {consultation.visit.labOrders.map((labOrder) => (
+                                        {consultation.labOrders.map((labOrder) => (
                                             <Card key={labOrder.id} className="p-4">
                                                 <div className="flex justify-between items-center mb-2">
                                                     <div>
@@ -557,16 +682,16 @@ export default function ConsultationShow() {
                                                         <p className="text-sm text-muted-foreground">
                                                             {new Date(labOrder.created_at).toLocaleDateString()}
                                                         </p>
+                                                        <Badge className={
+                                                            labOrder.status === 'completed'
+                                                                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                                                : labOrder.status === 'in_progress'
+                                                                ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                                                                : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                                                        }>
+                                                            {labOrder.status === 'completed' ? 'Completed' : labOrder.status === 'in_progress' ? 'Processing' : 'Pending'}
+                                                        </Badge>
                                                     </div>
-                                                    <Badge className={
-                                                        labOrder.status === 'completed'
-                                                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                                                            : labOrder.status === 'in_progress'
-                                                            ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-                                                            : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-                                                    }>
-                                                        {labOrder.status === 'completed' ? 'Completed' : labOrder.status === 'in_progress' ? 'Processing' : 'Pending'}
-                                                    </Badge>
                                                 </div>
                                                 {labOrder.items && labOrder.items.length > 0 && (
                                                     <div className="space-y-2">
@@ -609,15 +734,36 @@ export default function ConsultationShow() {
                                 </div>
                             ) : (
                                 <div className="flex items-center justify-between">
-                                    <p className="text-muted-foreground">No laboratory orders created yet.</p>
-                                    <PermissionGuard permission="laboratory.order" fallback={null}>
-                                        <Button variant="outline" asChild>
-                                            <a href={`/laboratory/create/${consultation.visit_id}`}>
-                                                <FlaskConical className="mr-2 h-4 w-4" />
-                                                Request Lab Test
-                                            </a>
-                                        </Button>
-                                    </PermissionGuard>
+                                    {visitStatus === 'LAB_RESULTS_READY' ? (
+                                        <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg dark:bg-green-950 dark:border-green-800">
+                                            <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+                                            <p className="text-sm font-medium text-green-800 dark:text-green-200">Lab tests completed</p>
+                                        </div>
+                                    ) : visitStatus === 'WAITING_FOR_LAB' || visitStatus === 'LAB_IN_PROGRESS' ? (
+                                        <div className="flex items-center gap-2">
+                                            <div className="h-2 w-2 bg-blue-500 rounded-full animate-pulse" />
+                                            <p className="text-muted-foreground">Waiting for lab results</p>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <p className="text-muted-foreground">No laboratory orders created yet.</p>
+                                            <PermissionGuard permission="laboratory.order" fallback={null}>
+                                                {disableCreateLabOrder ? (
+                                                    <Button variant="outline" disabled>
+                                                        <FlaskConical className="mr-2 h-4 w-4" />
+                                                        Request Lab Test
+                                                    </Button>
+                                                ) : (
+                                                    <Button variant="outline" asChild>
+                                                        <a href={`/laboratory/create/${consultation.visit_id}`}>
+                                                            <FlaskConical className="mr-2 h-4 w-4" />
+                                                            Request Lab Test
+                                                        </a>
+                                                    </Button>
+                                                )}
+                                            </PermissionGuard>
+                                        </>
+                                    )}
                                 </div>
                             )}
                         </CardContent>

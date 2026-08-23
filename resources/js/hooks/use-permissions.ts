@@ -14,11 +14,11 @@ export function useCan(permission: string): boolean {
     }
 
     // Super Admin has all permissions
-    if (user.is_super_admin) {
+    if (user.is_super_admin === true) {
         return true;
     }
 
-    return user.permissions.includes(permission);
+    return user.permissions?.includes(permission) ?? false;
 }
 
 /**
@@ -33,12 +33,12 @@ export function useCanAny(permissions: string[]): boolean {
     }
 
     // Super Admin has all permissions
-    if (user.is_super_admin) {
+    if (user.is_super_admin === true) {
         return true;
     }
 
     return permissions.some((permission) =>
-        user.permissions.includes(permission),
+        user.permissions?.includes(permission) ?? false,
     );
 }
 
@@ -54,12 +54,12 @@ export function useCanAll(permissions: string[]): boolean {
     }
 
     // Super Admin has all permissions
-    if (user.is_super_admin) {
+    if (user.is_super_admin === true) {
         return true;
     }
 
     return permissions.every((permission) =>
-        user.permissions.includes(permission),
+        user.permissions?.includes(permission) ?? false,
     );
 }
 
@@ -74,7 +74,7 @@ export function useHasRole(role: string): boolean {
         return false;
     }
 
-    return user.roles.includes(role);
+    return user.roles?.includes(role) ?? false;
 }
 
 /**
@@ -88,7 +88,7 @@ export function useHasAnyRole(roles: string[]): boolean {
         return false;
     }
 
-    return roles.some((role) => user.roles.includes(role));
+    return roles.some((role) => user.roles?.includes(role) ?? false);
 }
 
 /**

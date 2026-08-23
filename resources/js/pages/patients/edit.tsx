@@ -1,5 +1,5 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
-import { ArrowLeft, Calendar, MapPin, Phone, User } from 'lucide-react';
+import { ArrowLeft, Calendar, MapPin, Phone, User, Users, CreditCard, Shield, Heart, AlertTriangle } from 'lucide-react';
 import AlertError from '@/components/alert-error';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
@@ -44,6 +44,12 @@ export default function PatientEdit() {
         county_id: patient.county_id?.toString() || '',
         sub_county_id: patient.sub_county_id?.toString() || '',
         notes: patient.notes || '',
+        emergency_contacts: patient.emergencyContacts || [],
+        identifiers: patient.identifiers || [],
+        allergies: patient.allergies || [],
+        chronic_conditions: patient.chronicConditions || [],
+        relationships: patient.relationships || [],
+        alerts: patient.alerts || [],
     });
 
     const handleCountyChange = (countyId: string) => {
@@ -254,6 +260,580 @@ export default function PatientEdit() {
                                         className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                     />
                                     <InputError message={errors.notes} />
+                                </div>
+                            </div>
+
+                            {/* Emergency Contacts */}
+                            <div className="space-y-4">
+                                <h3 className="text-lg font-semibold flex items-center gap-2">
+                                    <Users className="h-5 w-5" />
+                                    Emergency Contacts
+                                </h3>
+                                <div className="space-y-2">
+                                    {data.emergency_contacts.map((contact: any, index: number) => (
+                                        <div key={index} className="p-4 border rounded-md space-y-2">
+                                            <div className="flex justify-between items-center">
+                                                <span className="font-medium">Contact {index + 1}</span>
+                                                <Button
+                                                    type="button"
+                                                    variant="destructive"
+                                                    size="sm"
+                                                    onClick={() => {
+                                                        const updated = [...data.emergency_contacts];
+                                                        updated.splice(index, 1);
+                                                        setData('emergency_contacts', updated);
+                                                    }}
+                                                >
+                                                    Remove
+                                                </Button>
+                                            </div>
+                                            <div className="grid gap-2 md:grid-cols-2">
+                                                <div>
+                                                    <Label>Name</Label>
+                                                    <Input
+                                                        value={contact.name || ''}
+                                                        onChange={(e) => {
+                                                            const updated = [...data.emergency_contacts];
+                                                            updated[index].name = e.target.value;
+                                                            setData('emergency_contacts', updated);
+                                                        }}
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <Label>Relationship</Label>
+                                                    <Input
+                                                        value={contact.relationship || ''}
+                                                        onChange={(e) => {
+                                                            const updated = [...data.emergency_contacts];
+                                                            updated[index].relationship = e.target.value;
+                                                            setData('emergency_contacts', updated);
+                                                        }}
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <Label>Phone</Label>
+                                                    <Input
+                                                        value={contact.phone || ''}
+                                                        onChange={(e) => {
+                                                            const updated = [...data.emergency_contacts];
+                                                            updated[index].phone = e.target.value;
+                                                            setData('emergency_contacts', updated);
+                                                        }}
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <Label>Address</Label>
+                                                    <Input
+                                                        value={contact.address || ''}
+                                                        onChange={(e) => {
+                                                            const updated = [...data.emergency_contacts];
+                                                            updated[index].address = e.target.value;
+                                                            setData('emergency_contacts', updated);
+                                                        }}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() => {
+                                            setData('emergency_contacts', [
+                                                ...data.emergency_contacts,
+                                                { name: '', relationship: '', phone: '', address: '' }
+                                            ]);
+                                        }}
+                                    >
+                                        Add Emergency Contact
+                                    </Button>
+                                </div>
+                            </div>
+
+                            {/* Patient Identifiers */}
+                            <div className="space-y-4">
+                                <h3 className="text-lg font-semibold flex items-center gap-2">
+                                    <CreditCard className="h-5 w-5" />
+                                    Patient Identifiers
+                                </h3>
+                                <div className="space-y-2">
+                                    {data.identifiers.map((identifier: any, index: number) => (
+                                        <div key={index} className="p-4 border rounded-md space-y-2">
+                                            <div className="flex justify-between items-center">
+                                                <span className="font-medium">Identifier {index + 1}</span>
+                                                <Button
+                                                    type="button"
+                                                    variant="destructive"
+                                                    size="sm"
+                                                    onClick={() => {
+                                                        const updated = [...data.identifiers];
+                                                        updated.splice(index, 1);
+                                                        setData('identifiers', updated);
+                                                    }}
+                                                >
+                                                    Remove
+                                                </Button>
+                                            </div>
+                                            <div className="grid gap-2 md:grid-cols-2">
+                                                <div>
+                                                    <Label>Type</Label>
+                                                    <Input
+                                                        value={identifier.identifier_type || ''}
+                                                        onChange={(e) => {
+                                                            const updated = [...data.identifiers];
+                                                            updated[index].identifier_type = e.target.value;
+                                                            setData('identifiers', updated);
+                                                        }}
+                                                        placeholder="e.g., National ID, Passport"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <Label>Value</Label>
+                                                    <Input
+                                                        value={identifier.identifier_value || ''}
+                                                        onChange={(e) => {
+                                                            const updated = [...data.identifiers];
+                                                            updated[index].identifier_value = e.target.value;
+                                                            setData('identifiers', updated);
+                                                        }}
+                                                    />
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <input
+                                                        type="checkbox"
+                                                        id={`primary-${index}`}
+                                                        checked={identifier.is_primary || false}
+                                                        onChange={(e) => {
+                                                            const updated = [...data.identifiers];
+                                                            updated[index].is_primary = e.target.checked;
+                                                            setData('identifiers', updated);
+                                                        }}
+                                                    />
+                                                    <Label htmlFor={`primary-${index}`}>Primary</Label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() => {
+                                            setData('identifiers', [
+                                                ...data.identifiers,
+                                                { identifier_type: '', identifier_value: '', is_primary: false }
+                                            ]);
+                                        }}
+                                    >
+                                        Add Identifier
+                                    </Button>
+                                </div>
+                            </div>
+
+                            {/* Allergies */}
+                            <div className="space-y-4">
+                                <h3 className="text-lg font-semibold flex items-center gap-2">
+                                    <Shield className="h-5 w-5" />
+                                    Allergies
+                                </h3>
+                                <div className="space-y-2">
+                                    {data.allergies.map((allergy: any, index: number) => (
+                                        <div key={index} className="p-4 border rounded-md space-y-2">
+                                            <div className="flex justify-between items-center">
+                                                <span className="font-medium">Allergy {index + 1}</span>
+                                                <Button
+                                                    type="button"
+                                                    variant="destructive"
+                                                    size="sm"
+                                                    onClick={() => {
+                                                        const updated = [...data.allergies];
+                                                        updated.splice(index, 1);
+                                                        setData('allergies', updated);
+                                                    }}
+                                                >
+                                                    Remove
+                                                </Button>
+                                            </div>
+                                            <div className="grid gap-2 md:grid-cols-2">
+                                                <div>
+                                                    <Label>Allergen</Label>
+                                                    <Input
+                                                        value={allergy.allergen || ''}
+                                                        onChange={(e) => {
+                                                            const updated = [...data.allergies];
+                                                            updated[index].allergen = e.target.value;
+                                                            setData('allergies', updated);
+                                                        }}
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <Label>Severity</Label>
+                                                    <select
+                                                        value={allergy.severity || ''}
+                                                        onChange={(e) => {
+                                                            const updated = [...data.allergies];
+                                                            updated[index].severity = e.target.value;
+                                                            setData('allergies', updated);
+                                                        }}
+                                                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                                    >
+                                                        <option value="">Select severity</option>
+                                                        <option value="mild">Mild</option>
+                                                        <option value="moderate">Moderate</option>
+                                                        <option value="severe">Severe</option>
+                                                    </select>
+                                                </div>
+                                                <div className="md:col-span-2">
+                                                    <Label>Reaction</Label>
+                                                    <Input
+                                                        value={allergy.reaction || ''}
+                                                        onChange={(e) => {
+                                                            const updated = [...data.allergies];
+                                                            updated[index].reaction = e.target.value;
+                                                            setData('allergies', updated);
+                                                        }}
+                                                    />
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <input
+                                                        type="checkbox"
+                                                        id={`allergy-active-${index}`}
+                                                        checked={allergy.is_active !== false}
+                                                        onChange={(e) => {
+                                                            const updated = [...data.allergies];
+                                                            updated[index].is_active = e.target.checked;
+                                                            setData('allergies', updated);
+                                                        }}
+                                                    />
+                                                    <Label htmlFor={`allergy-active-${index}`}>Active</Label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() => {
+                                            setData('allergies', [
+                                                ...data.allergies,
+                                                { allergen: '', severity: '', reaction: '', is_active: true }
+                                            ]);
+                                        }}
+                                    >
+                                        Add Allergy
+                                    </Button>
+                                </div>
+                            </div>
+
+                            {/* Chronic Conditions */}
+                            <div className="space-y-4">
+                                <h3 className="text-lg font-semibold flex items-center gap-2">
+                                    <Heart className="h-5 w-5" />
+                                    Chronic Conditions
+                                </h3>
+                                <div className="space-y-2">
+                                    {data.chronic_conditions.map((condition: any, index: number) => (
+                                        <div key={index} className="p-4 border rounded-md space-y-2">
+                                            <div className="flex justify-between items-center">
+                                                <span className="font-medium">Condition {index + 1}</span>
+                                                <Button
+                                                    type="button"
+                                                    variant="destructive"
+                                                    size="sm"
+                                                    onClick={() => {
+                                                        const updated = [...data.chronic_conditions];
+                                                        updated.splice(index, 1);
+                                                        setData('chronic_conditions', updated);
+                                                    }}
+                                                >
+                                                    Remove
+                                                </Button>
+                                            </div>
+                                            <div className="grid gap-2 md:grid-cols-2">
+                                                <div>
+                                                    <Label>Condition Name</Label>
+                                                    <Input
+                                                        value={condition.condition_name || ''}
+                                                        onChange={(e) => {
+                                                            const updated = [...data.chronic_conditions];
+                                                            updated[index].condition_name = e.target.value;
+                                                            setData('chronic_conditions', updated);
+                                                        }}
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <Label>Status</Label>
+                                                    <Input
+                                                        value={condition.status || ''}
+                                                        onChange={(e) => {
+                                                            const updated = [...data.chronic_conditions];
+                                                            updated[index].status = e.target.value;
+                                                            setData('chronic_conditions', updated);
+                                                        }}
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <Label>Diagnosis Date</Label>
+                                                    <Input
+                                                        type="date"
+                                                        value={condition.diagnosed_on || ''}
+                                                        onChange={(e) => {
+                                                            const updated = [...data.chronic_conditions];
+                                                            updated[index].diagnosed_on = e.target.value;
+                                                            setData('chronic_conditions', updated);
+                                                        }}
+                                                    />
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <input
+                                                        type="checkbox"
+                                                        id={`condition-active-${index}`}
+                                                        checked={condition.is_active !== false}
+                                                        onChange={(e) => {
+                                                            const updated = [...data.chronic_conditions];
+                                                            updated[index].is_active = e.target.checked;
+                                                            setData('chronic_conditions', updated);
+                                                        }}
+                                                    />
+                                                    <Label htmlFor={`condition-active-${index}`}>Active</Label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() => {
+                                            setData('chronic_conditions', [
+                                                ...data.chronic_conditions,
+                                                { condition_name: '', status: '', diagnosed_on: '', is_active: true }
+                                            ]);
+                                        }}
+                                    >
+                                        Add Chronic Condition
+                                    </Button>
+                                </div>
+                            </div>
+
+                            {/* Family Relationships */}
+                            <div className="space-y-4">
+                                <h3 className="text-lg font-semibold flex items-center gap-2">
+                                    <Users className="h-5 w-5" />
+                                    Family Relationships
+                                </h3>
+                                <div className="space-y-2">
+                                    {data.relationships.map((rel: any, index: number) => (
+                                        <div key={index} className="p-4 border rounded-md space-y-2">
+                                            <div className="flex justify-between items-center">
+                                                <span className="font-medium">Relationship {index + 1}</span>
+                                                <Button
+                                                    type="button"
+                                                    variant="destructive"
+                                                    size="sm"
+                                                    onClick={() => {
+                                                        const updated = [...data.relationships];
+                                                        updated.splice(index, 1);
+                                                        setData('relationships', updated);
+                                                    }}
+                                                >
+                                                    Remove
+                                                </Button>
+                                            </div>
+                                            <div className="grid gap-2 md:grid-cols-2">
+                                                <div>
+                                                    <Label>Relationship Type</Label>
+                                                    <Input
+                                                        value={rel.relationship_type || ''}
+                                                        onChange={(e) => {
+                                                            const updated = [...data.relationships];
+                                                            updated[index].relationship_type = e.target.value;
+                                                            setData('relationships', updated);
+                                                        }}
+                                                        placeholder="e.g., Mother, Father, Spouse"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <Label>Related Patient Name</Label>
+                                                    <Input
+                                                        value={rel.related_patient ? `${rel.related_patient.first_name} ${rel.related_patient.last_name}` : ''}
+                                                        disabled
+                                                        placeholder="Search and select patient"
+                                                    />
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <input
+                                                        type="checkbox"
+                                                        id={`kin-${index}`}
+                                                        checked={rel.is_next_of_kin || false}
+                                                        onChange={(e) => {
+                                                            const updated = [...data.relationships];
+                                                            updated[index].is_next_of_kin = e.target.checked;
+                                                            setData('relationships', updated);
+                                                        }}
+                                                    />
+                                                    <Label htmlFor={`kin-${index}`}>Next of Kin</Label>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <input
+                                                        type="checkbox"
+                                                        id={`emergency-${index}`}
+                                                        checked={rel.is_emergency_contact || false}
+                                                        onChange={(e) => {
+                                                            const updated = [...data.relationships];
+                                                            updated[index].is_emergency_contact = e.target.checked;
+                                                            setData('relationships', updated);
+                                                        }}
+                                                    />
+                                                    <Label htmlFor={`emergency-${index}`}>Emergency Contact</Label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() => {
+                                            setData('relationships', [
+                                                ...data.relationships,
+                                                { relationship_type: '', related_patient_id: null, is_next_of_kin: false, is_emergency_contact: false }
+                                            ]);
+                                        }}
+                                    >
+                                        Add Family Relationship
+                                    </Button>
+                                </div>
+                            </div>
+
+                            {/* Patient Alerts */}
+                            <div className="space-y-4">
+                                <h3 className="text-lg font-semibold flex items-center gap-2">
+                                    <AlertTriangle className="h-5 w-5" />
+                                    Patient Alerts
+                                </h3>
+                                <div className="space-y-2">
+                                    {data.alerts.map((alert: any, index: number) => (
+                                        <div key={index} className="p-4 border rounded-md space-y-2">
+                                            <div className="flex justify-between items-center">
+                                                <span className="font-medium">Alert {index + 1}</span>
+                                                <Button
+                                                    type="button"
+                                                    variant="destructive"
+                                                    size="sm"
+                                                    onClick={() => {
+                                                        const updated = [...data.alerts];
+                                                        updated.splice(index, 1);
+                                                        setData('alerts', updated);
+                                                    }}
+                                                >
+                                                    Remove
+                                                </Button>
+                                            </div>
+                                            <div className="grid gap-2 md:grid-cols-2">
+                                                <div>
+                                                    <Label>Type</Label>
+                                                    <Input
+                                                        value={alert.type || ''}
+                                                        onChange={(e) => {
+                                                            const updated = [...data.alerts];
+                                                            updated[index].type = e.target.value;
+                                                            setData('alerts', updated);
+                                                        }}
+                                                        placeholder="e.g., Medication, Clinical"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <Label>Severity</Label>
+                                                    <select
+                                                        value={alert.severity || ''}
+                                                        onChange={(e) => {
+                                                            const updated = [...data.alerts];
+                                                            updated[index].severity = e.target.value;
+                                                            setData('alerts', updated);
+                                                        }}
+                                                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                                    >
+                                                        <option value="">Select severity</option>
+                                                        <option value="low">Low</option>
+                                                        <option value="medium">Medium</option>
+                                                        <option value="high">High</option>
+                                                        <option value="critical">Critical</option>
+                                                    </select>
+                                                </div>
+                                                <div className="md:col-span-2">
+                                                    <Label>Title</Label>
+                                                    <Input
+                                                        value={alert.title || ''}
+                                                        onChange={(e) => {
+                                                            const updated = [...data.alerts];
+                                                            updated[index].title = e.target.value;
+                                                            setData('alerts', updated);
+                                                        }}
+                                                    />
+                                                </div>
+                                                <div className="md:col-span-2">
+                                                    <Label>Message</Label>
+                                                    <textarea
+                                                        value={alert.message || ''}
+                                                        onChange={(e) => {
+                                                            const updated = [...data.alerts];
+                                                            updated[index].message = e.target.value;
+                                                            setData('alerts', updated);
+                                                        }}
+                                                        rows={2}
+                                                        className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <Label>Start Date</Label>
+                                                    <Input
+                                                        type="date"
+                                                        value={alert.starts_at || ''}
+                                                        onChange={(e) => {
+                                                            const updated = [...data.alerts];
+                                                            updated[index].starts_at = e.target.value;
+                                                            setData('alerts', updated);
+                                                        }}
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <Label>End Date</Label>
+                                                    <Input
+                                                        type="date"
+                                                        value={alert.ends_at || ''}
+                                                        onChange={(e) => {
+                                                            const updated = [...data.alerts];
+                                                            updated[index].ends_at = e.target.value;
+                                                            setData('alerts', updated);
+                                                        }}
+                                                    />
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <input
+                                                        type="checkbox"
+                                                        id={`alert-active-${index}`}
+                                                        checked={alert.is_active !== false}
+                                                        onChange={(e) => {
+                                                            const updated = [...data.alerts];
+                                                            updated[index].is_active = e.target.checked;
+                                                            setData('alerts', updated);
+                                                        }}
+                                                    />
+                                                    <Label htmlFor={`alert-active-${index}`}>Active</Label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() => {
+                                            setData('alerts', [
+                                                ...data.alerts,
+                                                { type: '', severity: '', title: '', message: '', starts_at: '', ends_at: '', is_active: true }
+                                            ]);
+                                        }}
+                                    >
+                                        Add Alert
+                                    </Button>
                                 </div>
                             </div>
 

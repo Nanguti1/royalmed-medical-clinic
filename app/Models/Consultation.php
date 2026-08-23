@@ -22,6 +22,8 @@ class Consultation extends Model
         'follow_up_date' => 'date',
     ];
 
+    protected $appends = ['labOrders'];
+
     public function visit(): BelongsTo
     {
         return $this->belongsTo(Visit::class);
@@ -55,6 +57,11 @@ class Consultation extends Model
     public function labOrders(): HasMany
     {
         return $this->hasMany(LabOrder::class);
+    }
+
+    public function getLabOrdersAttribute()
+    {
+        return $this->getRelationValue('labOrders');
     }
 
     public function getSubjectiveAttribute(): ?string

@@ -72,7 +72,7 @@ class QueueService
 
     public function getWorklist(?string $department = null, array $statuses = ['waiting', 'called'])
     {
-        $query = QueueEntry::with(['visit.patient.activeAlerts', 'visit.patient.activeAllergies', 'visit.vitalSign'])
+        $query = QueueEntry::with(['visit.patient.activeAlerts', 'visit.patient.activeAllergies', 'visit.vitalSign', 'visit.consultation', 'visit.status'])
             ->whereIn('status', $statuses);
 
         if ($department) {

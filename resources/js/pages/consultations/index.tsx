@@ -93,9 +93,11 @@ function QueueCard({ entry, onStartConsultation, onContinueConsultation }: { ent
     const arrivalTime = new Date(entry.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
     const hasVitals = entry.visit?.vitalSign !== null;
+    const hasConsultation = entry.visit?.consultation !== null && entry.visit?.consultation !== undefined;
+    const visitStatus = entry.visit?.status?.code;
+    const consultationId = entry.visit?.consultation?.id;
 
     const isLabReturn = entry.metadata?.action === 'continue_consultation';
-    const consultationId = entry.metadata?.consultation_id;
 
     const getStatusColor = (status: string) => {
         switch (status) {
@@ -108,6 +110,39 @@ function QueueCard({ entry, onStartConsultation, onContinueConsultation }: { ent
             default:
                 return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
         }
+    };
+
+    const getActionButton = () => {
+        // If visit has progressed beyond consultation stage, don't show any button
+        if (visitStatus && (
+            visitStatus === 'WAITING_FOR_PRESCRIPTION' ||
+            visitStatus === 'PRESCRIPTION_CREATED' ||
+            visitStatus === 'WAITING_FOR_PHARMACY' ||
+            visitStatus === 'WAITING_FOR_BILLING' ||
+            visitStatus === 'PAID' ||
+            visitStatus === 'VISIT_COMPLETED' ||
+            visitStatus === 'CANCELLED'
+        )) {
+            return null;
+        }
+
+        // If consultation exists, show continue button
+        if (hasConsultation && consultationId) {
+            return (
+                <Button onClick={() => onContinueConsultation(consultationId)}>
+                    <Play className="mr-2 h-4 w-4" />
+                    Continue Consultation
+                </Button>
+            );
+        }
+
+        // Show start consultation button for new consultations
+        return (
+            <Button onClick={() => onStartConsultation(entry.visit_id)}>
+                <Play className="mr-2 h-4 w-4" />
+                Start Consultation
+            </Button>
+        );
     };
 
     return (
@@ -134,6 +169,11 @@ function QueueCard({ entry, onStartConsultation, onContinueConsultation }: { ent
                                 Vitals Captured
                             </Badge>
                         )}
+                        {hasConsultation && (
+                            <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                                Consultation Started
+                            </Badge>
+                        )}
                         {isLabReturn && (
                             <Badge className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
                                 <FlaskConical className="mr-1 h-3 w-3" />
@@ -141,17 +181,7 @@ function QueueCard({ entry, onStartConsultation, onContinueConsultation }: { ent
                             </Badge>
                         )}
                         <PermissionGuard permission="consultations.create" fallback={null}>
-                            {isLabReturn && consultationId ? (
-                                <Button onClick={() => onContinueConsultation(consultationId)}>
-                                    <Play className="mr-2 h-4 w-4" />
-                                    Continue Consultation
-                                </Button>
-                            ) : (
-                                <Button onClick={() => onStartConsultation(entry.visit_id)}>
-                                    <Play className="mr-2 h-4 w-4" />
-                                    Start Consultation
-                                </Button>
-                            )}
+                            {getActionButton()}
                         </PermissionGuard>
                     </div>
                 </div>

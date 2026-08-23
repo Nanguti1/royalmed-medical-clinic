@@ -95,7 +95,7 @@ class PatientController extends Controller
 
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Failed to register patient: ' . $e->getMessage());
+                ->with('error', 'Failed to register patient: '.$e->getMessage());
         }
     }
 
@@ -122,6 +122,7 @@ class PatientController extends Controller
 
         return Inertia::render('patients/show', [
             'patient' => $patient,
+            'timelineEvents' => [], // Will be populated by timeline service
         ]);
     }
 
@@ -130,7 +131,7 @@ class PatientController extends Controller
         $patient->load([
             'gender', 'county', 'sub_county',
             'identifiers', 'contacts', 'addresses', 'emergencyContacts',
-            'relationships', 'allergies', 'chronicConditions', 'alerts',
+            'relationships.relatedPatient', 'allergies', 'chronicConditions', 'alerts',
         ]);
 
         return Inertia::render('patients/edit', [

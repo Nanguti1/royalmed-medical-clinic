@@ -92,7 +92,7 @@ class UpdatePatientAction
         }
 
         foreach ($relationships as $item) {
-            if (! empty($item['relationship'])) {
+            if (! empty($item['relationship_type'])) {
                 if (isset($item['id'])) {
                     $patient->relationships()->where('id', $item['id'])->update($item);
                 } else {
@@ -119,6 +119,9 @@ class UpdatePatientAction
                     $patient->chronicConditions()->where('id', $item['id'])->update($item);
                 } else {
                     $item['recorded_by'] ??= $data['updated_by'] ?? null;
+                    if (empty($item['diagnosed_on'])) {
+                        $item['diagnosed_on'] = now();
+                    }
                     $patient->chronicConditions()->create($item);
                 }
             }
@@ -130,6 +133,9 @@ class UpdatePatientAction
                     $patient->alerts()->where('id', $item['id'])->update($item);
                 } else {
                     $item['created_by'] ??= $data['updated_by'] ?? null;
+                    if (empty($item['starts_at'])) {
+                        $item['starts_at'] = now();
+                    }
                     $patient->alerts()->create($item);
                 }
             }

@@ -41,7 +41,7 @@ class ConsultationController extends Controller
     public function index(): Response
     {
         $entries = $this->queueService->getWorklist('consultation', ['waiting', 'called']);
-        $entries->load(['visit.patient', 'visit.vitalSign']);
+        $entries->load(['visit.patient', 'visit.vitalSign', 'visit.consultation', 'visit.status']);
 
         return Inertia::render('consultations/index', [
             'entries' => $entries,
@@ -79,21 +79,33 @@ class ConsultationController extends Controller
     {
         $consultation->load([
             'visit.patient.activeAlerts', 'visit.patient.activeAllergies', 'visit.patient.activeChronicConditions',
-            'visit.vitalSign', 'visit.queueEntry', 'visit.labOrders.items.test', 'visit.labOrders.items.result',
+            'visit.vitalSign', 'visit.queueEntry', 'labOrders.items.test', 'labOrders.items.result',
             'visit.prescriptions', 'visit.status', 'diagnoses', 'primaryDiagnoses', 'differentialDiagnoses', 'attachments',
+            'visit.prescriptions.items.medicine', 'visit.prescriptions.items.dosageUnit', 'visit.prescriptions.items.frequency',
         ]);
 
+        // Ensure fresh data by reloading the visit status, lab orders, and prescriptions
+        $consultation->visit->load(['status', 'prescriptions']);
+        $consultation->load(['labOrders.items.test', 'labOrders.items.result']);
+
         $clinicalSummary = $this->consultationService->getClinicalSummary($consultation->visit->patient);
+
+        $user = auth()->user();
 
         return Inertia::render('consultations/show', [
             'consultation' => $consultation,
             'clinical_summary' => $clinicalSummary,
             'auth' => [
-                'user' => [
-                    'id' => auth()->id(),
-                    'email' => auth()->user() ? auth()->user()->email : null,
-                    'roles' => auth()->user() ? auth()->user()->getRoleNames()->toArray() : [],
-                ],
+                'user' => $user ? [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'phone' => $user->phone,
+                    'is_active' => $user->is_active,
+                    'roles' => $user->roles->pluck('name'),
+                    'permissions' => $user->getAllPermissions()->pluck('name'),
+                    'is_super_admin' => $user->hasRole('Super Admin'),
+                ] : null,
             ],
         ]);
     }
