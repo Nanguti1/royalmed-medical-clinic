@@ -1,5 +1,6 @@
 import { Head, usePage } from '@inertiajs/react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/empty-state';
 import { LoadingState } from '@/components/loading-state';
 import { FileText } from 'lucide-react';
@@ -38,7 +39,7 @@ export default function PrescriptionIndex() {
                         description="Prescriptions will appear here when visits are created and prescriptions are issued."
                     />
                 ) : (
-                    <div className="grid gap-4">
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                         {prescriptions.data.map((prescription) => (
                             <PrescriptionCard key={prescription.id} prescription={prescription} />
                         ))}
@@ -56,17 +57,35 @@ function PrescriptionCard({ prescription }: { prescription: Prescription }) {
             .join(' ')
         : 'Unknown Patient';
 
+    const getStatusColor = (finalized: boolean | null) => {
+        return finalized
+            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+            : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
+    };
+
+    const isFinalized = prescription.finalized_at !== null && prescription.finalized_at !== undefined;
+
     return (
         <Card className="hover:bg-accent/50 transition-colors cursor-pointer" onClick={() => (window.location.href = `/prescriptions/${prescription.id}`)}>
             <CardHeader>
-                <CardTitle className="text-lg">Prescription #{prescription.prescription_number || prescription.id}</CardTitle>
+                <div className="flex items-start justify-between">
+                    <CardTitle className="text-lg">Prescription #{prescription.prescription_number || prescription.id}</CardTitle>
+                    <Badge className={getStatusColor(isFinalized)}>
+                        {isFinalized ? 'Finalized' : 'Draft'}
+                    </Badge>
+                </div>
+                <p className="text-sm text-muted-foreground">Patient: {patientName}</p>
             </CardHeader>
             <CardContent>
                 <div className="space-y-1 text-sm">
-                    <p className="text-muted-foreground">Patient: {patientName}</p>
                     <p className="text-muted-foreground">Visit #{prescription.visit_id}</p>
-                    {prescription.finalized_at && (
-                        <p className="text-green-600">Finalized: {new Date(prescription.finalized_at).toLocaleDateString()}</p>
+                    <p className="text-muted-foreground">
+                        Created {new Date(prescription.created_at).toLocaleDateString()}
+                    </p>
+                    {isFinalized && (
+                        <p className="text-green-600 dark:text-green-400">
+                            Finalized {new Date(prescription.finalized_at).toLocaleDateString()}
+                        </p>
                     )}
                 </div>
             </CardContent>

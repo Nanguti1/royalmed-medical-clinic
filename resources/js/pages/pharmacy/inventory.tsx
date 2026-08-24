@@ -7,7 +7,11 @@ import type { Medicine } from '@/types/visit';
 import { PermissionGuard } from '@/components/permission-guard';
 
 type PageProps = {
-    medicines: Medicine[];
+    medicines: {
+        data: Medicine[];
+        links: any;
+        meta: any;
+    };
 };
 
 export default function PharmacyInventory() {
@@ -59,7 +63,7 @@ export default function PharmacyInventory() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {medicines.map((medicine) => (
+                                    {medicines.data.map((medicine) => (
                                         <tr key={medicine.id} className="border-b">
                                             <td className="p-3">
                                                 <div>
@@ -99,6 +103,23 @@ export default function PharmacyInventory() {
                                 </tbody>
                             </table>
                         </div>
+                        {/* Pagination */}
+                        {medicines.links && medicines.links.length > 3 && (
+                            <div className="flex justify-center gap-2 mt-4">
+                                {medicines.links.map((link: any, index: number) => (
+                                    <a
+                                        key={index}
+                                        href={link.url || '#'}
+                                        className={`px-4 py-2 rounded ${
+                                            link.active
+                                                ? 'bg-primary text-primary-foreground'
+                                                : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                                        } ${!link.url ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        dangerouslySetInnerHTML={{ __html: link.label }}
+                                    />
+                                ))}
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
             </div>

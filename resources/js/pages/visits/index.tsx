@@ -99,7 +99,7 @@ export default function VisitIndex() {
                     />
                 ) : (
                     <>
-                        <div className="grid gap-4">
+                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                             {visits.data.map((visit) => (
                                 <VisitCard key={visit.id} visit={visit} />
                             ))}
@@ -153,22 +153,19 @@ function VisitCard({ visit }: { visit: Visit }) {
 
     return (
         <Card className="hover:bg-accent/50 transition-colors cursor-pointer" onClick={() => (window.location.href = `/visits/${visit.id}`)}>
-            <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-                            <Stethoscope className="h-6 w-6 text-primary" />
-                        </div>
-                        <div>
-                            <h3 className="font-semibold">{patientName}</h3>
-                            <p className="text-sm text-muted-foreground">
-                                Visit #{visit.id} • {new Date(visit.created_at).toLocaleDateString()}
-                            </p>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-4">
-                        <Badge className={getStatusColor()}>{getStatusText()}</Badge>
-                    </div>
+            <CardHeader>
+                <div className="flex items-start justify-between">
+                    <CardTitle className="text-lg">{patientName}</CardTitle>
+                    <Badge className={getStatusColor()}>{getStatusText()}</Badge>
+                </div>
+                <p className="text-sm text-muted-foreground">Visit #{visit.id}</p>
+            </CardHeader>
+            <CardContent>
+                <div className="space-y-1 text-sm">
+                    <p className="text-muted-foreground">{new Date(visit.created_at).toLocaleDateString()}</p>
+                    {visit.patient?.hospital_number && (
+                        <p className="text-muted-foreground">{visit.patient.hospital_number}</p>
+                    )}
                 </div>
             </CardContent>
         </Card>

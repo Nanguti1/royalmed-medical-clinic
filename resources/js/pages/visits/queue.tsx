@@ -79,7 +79,7 @@ export default function VisitQueue() {
                         description="No patients are currently waiting in the queue."
                     />
                 ) : (
-                    <div className="grid gap-4">
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                         {entries.map((entry) => (
                             <QueueCard
                                 key={entry.id}
@@ -117,31 +117,29 @@ function QueueCard({ entry, onRemove }: { entry: QueueEntry; onRemove: (id: numb
     };
 
     return (
-        <Card>
-            <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-                            <span className="text-lg font-bold text-primary">{entry.position || '–'}</span>
-                        </div>
-                        <div>
-                            <h3 className="font-semibold">{patientName}</h3>
-                            <p className="text-sm text-muted-foreground">
-                                Visit #{entry.visit_id} • Added {new Date(entry.created_at).toLocaleString()}
-                            </p>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-4">
-                        <Badge className={getStatusColor(entry.status)}>
-                            {entry.status.charAt(0).toUpperCase() + entry.status.slice(1).replace('_', ' ')}
-                        </Badge>
+        <Card className="hover:bg-accent/50 transition-colors">
+            <CardHeader>
+                <div className="flex items-start justify-between">
+                    <CardTitle className="text-lg">{patientName}</CardTitle>
+                    <Badge className={getStatusColor(entry.status)}>
+                        {entry.status.charAt(0).toUpperCase() + entry.status.slice(1).replace('_', ' ')}
+                    </Badge>
+                </div>
+                <p className="text-sm text-muted-foreground">Visit #{entry.visit_id}</p>
+            </CardHeader>
+            <CardContent>
+                <div className="space-y-1 text-sm">
+                    <p className="text-muted-foreground">Position: {entry.position || '–'}</p>
+                    <p className="text-muted-foreground">Added {new Date(entry.created_at).toLocaleString()}</p>
+                    <div className="flex gap-2 mt-2">
                         <PermissionGuard permission="visits.update" fallback={null}>
                             <Button
                                 variant="ghost"
-                                size="icon"
+                                size="sm"
                                 onClick={() => onRemove(entry.id)}
                             >
-                                <X className="h-4 w-4" />
+                                <X className="h-4 w-4 mr-2" />
+                                Remove
                             </Button>
                         </PermissionGuard>
                     </div>

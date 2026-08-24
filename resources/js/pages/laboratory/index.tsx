@@ -66,7 +66,7 @@ export default function LaboratoryIndex() {
                     />
                 ) : (
                     <>
-                        <div className="grid gap-4">
+                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                             {orders.data.map((order) => (
                                 <LabOrderCard key={order.id} order={order} getStatusBadge={getStatusBadge} getPriorityBadge={getPriorityBadge} />
                             ))}
@@ -106,23 +106,22 @@ function LabOrderCard({ order, getStatusBadge, getPriorityBadge }: { order: LabO
     const testNames = order.items?.map((item) => item.test?.name).filter(Boolean).join(', ') || 'No tests';
 
     return (
-        <Card>
-            <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-                            <FlaskConical className="h-6 w-6 text-primary" />
-                        </div>
-                        <div>
-                            <h3 className="font-semibold">{patientName}</h3>
-                            <p className="text-sm text-muted-foreground">
-                                Lab Order #{order.id} • {date} • {testNames}
-                            </p>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-4">
+        <Card className="hover:bg-accent/50 transition-colors">
+            <CardHeader>
+                <div className="flex items-start justify-between">
+                    <CardTitle className="text-lg">{patientName}</CardTitle>
+                    <div className="flex gap-2">
                         {getPriorityBadge(order.priority)}
                         {getStatusBadge(order.status)}
+                    </div>
+                </div>
+                <p className="text-sm text-muted-foreground">Lab Order #{order.id}</p>
+            </CardHeader>
+            <CardContent>
+                <div className="space-y-2 text-sm">
+                    <p className="text-muted-foreground">Tests: {testNames}</p>
+                    <p className="text-muted-foreground">Ordered {date}</p>
+                    <div className="flex gap-2 mt-2">
                         <Button variant="outline" size="sm" asChild>
                             <a href={`/laboratory/${order.id}`}>
                                 <FileText className="mr-2 h-4 w-4" />

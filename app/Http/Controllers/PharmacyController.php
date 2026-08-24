@@ -80,9 +80,11 @@ class PharmacyController extends Controller
 
     public function inventory(): Response
     {
-        $medicines = Medicine::with('batches')->get();
+        $medicines = Medicine::with('batches')
+            ->orderBy('name')
+            ->paginate(20);
 
-        $medicines = $medicines->map(function ($medicine) {
+        $medicines->getCollection()->transform(function ($medicine) {
             $totalStock = $medicine->batches->sum('quantity');
             $isLowStock = $totalStock < ($medicine->reorder_level ?? 0);
             $hasExpired = $medicine->batches->contains(fn ($batch) => $batch->isExpired());

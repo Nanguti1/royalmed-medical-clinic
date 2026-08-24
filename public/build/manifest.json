@@ -826,7 +826,7 @@
     "isEntry": true
   },
   "resources/js/app.tsx": {
-    "file": "assets/app-4gqTZwtq.js",
+    "file": "assets/app-ByENRkPd.js",
     "name": "app",
     "src": "resources/js/app.tsx",
     "isEntry": true,
@@ -1108,7 +1108,7 @@
     ]
   },
   "resources/js/pages/appointments/index.tsx": {
-    "file": "assets/appointments-BhrZQJFB.js",
+    "file": "assets/appointments-DtL4eIbz.js",
     "name": "appointments",
     "src": "resources/js/pages/appointments/index.tsx",
     "isDynamicEntry": true,
@@ -1122,7 +1122,6 @@
       "_clock-CuorTc7n.js",
       "_plus-D-oWa3RE.js",
       "_triangle-alert-CVo3kvGt.js",
-      "_user-Ce4dyEsO.js",
       "_button-CJQ5X1ir.js",
       "_input-CmqlKrzs.js",
       "_card-BZN2PXO0.js",
@@ -1767,7 +1766,7 @@
     ]
   },
   "resources/js/pages/consultations/index.tsx": {
-    "file": "assets/consultations-BdWXOVGl.js",
+    "file": "assets/consultations-DuhQsjFe.js",
     "name": "consultations",
     "src": "resources/js/pages/consultations/index.tsx",
     "isDynamicEntry": true,
@@ -2599,7 +2598,7 @@
     ]
   },
   "resources/js/pages/laboratory/index.tsx": {
-    "file": "assets/laboratory-BHA7Rjcs.js",
+    "file": "assets/laboratory-QekkFHOZ.js",
     "name": "laboratory",
     "src": "resources/js/pages/laboratory/index.tsx",
     "isDynamicEntry": true,
@@ -3280,7 +3279,7 @@
     ]
   },
   "resources/js/pages/pharmacy/inventory.tsx": {
-    "file": "assets/inventory-0K7fg-6m.js",
+    "file": "assets/inventory-Sdy1nxBP.js",
     "name": "inventory",
     "src": "resources/js/pages/pharmacy/inventory.tsx",
     "isDynamicEntry": true,
@@ -3772,7 +3771,7 @@
     ]
   },
   "resources/js/pages/prescriptions/index.tsx": {
-    "file": "assets/prescriptions-bhn7UmM-.js",
+    "file": "assets/prescriptions-FC6ok5GX.js",
     "name": "prescriptions",
     "src": "resources/js/pages/prescriptions/index.tsx",
     "isDynamicEntry": true,
@@ -3781,6 +3780,7 @@
       "_dist-BEAKNXc7.js",
       "_file-text-DbS7JxCO.js",
       "_card-BZN2PXO0.js",
+      "_badge-PPmXdh_o.js",
       "_empty-state-B9NNhhZR.js"
     ]
   },
@@ -4367,7 +4367,7 @@
     ]
   },
   "resources/js/pages/visits/index.tsx": {
-    "file": "assets/visits-CBptQuu3.js",
+    "file": "assets/visits-DS94iatU.js",
     "name": "visits",
     "src": "resources/js/pages/visits/index.tsx",
     "isDynamicEntry": true,
@@ -4387,7 +4387,7 @@
     ]
   },
   "resources/js/pages/visits/queue.tsx": {
-    "file": "assets/queue-DPWg-lJE.js",
+    "file": "assets/queue-Bk0-po3J.js",
     "name": "queue",
     "src": "resources/js/pages/visits/queue.tsx",
     "isDynamicEntry": true,

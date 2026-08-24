@@ -472,4 +472,34 @@ class PharmacyWorkflowTest extends TestCase
         $this->assertContains('low_stock', $types);
         $this->assertContains('expired_stock', $types);
     }
+
+    public function test_inventory_page_has_pagination()
+    {
+        $user = User::factory()->create();
+        $user->givePermissionTo('inventory.view');
+        $this->actingAs($user);
+
+        // Create 25 medicines to test pagination (20 per page)
+        Medicine::factory()->count(25)->create();
+
+        $response = $this->get('/pharmacy/inventory');
+
+        $response->assertStatus(200);
+        $response->assertInertia(function ($page) {
+            $medicines = $page->props['medicines'];
+            
+            // Check that medicines is paginated
+            $this->assertArrayHasKey('data', $medicines);
+            $this->assertArrayHasKey('links', $medicines);
+            $this->assertArrayHasKey('meta', $medicines);
+            
+            // Check that first page has 20 items
+            $this->assertCount(20, $medicines['data']);
+            
+            // Check that pagination links exist
+            $this->assertGreaterThan(3, count($medicines['links']));
+            
+            return true;
+        });
+    }
 }

@@ -67,7 +67,7 @@ export default function ConsultationIndex() {
                         description="There are no patients currently waiting for consultation."
                     />
                 ) : (
-                    <div className="grid gap-4">
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                         {entries.map((entry) => (
                             <QueueCard
                                 key={entry.id}
@@ -129,41 +129,37 @@ function QueueCard({ entry, onStartConsultation, onContinueConsultation }: { ent
         // If consultation exists, show continue button
         if (hasConsultation && consultationId) {
             return (
-                <Button onClick={() => onContinueConsultation(consultationId)}>
+                <Button size="sm" onClick={() => onContinueConsultation(consultationId)}>
                     <Play className="mr-2 h-4 w-4" />
-                    Continue Consultation
+                    Continue
                 </Button>
             );
         }
 
         // Show start consultation button for new consultations
         return (
-            <Button onClick={() => onStartConsultation(entry.visit_id)}>
+            <Button size="sm" onClick={() => onStartConsultation(entry.visit_id)}>
                 <Play className="mr-2 h-4 w-4" />
-                Start Consultation
+                Start
             </Button>
         );
     };
 
     return (
-        <Card>
-            <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-                            <span className="text-lg font-bold text-primary">{entry.position || '–'}</span>
-                        </div>
-                        <div>
-                            <h3 className="font-semibold">{patientName}</h3>
-                            <p className="text-sm text-muted-foreground">
-                                Visit #{entry.visit_id} • Arrived {arrivalTime}
-                            </p>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-4">
-                        <Badge className={getStatusColor(entry.status)}>
-                            {entry.status.charAt(0).toUpperCase() + entry.status.slice(1).replace('_', ' ')}
-                        </Badge>
+        <Card className="hover:bg-accent/50 transition-colors">
+            <CardHeader>
+                <div className="flex items-start justify-between">
+                    <CardTitle className="text-lg">{patientName}</CardTitle>
+                    <Badge className={getStatusColor(entry.status)}>
+                        {entry.status.charAt(0).toUpperCase() + entry.status.slice(1).replace('_', ' ')}
+                    </Badge>
+                </div>
+                <p className="text-sm text-muted-foreground">Visit #{entry.visit_id} • Position: {entry.position || '–'}</p>
+            </CardHeader>
+            <CardContent>
+                <div className="space-y-2 text-sm">
+                    <p className="text-muted-foreground">Arrived {arrivalTime}</p>
+                    <div className="flex flex-wrap gap-2">
                         {hasVitals && (
                             <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
                                 Vitals Captured
@@ -180,6 +176,8 @@ function QueueCard({ entry, onStartConsultation, onContinueConsultation }: { ent
                                 Lab Results Ready
                             </Badge>
                         )}
+                    </div>
+                    <div className="flex gap-2 mt-2">
                         <PermissionGuard permission="consultations.create" fallback={null}>
                             {getActionButton()}
                         </PermissionGuard>

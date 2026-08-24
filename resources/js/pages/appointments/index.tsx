@@ -184,7 +184,7 @@ export default function AppointmentIndex() {
                     />
                 ) : (
                     <>
-                        <div className="grid gap-4">
+                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                             {appointments.data.map((appointment) => (
                                 <AppointmentCard key={appointment.id} appointment={appointment} getStatusColor={getStatusColor} getStatusIcon={getStatusIcon} />
                             ))}
@@ -218,12 +218,9 @@ function AppointmentCard({ appointment, getStatusColor, getStatusIcon }: { appoi
         <Card className="hover:bg-accent/50 transition-colors cursor-pointer" onClick={() => (window.location.href = `/appointments/${appointment.id}`)}>
             <CardHeader>
                 <div className="flex items-start justify-between">
-                    <div>
-                        <CardTitle className="text-lg">
-                            {appointment.patient?.first_name} {appointment.patient?.last_name}
-                        </CardTitle>
-                        <p className="text-sm text-muted-foreground">{appointment.patient?.hospital_number}</p>
-                    </div>
+                    <CardTitle className="text-lg">
+                        {appointment.patient?.first_name} {appointment.patient?.last_name}
+                    </CardTitle>
                     <Badge className={getStatusColor(appointment.status)}>
                         <span className="flex items-center gap-1">
                             {getStatusIcon(appointment.status)}
@@ -231,25 +228,18 @@ function AppointmentCard({ appointment, getStatusColor, getStatusIcon }: { appoi
                         </span>
                     </Badge>
                 </div>
+                <p className="text-sm text-muted-foreground">{appointment.patient?.hospital_number}</p>
             </CardHeader>
             <CardContent>
-                <div className="space-y-2 text-sm">
-                    <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4 text-muted-foreground" />
-                        <span>{new Date(appointment.appointment_date).toLocaleDateString()}</span>
-                        <Clock className="h-4 w-4 text-muted-foreground" />
-                        <span>{appointment.start_time} - {appointment.end_time}</span>
-                    </div>
+                <div className="space-y-1 text-sm">
+                    <p className="text-muted-foreground">{new Date(appointment.appointment_date).toLocaleDateString()}</p>
+                    <p className="text-muted-foreground">{appointment.start_time} - {appointment.end_time}</p>
                     {appointment.doctor && (
-                        <div className="flex items-center gap-2">
-                            <User className="h-4 w-4 text-muted-foreground" />
-                            <span>Dr. {appointment.doctor.first_name} {appointment.doctor.last_name}</span>
-                        </div>
+                        <p className="text-muted-foreground">Dr. {appointment.doctor.first_name} {appointment.doctor.last_name}</p>
                     )}
-                    {appointment.reason && (
-                        <p className="text-muted-foreground">{appointment.reason}</p>
-                    )}
-                    <Badge variant="outline">{appointment.appointment_type.replace('_', ' ')}</Badge>
+                    <div className="flex gap-2 mt-2">
+                        <Badge variant="outline">{appointment.appointment_type.replace('_', ' ')}</Badge>
+                    </div>
                 </div>
             </CardContent>
         </Card>
