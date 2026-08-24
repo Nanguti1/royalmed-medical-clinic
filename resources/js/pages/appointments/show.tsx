@@ -90,7 +90,7 @@ export default function AppointmentShow() {
                                 <span>{appointment.start_time} - {appointment.end_time}</span>
                             </div>
                             <div className="flex items-center gap-2">
-                                <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+                                <Calendar className="h-4 w-4 text-muted-foreground" />
                                 <span className="font-medium">Type:</span>
                                 <Badge variant="outline">{appointment.appointment_type.replace('_', ' ')}</Badge>
                             </div>

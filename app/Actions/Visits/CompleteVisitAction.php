@@ -4,6 +4,7 @@ namespace App\Actions\Visits;
 
 use App\Events\VisitCompleted;
 use App\Exceptions\InvalidVisitStatusTransitionException;
+use App\Models\QueueEntry;
 use App\Models\Visit;
 use App\Services\VisitCompletionValidator;
 use Illuminate\Support\Facades\Auth;
@@ -40,6 +41,14 @@ class CompleteVisitAction
             'completed_by' => Auth::id(),
         ]);
         Log::info('Visit completed', ['visit_id' => $visit->id]);
+
+        // Complete all active queue entries for this visit
+        QueueEntry::where('visit_id', $visit->id)
+            ->whereIn('status', ['waiting', 'called', 'in_progress'])
+            ->update([
+                'status' => 'completed',
+                'completed_at' => now(),
+            ]);
 
         event(new VisitCompleted($visit));
 

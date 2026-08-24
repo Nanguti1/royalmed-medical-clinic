@@ -13,7 +13,8 @@
       "Exec(composer dump-autoload)",
       "Exec(mkdir)",
       "Exec(find)",
-      "Exec(move)"
+      "Exec(move)",
+      "Exec(npm list)"
     ]
   }
 }
