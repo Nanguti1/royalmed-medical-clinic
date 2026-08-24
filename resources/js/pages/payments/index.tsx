@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { DollarSign, Smartphone, Search, Calendar, ArrowLeft } from 'lucide-react';
+import { DollarSign, Smartphone, Search, ArrowLeft } from 'lucide-react';
 import { PermissionGuard } from '@/components/permission-guard';
 
 type PageProps = {
@@ -38,8 +38,28 @@ type PageProps = {
         meta: any;
     };
     search: string;
-    date: string;
-    dailyTotals: {
+    todayTotals: {
+        cash_total: number;
+        mpesa_total: number;
+        total_amount: number;
+        cash_count: number;
+        mpesa_count: number;
+    } | null;
+    weekTotals: {
+        cash_total: number;
+        mpesa_total: number;
+        total_amount: number;
+        cash_count: number;
+        mpesa_count: number;
+    } | null;
+    monthTotals: {
+        cash_total: number;
+        mpesa_total: number;
+        total_amount: number;
+        cash_count: number;
+        mpesa_count: number;
+    } | null;
+    yearTotals: {
         cash_total: number;
         mpesa_total: number;
         total_amount: number;
@@ -49,20 +69,14 @@ type PageProps = {
 };
 
 export default function PaymentsIndex() {
-    const { payments, search, date, dailyTotals } = usePage<PageProps>().props;
+    const { payments, search, todayTotals, weekTotals, monthTotals, yearTotals } = usePage<PageProps>().props;
 
     const { get, processing, setData } = useForm({
         search: search || '',
-        date: date || new Date().toISOString().split('T')[0],
     });
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
-        get('/payments');
-    };
-
-    const handleDateChange = (newDate: string) => {
-        setData('date', newDate);
         get('/payments');
     };
 
@@ -102,69 +116,63 @@ export default function PaymentsIndex() {
                         <div>
                             <h1 className="text-3xl font-bold tracking-tight">Payments Dashboard</h1>
                             <p className="text-muted-foreground">
-                                Daily payment overview and history
+                                Payment overview and history
                             </p>
                         </div>
                     </div>
                 </div>
 
-                {/* Daily Summary Cards */}
-                {dailyTotals && (
-                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                        <Card>
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">Total Collected</CardTitle>
-                                <DollarSign className="h-4 w-4 text-muted-foreground" />
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-2xl font-bold">{Number(dailyTotals.total_amount).toFixed(2)}</div>
-                                <p className="text-xs text-muted-foreground">KES • Today</p>
-                            </CardContent>
-                        </Card>
+                {/* Summary Cards */}
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">Today</CardTitle>
+                            <DollarSign className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">{Number(todayTotals?.total_amount || 0).toFixed(2)}</div>
+                            <p className="text-xs text-muted-foreground">KES • Total collected</p>
+                        </CardContent>
+                    </Card>
 
-                        <Card>
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">Cash</CardTitle>
-                                <DollarSign className="h-4 w-4 text-green-600" />
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-2xl font-bold">{Number(dailyTotals.cash_total).toFixed(2)}</div>
-                                <p className="text-xs text-muted-foreground">
-                                    {dailyTotals.cash_count} transaction{dailyTotals.cash_count !== 1 ? 's' : ''}
-                                </p>
-                            </CardContent>
-                        </Card>
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">This Week</CardTitle>
+                            <DollarSign className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">{Number(weekTotals?.total_amount || 0).toFixed(2)}</div>
+                            <p className="text-xs text-muted-foreground">KES • Total collected</p>
+                        </CardContent>
+                    </Card>
 
-                        <Card>
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">M-Pesa</CardTitle>
-                                <Smartphone className="h-4 w-4 text-blue-600" />
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-2xl font-bold">{Number(dailyTotals.mpesa_total).toFixed(2)}</div>
-                                <p className="text-xs text-muted-foreground">
-                                    {dailyTotals.mpesa_count} transaction{dailyTotals.mpesa_count !== 1 ? 's' : ''}
-                                </p>
-                            </CardContent>
-                        </Card>
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">This Month</CardTitle>
+                            <DollarSign className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">{Number(monthTotals?.total_amount || 0).toFixed(2)}</div>
+                            <p className="text-xs text-muted-foreground">KES • Total collected</p>
+                        </CardContent>
+                    </Card>
 
-                        <Card>
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">Date</CardTitle>
-                                <Calendar className="h-4 w-4 text-muted-foreground" />
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-2xl font-bold">{new Date(date).toLocaleDateString()}</div>
-                                <p className="text-xs text-muted-foreground">Selected date</p>
-                            </CardContent>
-                        </Card>
-                    </div>
-                )}
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">This Year</CardTitle>
+                            <DollarSign className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">{Number(yearTotals?.total_amount || 0).toFixed(2)}</div>
+                            <p className="text-xs text-muted-foreground">KES • Total collected</p>
+                        </CardContent>
+                    </Card>
+                </div>
 
-                {/* Search and Filter */}
+                {/* Search */}
                 <Card>
                     <CardHeader>
-                        <CardTitle>Search & Filter</CardTitle>
+                        <CardTitle>Search</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={handleSearch} className="flex gap-4">
@@ -178,14 +186,6 @@ export default function PaymentsIndex() {
                                         className="pl-10"
                                     />
                                 </div>
-                            </div>
-                            <div>
-                                <Input
-                                    type="date"
-                                    value={date}
-                                    onChange={(e) => handleDateChange(e.target.value)}
-                                    className="w-auto"
-                                />
                             </div>
                             <Button type="submit" disabled={processing}>
                                 {processing ? 'Searching...' : 'Search'}
@@ -202,7 +202,7 @@ export default function PaymentsIndex() {
                     <CardContent>
                         {payments.data.length === 0 ? (
                             <p className="text-muted-foreground text-center py-8">
-                                No payments found for this date.
+                                No payments found.
                             </p>
                         ) : (
                             <>

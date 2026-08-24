@@ -567,6 +567,34 @@ class PaymentTest extends TestCase
         $payment->save();
     }
 
+    public function test_payments_index_returns_totals_for_different_time_periods()
+    {
+        $user = $this->createUserWithPermission('billing.view');
+        $cashMethod = PaymentMethod::where('name', 'Cash')->first();
+
+        // Create a payment for today
+        $invoice = $this->createInvoiceWithBalance(1000);
+        Payment::create([
+            'invoice_id' => $invoice->id,
+            'payment_method_id' => $cashMethod->id,
+            'amount' => 500,
+            'paid_at' => now(),
+            'received_by' => $user->id,
+        ]);
+
+        $response = $this->actingAs($user)
+            ->get('/payments');
+
+        $response->assertInertia(function ($page) {
+            $page->component('payments/index')
+                ->has('todayTotals')
+                ->has('weekTotals')
+                ->has('monthTotals')
+                ->has('yearTotals')
+                ->has('payments');
+        });
+    }
+
     public function test_payment_method_id_cannot_be_modified_after_creation()
     {
         $this->expectException(\RuntimeException::class);

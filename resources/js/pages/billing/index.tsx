@@ -3,9 +3,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/empty-state';
-import { FileText, DollarSign, User } from 'lucide-react';
+import { FileText, Search } from 'lucide-react';
 import type { Invoice } from '@/types/visit';
 import { PermissionGuard } from '@/components/permission-guard';
+import { Input } from '@/components/ui/input';
 
 type PageProps = {
     invoices: {
@@ -61,12 +62,12 @@ export default function BillingIndex() {
                 <Card>
                     <CardContent className="pt-6">
                         <div className="flex gap-4">
-                            <div className="flex-1">
-                                <input
-                                    type="text"
+                            <div className="relative flex-1">
+                                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                <Input
                                     placeholder="Search by invoice number, patient name, or phone..."
                                     defaultValue={search}
-                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                    className="pl-9"
                                     onChange={(e) => handleSearch(e.target.value)}
                                 />
                             </div>
@@ -94,7 +95,7 @@ export default function BillingIndex() {
                     />
                 ) : (
                     <>
-                        <div className="grid gap-4">
+                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                             {invoices.data.map((invoice) => (
                                 <InvoiceCard key={invoice.id} invoice={invoice} getStatusBadge={getStatusBadge} />
                             ))}
@@ -133,32 +134,21 @@ function InvoiceCard({ invoice, getStatusBadge }: { invoice: Invoice; getStatusB
     const date = new Date(invoice.created_at).toLocaleDateString();
 
     return (
-        <Card>
-            <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-                            <FileText className="h-6 w-6 text-primary" />
-                        </div>
-                        <div>
-                            <h3 className="font-semibold">{invoice.invoice_number}</h3>
-                            <p className="text-sm text-muted-foreground">
-                                {patientName} • Visit #{invoice.visit_id} • {date}
-                            </p>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-4">
-                        <div className="text-right">
-                            <p className="font-semibold">{Number(invoice.total_amount).toFixed(2)}</p>
-                            <p className="text-sm text-muted-foreground">Due: {Number(invoice.due_amount).toFixed(2)}</p>
-                        </div>
-                        {invoice.status && getStatusBadge(invoice.status.code)}
-                        <Button variant="outline" size="sm" asChild>
-                            <a href={`/billing/${invoice.id}`}>
-                                <User className="mr-2 h-4 w-4" />
-                                View
-                            </a>
-                        </Button>
+        <Card className="hover:bg-accent/50 transition-colors cursor-pointer" onClick={() => (window.location.href = `/billing/${invoice.id}`)}>
+            <CardHeader>
+                <div className="flex items-start justify-between">
+                    <CardTitle className="text-lg">{patientName}</CardTitle>
+                    {invoice.status && getStatusBadge(invoice.status.code)}
+                </div>
+                <p className="text-sm text-muted-foreground">Invoice #{invoice.invoice_number}</p>
+            </CardHeader>
+            <CardContent>
+                <div className="space-y-2 text-sm">
+                    <p className="text-muted-foreground">Visit #{invoice.visit_id}</p>
+                    <p className="text-muted-foreground">Date: {date}</p>
+                    <div className="flex items-center justify-between pt-2">
+                        <p className="font-semibold">Total: {Number(invoice.total_amount).toFixed(2)}</p>
+                        <p className="text-muted-foreground">Due: {Number(invoice.due_amount).toFixed(2)}</p>
                     </div>
                 </div>
             </CardContent>

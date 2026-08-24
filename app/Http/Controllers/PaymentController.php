@@ -34,10 +34,8 @@ class PaymentController extends Controller
     public function index(Request $request): Response
     {
         $query = $request->input('search');
-        $date = $request->input('date', now()->toDateString());
 
-        $paymentsQuery = Payment::with(['invoice.visit.patient', 'method', 'mpesaTransaction', 'receivedBy'])
-            ->whereDate('paid_at', $date);
+        $paymentsQuery = Payment::with(['invoice.visit.patient', 'method', 'mpesaTransaction', 'receivedBy']);
 
         if ($query) {
             $paymentsQuery->where(function ($q) use ($query) {
@@ -54,23 +52,35 @@ class PaymentController extends Controller
 
         $payments = $paymentsQuery->orderBy('paid_at', 'desc')->paginate(20);
 
-        // Calculate daily totals using application timezone
-        $dailyTotals = Payment::whereDate('paid_at', $date)
-            ->selectRaw('
-                COALESCE(SUM(CASE WHEN LOWER(payment_methods.name) = "cash" THEN payments.amount ELSE 0 END), 0) as cash_total,
-                COALESCE(SUM(CASE WHEN LOWER(payment_methods.name) = "mpesa" THEN payments.amount ELSE 0 END), 0) as mpesa_total,
-                COALESCE(SUM(payments.amount), 0) as total_amount,
-                COUNT(CASE WHEN LOWER(payment_methods.name) = "cash" THEN 1 END) as cash_count,
-                COUNT(CASE WHEN LOWER(payment_methods.name) = "mpesa" THEN 1 END) as mpesa_count
-            ')
-            ->leftJoin('payment_methods', 'payments.payment_method_id', '=', 'payment_methods.id')
-            ->first();
+        // Calculate totals for different time periods
+        $today = now()->toDateString();
+        $weekStart = now()->startOfWeek()->toDateString();
+        $weekEnd = now()->endOfWeek()->toDateString();
+        $monthStart = now()->startOfMonth()->toDateString();
+        $monthEnd = now()->endOfMonth()->toDateString();
+        $yearStart = now()->startOfYear()->toDateString();
+        $yearEnd = now()->endOfYear()->toDateString();
+
+        $totalsQuery = function ($startDate, $endDate) {
+            return Payment::whereBetween('paid_at', [$startDate, $endDate])
+                ->selectRaw('
+                    COALESCE(SUM(CASE WHEN LOWER(payment_methods.name) = "cash" THEN payments.amount ELSE 0 END), 0) as cash_total,
+                    COALESCE(SUM(CASE WHEN LOWER(payment_methods.name) = "mpesa" THEN payments.amount ELSE 0 END), 0) as mpesa_total,
+                    COALESCE(SUM(payments.amount), 0) as total_amount,
+                    COUNT(CASE WHEN LOWER(payment_methods.name) = "cash" THEN 1 END) as cash_count,
+                    COUNT(CASE WHEN LOWER(payment_methods.name) = "mpesa" THEN 1 END) as mpesa_count
+                ')
+                ->leftJoin('payment_methods', 'payments.payment_method_id', '=', 'payment_methods.id')
+                ->first();
+        };
 
         return Inertia::render('payments/index', [
             'payments' => $payments,
             'search' => $query ?? '',
-            'date' => $date,
-            'dailyTotals' => $dailyTotals,
+            'todayTotals' => $totalsQuery($today, $today),
+            'weekTotals' => $totalsQuery($weekStart, $weekEnd),
+            'monthTotals' => $totalsQuery($monthStart, $monthEnd),
+            'yearTotals' => $totalsQuery($yearStart, $yearEnd),
         ]);
     }
 
