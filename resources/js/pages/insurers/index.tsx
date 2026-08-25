@@ -1,4 +1,4 @@
-import { Head, useForm, usePage, Link, router } from '@inertiajs/react';
+import { Head, useForm, usePage } from '@inertiajs/react';
 import { Search, Plus } from 'lucide-react';
 import { EmptyState } from '@/components/empty-state';
 import { LoadingState } from '@/components/loading-state';
@@ -19,14 +19,22 @@ type PageProps = {
         search?: string;
         type?: string;
     };
+    auth?: {
+        user?: {
+            is_super_admin?: boolean;
+            permissions?: string[];
+        };
+    };
 };
 
 export default function InsurersIndex() {
-    const { insurers, filters } = usePage<PageProps>().props;
+    const { insurers, filters, auth } = usePage<PageProps>().props;
     const { data, setData, get, processing } = useForm({
         search: filters.search || '',
         type: filters.type || '',
     });
+
+    const canCreateInsurer = auth?.user?.is_super_admin === true || auth?.user?.permissions?.includes('insurance.create');
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
@@ -48,12 +56,14 @@ export default function InsurersIndex() {
                             Manage insurance providers and their details.
                         </p>
                     </div>
-                    <Button asChild>
-                        <Link href="/insurance/insurers/create">
-                            <Plus className="mr-2 h-4 w-4" />
-                            New Insurer
-                        </Link>
-                    </Button>
+                    {canCreateInsurer && (
+                        <Button asChild>
+                            <a href="/insurance/insurers/create">
+                                <Plus className="mr-2 h-4 w-4" />
+                                New Insurer
+                            </a>
+                        </Button>
+                    )}
                 </div>
 
                 {/* Filters */}
@@ -100,11 +110,13 @@ export default function InsurersIndex() {
                     <EmptyState
                         icon={Plus}
                         title="No insurers found"
-                        description="Try adjusting your search terms or create a new insurer."
-                        action={{
-                            label: 'New Insurer',
-                            onClick: () => router.visit('/insurance/insurers/create'),
-                        }}
+                        description={data.search || data.type ? 'Try adjusting your search terms.' : 'Get started by creating your first insurer.'}
+                        action={
+                            !data.search && !data.type && canCreateInsurer ? {
+                                label: 'New Insurer',
+                                onClick: () => (window.location.href = '/insurance/insurers/create'),
+                            } : undefined
+                        }
                     />
                 ) : (
                     <>
@@ -159,7 +171,7 @@ function InsurerCard({ insurer }: { insurer: Insurer }) {
     };
 
     return (
-        <Card className="hover:bg-accent/50 transition-colors cursor-pointer" onClick={() => router.visit(`/insurance/insurers/${insurer.id}/edit`)}>
+        <Card className="hover:bg-accent/50 transition-colors cursor-pointer" onClick={() => (window.location.href = `/insurance/insurers/${insurer.id}/edit`)}>
             <CardHeader>
                 <div className="flex items-start justify-between">
                     <CardTitle className="text-lg">{insurer.name}</CardTitle>

@@ -1,4 +1,4 @@
-import { Head, useForm, usePage, Link } from '@inertiajs/react';
+import { Head, useForm, usePage } from '@inertiajs/react';
 import { ArrowLeft, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -49,9 +49,9 @@ export default function InsurerEdit() {
                 {/* Header */}
                 <div className="flex items-center gap-4">
                     <Button variant="ghost" size="icon" asChild>
-                        <Link href="/insurance/insurers">
+                        <a href="/insurance/insurers">
                             <ArrowLeft className="h-4 w-4" />
-                        </Link>
+                        </a>
                     </Button>
                     <div>
                         <h1 className="text-3xl font-bold tracking-tight">Edit Insurance Insurer</h1>
@@ -99,7 +99,8 @@ export default function InsurerEdit() {
                                         <SelectContent>
                                             <SelectItem value="private">Private</SelectItem>
                                             <SelectItem value="public">Public</SelectItem>
-                                            <SelectItem value="government">Government</SelectItem>
+                                            <SelectItem value="nhif">NHIF</SelectItem>
+                                            <SelectItem value="corporate">Corporate</SelectItem>
                                         </SelectContent>
                                     </Select>
                                     {errors.type && <p className="text-sm text-destructive">{errors.type}</p>}
@@ -163,7 +164,7 @@ export default function InsurerEdit() {
 
                             <div className="flex justify-end gap-2">
                                 <Button type="button" variant="outline" asChild>
-                                    <Link href="/insurance/insurers">Cancel</Link>
+                                    <a href="/insurance/insurers">Cancel</a>
                                 </Button>
                                 <Button type="submit" disabled={processing}>
                                     <Save className="mr-2 h-4 w-4" />

@@ -68,18 +68,7 @@ export default function ClaimsIndex() {
                         <h1 className="text-3xl font-bold tracking-tight">Insurance Claims</h1>
                         <p className="text-muted-foreground">Manage insurance claims and submissions.</p>
                     </div>
-                    <div className="flex gap-2">
-                        <Button variant="outline" asChild>
-                            <a href="/billing/claims/aging-report">
-                                Aging Report
-                            </a>
-                        </Button>
-                        <Button asChild>
-                            <a href="/billing/preauthorizations">
-                                Preauthorizations
-                            </a>
-                        </Button>
-                    </div>
+
                 </div>
 
                 <Card>

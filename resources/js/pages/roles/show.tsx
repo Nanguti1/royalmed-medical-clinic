@@ -1,4 +1,4 @@
-import { Head } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -63,11 +63,12 @@ export default function ShowRole() {
                   <PermissionGuard permission="roles.delete" fallback={null}>
                     <Button
                       variant="destructive"
-                      asChild
                       className="flex-1"
-                      method="delete"
-                      as="a"
-                      href={`/roles/${role.id}`}
+                      onClick={() => {
+                        if (confirm('Are you sure you want to delete this role?')) {
+                          window.location.href = `/roles/${role.id}`;
+                        }
+                      }}
                     >
                       <Trash2 className="mr-2 h-4 w-4" />
                       Delete

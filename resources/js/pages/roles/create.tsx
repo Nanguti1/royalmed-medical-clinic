@@ -1,5 +1,4 @@
-import { Head } from '@inertiajs/react';
-import { useForm } from '@inertiajs/react';
+import { Head, usePage, useForm } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';

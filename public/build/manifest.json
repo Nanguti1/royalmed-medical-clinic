@@ -834,7 +834,7 @@
     "isEntry": true
   },
   "resources/js/app.tsx": {
-    "file": "assets/app-BcHKhfdb.js",
+    "file": "assets/app-WUniKuaw.js",
     "name": "app",
     "src": "resources/js/app.tsx",
     "isEntry": true,
@@ -1389,7 +1389,7 @@
     ]
   },
   "resources/js/pages/billing/claims/index.tsx": {
-    "file": "assets/claims-Bcu9yf1C.js",
+    "file": "assets/claims-DMOdyQR6.js",
     "name": "claims",
     "src": "resources/js/pages/billing/claims/index.tsx",
     "isDynamicEntry": true,
@@ -2411,7 +2411,7 @@
     ]
   },
   "resources/js/pages/insurers/create.tsx": {
-    "file": "assets/create-CbBX7p84.js",
+    "file": "assets/create-BjZGPsGm.js",
     "name": "create",
     "src": "resources/js/pages/insurers/create.tsx",
     "isDynamicEntry": true,
@@ -2429,7 +2429,7 @@
     ]
   },
   "resources/js/pages/insurers/edit.tsx": {
-    "file": "assets/edit-D0ijXvMp.js",
+    "file": "assets/edit-BHZZvUTZ.js",
     "name": "edit",
     "src": "resources/js/pages/insurers/edit.tsx",
     "isDynamicEntry": true,
@@ -2447,7 +2447,7 @@
     ]
   },
   "resources/js/pages/insurers/index.tsx": {
-    "file": "assets/insurers-CXN3K7G6.js",
+    "file": "assets/insurers-Dgaiw4Ry.js",
     "name": "insurers",
     "src": "resources/js/pages/insurers/index.tsx",
     "isDynamicEntry": true,
@@ -3987,7 +3987,7 @@
     ]
   },
   "resources/js/pages/roles/create.tsx": {
-    "file": "assets/create-YgCDZzsn.js",
+    "file": "assets/create-Btnu-mv3.js",
     "name": "create",
     "src": "resources/js/pages/roles/create.tsx",
     "isDynamicEntry": true,
@@ -4003,7 +4003,7 @@
     ]
   },
   "resources/js/pages/roles/edit.tsx": {
-    "file": "assets/edit-CFB_JgMZ.js",
+    "file": "assets/edit-6dwHTqIf.js",
     "name": "edit",
     "src": "resources/js/pages/roles/edit.tsx",
     "isDynamicEntry": true,
@@ -4019,7 +4019,7 @@
     ]
   },
   "resources/js/pages/roles/index.tsx": {
-    "file": "assets/roles-DjKGAHaA.js",
+    "file": "assets/roles-kJaveB0v.js",
     "name": "roles",
     "src": "resources/js/pages/roles/index.tsx",
     "isDynamicEntry": true,
@@ -4037,7 +4037,7 @@
     ]
   },
   "resources/js/pages/roles/show.tsx": {
-    "file": "assets/show-B5iHJlQ9.js",
+    "file": "assets/show-BCD5aMl4.js",
     "name": "show",
     "src": "resources/js/pages/roles/show.tsx",
     "isDynamicEntry": true,
