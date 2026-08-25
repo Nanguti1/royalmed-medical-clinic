@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\InsuranceClaim;
+use App\Models\InsuranceScheme;
 use App\Models\Invoice;
 use App\Models\PatientCoverage;
 use App\Models\Preauthorization;
@@ -116,16 +117,13 @@ class InsuranceService
     public function createPreauthorization(array $data): Preauthorization
     {
         return DB::transaction(function () use ($data) {
-            $coverage = PatientCoverage::find($data['patient_coverage_id']);
-            if (! $coverage) {
-                throw new \InvalidArgumentException('Patient coverage not found');
+            $scheme = InsuranceScheme::find($data['insurance_scheme_id']);
+            if (! $scheme) {
+                throw new \InvalidArgumentException('Insurance scheme not found');
             }
 
-            if ($coverage->scheme && $coverage->scheme->requires_preauthorization) {
-                $data['insurer_id'] = $coverage->insurer_id;
-                $data['insurance_scheme_id'] = $coverage->insurance_scheme_id;
-                $data['request_date'] = now();
-            }
+            $data['insurer_id'] = $scheme->insurer_id;
+            $data['request_date'] = now();
 
             return Preauthorization::create($data);
         });

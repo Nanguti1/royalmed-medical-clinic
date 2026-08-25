@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 
 type PageProps = {
     patients: Array<{
@@ -27,19 +28,20 @@ export default function PreauthorizationCreate() {
     const { patients, schemes } = usePage<PageProps>().props;
     const { data, setData, post, processing, errors } = useForm({
         patient_id: '',
-        insurer_id: '',
         insurance_scheme_id: '',
-        service_type: '',
-        service_description: '',
-        estimated_cost: '',
+        requested_amount: '',
+        diagnosis: '',
+        proposed_treatment: '',
+        service_code: '',
+        urgency: 'routine',
         notes: '',
     });
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        post('/insurance/preauthorizations', {
+        post('/billing/preauthorizations', {
             onSuccess: () => {
-                window.location.href = '/insurance/preauthorizations';
+                window.location.href = '/billing/preauthorizations';
             },
         });
     };
@@ -50,7 +52,7 @@ export default function PreauthorizationCreate() {
             <div className="flex h-full flex-1 flex-col gap-6 p-4 md:p-6">
                 <div className="flex items-center gap-4">
                     <Button variant="ghost" size="icon" asChild>
-                        <a href="/insurance/preauthorizations">
+                        <a href="/billing/preauthorizations">
                             <ArrowLeft className="h-4 w-4" />
                         </a>
                     </Button>
@@ -99,10 +101,6 @@ export default function PreauthorizationCreate() {
                                         value={data.insurance_scheme_id}
                                         onValueChange={(value) => {
                                             setData('insurance_scheme_id', value);
-                                            const scheme = schemes.find(s => s.id === parseInt(value));
-                                            if (scheme) {
-                                                setData('insurer_id', scheme.insurer.id.toString());
-                                            }
                                         }}
                                     >
                                         <SelectTrigger>
@@ -120,54 +118,86 @@ export default function PreauthorizationCreate() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="service_type">Service Type *</Label>
+                                    <Label htmlFor="requested_amount">Requested Amount *</Label>
                                     <Input
-                                        id="service_type"
-                                        value={data.service_type}
-                                        onChange={(e) => setData('service_type', e.target.value)}
-                                        placeholder="e.g., Surgery, Consultation"
+                                        id="requested_amount"
+                                        type="number"
+                                        step="0.01"
+                                        value={data.requested_amount}
+                                        onChange={(e) => setData('requested_amount', e.target.value)}
+                                        placeholder="0.00"
                                     />
-                                    {errors.service_type && <p className="text-sm text-red-500">{errors.service_type}</p>}
+                                    {errors.requested_amount && <p className="text-sm text-red-500">{errors.requested_amount}</p>}
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="estimated_cost">Estimated Cost *</Label>
+                                    <Label htmlFor="urgency">Urgency *</Label>
+                                    <Select
+                                        value={data.urgency}
+                                        onValueChange={(value) => setData('urgency', value)}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select urgency" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="routine">Routine</SelectItem>
+                                            <SelectItem value="urgent">Urgent</SelectItem>
+                                            <SelectItem value="emergency">Emergency</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    {errors.urgency && <p className="text-sm text-red-500">{errors.urgency}</p>}
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="service_code">Service Code</Label>
                                     <Input
-                                        id="estimated_cost"
-                                        type="number"
-                                        step="0.01"
-                                        value={data.estimated_cost}
-                                        onChange={(e) => setData('estimated_cost', e.target.value)}
-                                        placeholder="0.00"
+                                        id="service_code"
+                                        value={data.service_code}
+                                        onChange={(e) => setData('service_code', e.target.value)}
+                                        placeholder="Optional service code"
                                     />
-                                    {errors.estimated_cost && <p className="text-sm text-red-500">{errors.estimated_cost}</p>}
+                                    {errors.service_code && <p className="text-sm text-red-500">{errors.service_code}</p>}
                                 </div>
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="service_description">Service Description *</Label>
-                                <Input
-                                    id="service_description"
-                                    value={data.service_description}
-                                    onChange={(e) => setData('service_description', e.target.value)}
-                                    placeholder="Detailed description of the service"
+                                <Label htmlFor="diagnosis">Diagnosis *</Label>
+                                <Textarea
+                                    id="diagnosis"
+                                    value={data.diagnosis}
+                                    onChange={(e) => setData('diagnosis', e.target.value)}
+                                    placeholder="Patient diagnosis"
+                                    rows={3}
                                 />
-                                {errors.service_description && <p className="text-sm text-red-500">{errors.service_description}</p>}
+                                {errors.diagnosis && <p className="text-sm text-red-500">{errors.diagnosis}</p>}
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="proposed_treatment">Proposed Treatment *</Label>
+                                <Textarea
+                                    id="proposed_treatment"
+                                    value={data.proposed_treatment}
+                                    onChange={(e) => setData('proposed_treatment', e.target.value)}
+                                    placeholder="Detailed description of proposed treatment"
+                                    rows={3}
+                                />
+                                {errors.proposed_treatment && <p className="text-sm text-red-500">{errors.proposed_treatment}</p>}
                             </div>
 
                             <div className="space-y-2">
                                 <Label htmlFor="notes">Notes</Label>
-                                <Input
+                                <Textarea
                                     id="notes"
                                     value={data.notes}
                                     onChange={(e) => setData('notes', e.target.value)}
                                     placeholder="Additional notes"
+                                    rows={2}
                                 />
                             </div>
 
                             <div className="flex justify-end gap-2">
                                 <Button type="button" variant="outline" asChild>
-                                    <a href="/insurance/preauthorizations">Cancel</a>
+                                    <a href="/billing/preauthorizations">Cancel</a>
                                 </Button>
                                 <Button type="submit" disabled={processing}>
                                     <Save className="mr-2 h-4 w-4" />

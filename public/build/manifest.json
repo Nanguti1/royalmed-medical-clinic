@@ -724,6 +724,14 @@
       "_createLucideIcon-D9S2cJWN.js"
     ]
   },
+  "_textarea-DhVMjvXU.js": {
+    "file": "assets/textarea-DhVMjvXU.js",
+    "name": "textarea",
+    "imports": [
+      "_jsx-runtime-CTQSNLil.js",
+      "_createLucideIcon-D9S2cJWN.js"
+    ]
+  },
   "_thermometer-BFjXMCta.js": {
     "file": "assets/thermometer-BFjXMCta.js",
     "name": "thermometer",
@@ -817,7 +825,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-Ci6osbLd.css",
+    "file": "assets/app-DXKj6riK.css",
     "name": "app",
     "names": [
       "app.css"
@@ -826,7 +834,7 @@
     "isEntry": true
   },
   "resources/js/app.tsx": {
-    "file": "assets/app-ByENRkPd.js",
+    "file": "assets/app-BcHKhfdb.js",
     "name": "app",
     "src": "resources/js/app.tsx",
     "isEntry": true,
@@ -1331,7 +1339,7 @@
     ]
   },
   "resources/js/pages/billing/claims/aging-report.tsx": {
-    "file": "assets/aging-report-DOV-TXgF.js",
+    "file": "assets/aging-report-C7KB9v16.js",
     "name": "aging-report",
     "src": "resources/js/pages/billing/claims/aging-report.tsx",
     "isDynamicEntry": true,
@@ -1347,7 +1355,7 @@
     ]
   },
   "resources/js/pages/billing/claims/create.tsx": {
-    "file": "assets/create-Cuzajg2H.js",
+    "file": "assets/create-Cu_RIY_Q.js",
     "name": "create",
     "src": "resources/js/pages/billing/claims/create.tsx",
     "isDynamicEntry": true,
@@ -1364,7 +1372,7 @@
     ]
   },
   "resources/js/pages/billing/claims/edit.tsx": {
-    "file": "assets/edit-1o-SgmyT.js",
+    "file": "assets/edit-CIrdJ8o1.js",
     "name": "edit",
     "src": "resources/js/pages/billing/claims/edit.tsx",
     "isDynamicEntry": true,
@@ -1381,7 +1389,7 @@
     ]
   },
   "resources/js/pages/billing/claims/index.tsx": {
-    "file": "assets/claims-C2VyJgJQ.js",
+    "file": "assets/claims-Bcu9yf1C.js",
     "name": "claims",
     "src": "resources/js/pages/billing/claims/index.tsx",
     "isDynamicEntry": true,
@@ -1401,7 +1409,7 @@
     ]
   },
   "resources/js/pages/billing/claims/resubmit.tsx": {
-    "file": "assets/resubmit-jfXhYZ1u.js",
+    "file": "assets/resubmit-CbFx5uoK.js",
     "name": "resubmit",
     "src": "resources/js/pages/billing/claims/resubmit.tsx",
     "isDynamicEntry": true,
@@ -1417,7 +1425,7 @@
     ]
   },
   "resources/js/pages/billing/claims/show.tsx": {
-    "file": "assets/show-Dlky-ljK.js",
+    "file": "assets/show-BxpPiZJt.js",
     "name": "show",
     "src": "resources/js/pages/billing/claims/show.tsx",
     "isDynamicEntry": true,
@@ -1539,7 +1547,7 @@
     ]
   },
   "resources/js/pages/billing/index.tsx": {
-    "file": "assets/billing-C1YF994P.js",
+    "file": "assets/billing-CD4OPFLv.js",
     "name": "billing",
     "src": "resources/js/pages/billing/index.tsx",
     "isDynamicEntry": true,
@@ -1547,8 +1555,8 @@
       "_jsx-runtime-CTQSNLil.js",
       "_dist-BEAKNXc7.js",
       "_file-text-DbS7JxCO.js",
-      "_user-Ce4dyEsO.js",
-      "_button-CJQ5X1ir.js",
+      "_search-nVaLRYAU.js",
+      "_input-CmqlKrzs.js",
       "_card-BZN2PXO0.js",
       "_badge-PPmXdh_o.js",
       "_empty-state-B9NNhhZR.js"
@@ -1589,7 +1597,7 @@
     ]
   },
   "resources/js/pages/billing/preauthorizations/approve.tsx": {
-    "file": "assets/approve-BOgv7ffk.js",
+    "file": "assets/approve-BlLw_IWY.js",
     "name": "approve",
     "src": "resources/js/pages/billing/preauthorizations/approve.tsx",
     "isDynamicEntry": true,
@@ -1608,7 +1616,7 @@
     ]
   },
   "resources/js/pages/billing/preauthorizations/create.tsx": {
-    "file": "assets/create-D3efNyTp.js",
+    "file": "assets/create-Bp8wpETE.js",
     "name": "create",
     "src": "resources/js/pages/billing/preauthorizations/create.tsx",
     "isDynamicEntry": true,
@@ -1621,11 +1629,12 @@
       "_button-CJQ5X1ir.js",
       "_input-CmqlKrzs.js",
       "_card-BZN2PXO0.js",
-      "_label-C6vzcPMv.js"
+      "_label-C6vzcPMv.js",
+      "_textarea-DhVMjvXU.js"
     ]
   },
   "resources/js/pages/billing/preauthorizations/index.tsx": {
-    "file": "assets/preauthorizations-BHvtKb3z.js",
+    "file": "assets/preauthorizations-CEJ-Ck-D.js",
     "name": "preauthorizations",
     "src": "resources/js/pages/billing/preauthorizations/index.tsx",
     "isDynamicEntry": true,
@@ -1633,7 +1642,6 @@
       "_jsx-runtime-CTQSNLil.js",
       "_dist-BEAKNXc7.js",
       "_select-CjG2xs3M.js",
-      "_clock-CuorTc7n.js",
       "_plus-D-oWa3RE.js",
       "_search-nVaLRYAU.js",
       "_button-CJQ5X1ir.js",
@@ -1932,14 +1940,13 @@
     ]
   },
   "resources/js/pages/dental/charts/create.tsx": {
-    "file": "assets/create-Cp3kpFLh.js",
+    "file": "assets/create-C_6ONcJ2.js",
     "name": "create",
     "src": "resources/js/pages/dental/charts/create.tsx",
     "isDynamicEntry": true,
     "imports": [
       "_jsx-runtime-CTQSNLil.js",
       "_dist-BEAKNXc7.js",
-      "_createLucideIcon-D9S2cJWN.js",
       "_arrow-left-DD_CM7T3.js",
       "_plus-D-oWa3RE.js",
       "_save-BkA7qBSf.js",
@@ -1949,7 +1956,8 @@
       "_card-BZN2PXO0.js",
       "_badge-PPmXdh_o.js",
       "_label-C6vzcPMv.js",
-      "_checkbox-EYKOwumE.js"
+      "_checkbox-EYKOwumE.js",
+      "_textarea-DhVMjvXU.js"
     ]
   },
   "resources/js/pages/dental/index.tsx": {
@@ -2180,7 +2188,7 @@
     ]
   },
   "resources/js/pages/documents/index.tsx": {
-    "file": "assets/documents-B3Vio3my.js",
+    "file": "assets/documents-DOdbx9vj.js",
     "name": "documents",
     "src": "resources/js/pages/documents/index.tsx",
     "isDynamicEntry": true,
@@ -2188,7 +2196,6 @@
       "_jsx-runtime-CTQSNLil.js",
       "_dist-BEAKNXc7.js",
       "_select-CjG2xs3M.js",
-      "_clock-CuorTc7n.js",
       "_file-text-DbS7JxCO.js",
       "_search-nVaLRYAU.js",
       "_shield-B2__xxqP.js",
@@ -2440,7 +2447,7 @@
     ]
   },
   "resources/js/pages/insurers/index.tsx": {
-    "file": "assets/insurers-CjxkgmYS.js",
+    "file": "assets/insurers-CXN3K7G6.js",
     "name": "insurers",
     "src": "resources/js/pages/insurers/index.tsx",
     "isDynamicEntry": true,
@@ -3039,7 +3046,7 @@
     ]
   },
   "resources/js/pages/payments/index.tsx": {
-    "file": "assets/payments-DkqfSf_X.js",
+    "file": "assets/payments-BFWIi1ul.js",
     "name": "payments",
     "src": "resources/js/pages/payments/index.tsx",
     "isDynamicEntry": true,
@@ -3047,10 +3054,8 @@
       "_jsx-runtime-CTQSNLil.js",
       "_dist-BEAKNXc7.js",
       "_arrow-left-DD_CM7T3.js",
-      "_calendar-Doiteq86.js",
       "_dollar-sign-0cXqKfOx.js",
       "_search-nVaLRYAU.js",
-      "_smartphone-DtOqs5-x.js",
       "_button-CJQ5X1ir.js",
       "_input-CmqlKrzs.js",
       "_card-BZN2PXO0.js",

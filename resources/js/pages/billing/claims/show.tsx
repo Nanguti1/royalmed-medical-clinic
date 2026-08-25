@@ -40,7 +40,7 @@ export default function ClaimShow() {
             <div className="flex h-full flex-1 flex-col gap-6 p-4 md:p-6">
                 <div className="flex items-center gap-4">
                     <Button variant="ghost" size="icon" asChild>
-                        <a href="/insurance/claims">
+                        <a href="/billing/claims">
                             <ArrowLeft className="h-4 w-4" />
                         </a>
                     </Button>
@@ -164,7 +164,7 @@ export default function ClaimShow() {
                         </CardHeader>
                         <CardContent>
                             <Button asChild>
-                                <a href={`/insurance/claims/${claim.id}/resubmit`}>
+                                <a href={`/billing/claims/${claim.id}/resubmit`}>
                                     <RefreshCw className="mr-2 h-4 w-4" />
                                     Resubmit Claim
                                 </a>
@@ -177,10 +177,10 @@ export default function ClaimShow() {
                     <CardContent className="pt-6">
                         <div className="flex justify-end gap-2">
                             <Button variant="outline" asChild>
-                                <a href="/insurance/claims">Back to List</a>
+                                <a href="/billing/claims">Back to List</a>
                             </Button>
                             <Button asChild>
-                                <a href={`/insurance/claims/${claim.id}/edit`}>Edit Claim</a>
+                                <a href={`/billing/claims/${claim.id}/edit`}>Edit Claim</a>
                             </Button>
                         </div>
                     </CardContent>

@@ -18,7 +18,7 @@ export default function ClaimAgingReport() {
             <div className="flex h-full flex-1 flex-col gap-6 p-4 md:p-6">
                 <div className="flex items-center gap-4">
                     <Button variant="ghost" size="icon" asChild>
-                        <a href="/insurance/claims">
+                        <a href="/billing/claims">
                             <ArrowLeft className="h-4 w-4" />
                         </a>
                     </Button>

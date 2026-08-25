@@ -1,5 +1,5 @@
 import { Head, useForm, usePage, Link, router } from '@inertiajs/react';
-import { Search, Plus, CheckCircle, XCircle } from 'lucide-react';
+import { Search, Plus } from 'lucide-react';
 import { EmptyState } from '@/components/empty-state';
 import { LoadingState } from '@/components/loading-state';
 import { Button } from '@/components/ui/button';
@@ -24,8 +24,8 @@ type PageProps = {
 export default function InsurersIndex() {
     const { insurers, filters } = usePage<PageProps>().props;
     const { data, setData, get, processing } = useForm({
-        search: filters.search,
-        type: filters.type,
+        search: filters.search || '',
+        type: filters.type || '',
     });
 
     const handleSearch = (e: React.FormEvent) => {
@@ -98,7 +98,7 @@ export default function InsurersIndex() {
                     <LoadingState count={5} />
                 ) : insurers.data.length === 0 ? (
                     <EmptyState
-                        icon={Search}
+                        icon={Plus}
                         title="No insurers found"
                         description="Try adjusting your search terms or create a new insurer."
                         action={{
@@ -108,7 +108,7 @@ export default function InsurersIndex() {
                     />
                 ) : (
                     <>
-                        <div className="grid gap-4">
+                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                             {insurers.data.map((insurer) => (
                                 <InsurerCard key={insurer.id} insurer={insurer} />
                             ))}
@@ -138,32 +138,45 @@ export default function InsurersIndex() {
 }
 
 function InsurerCard({ insurer }: { insurer: Insurer }) {
+    const getStatusColor = () => {
+        if (insurer.is_active) return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
+    };
+
+    const getTypeColor = () => {
+        switch (insurer.type) {
+            case 'private':
+                return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+            case 'public':
+                return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
+            case 'nhif':
+                return 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200';
+            case 'corporate':
+                return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200';
+            default:
+                return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
+        }
+    };
+
     return (
         <Card className="hover:bg-accent/50 transition-colors cursor-pointer" onClick={() => router.visit(`/insurance/insurers/${insurer.id}/edit`)}>
             <CardHeader>
                 <div className="flex items-start justify-between">
-                    <div>
-                        <CardTitle className="text-lg">{insurer.name}</CardTitle>
-                        <p className="text-sm text-muted-foreground">{insurer.code}</p>
-                    </div>
-                    <Badge variant={insurer.is_active ? 'default' : 'secondary'}>
+                    <CardTitle className="text-lg">{insurer.name}</CardTitle>
+                    <Badge className={getStatusColor()}>
                         {insurer.is_active ? 'Active' : 'Inactive'}
                     </Badge>
                 </div>
+                <p className="text-sm text-muted-foreground">Insurer #{insurer.id}</p>
             </CardHeader>
             <CardContent>
-                <div className="space-y-2 text-sm">
-                    <div className="flex items-center gap-2">
-                        <Badge variant="outline">{insurer.type}</Badge>
-                    </div>
+                <div className="space-y-1 text-sm">
+                    <Badge className={getTypeColor()}>
+                        {insurer.type}
+                    </Badge>
+                    <p className="text-muted-foreground">{insurer.code}</p>
                     {insurer.contact_person && (
-                        <p className="text-muted-foreground">Contact: {insurer.contact_person}</p>
-                    )}
-                    {insurer.phone && (
-                        <p className="text-muted-foreground">Phone: {insurer.phone}</p>
-                    )}
-                    {insurer.email && (
-                        <p className="text-muted-foreground">Email: {insurer.email}</p>
+                        <p className="text-muted-foreground">{insurer.contact_person}</p>
                     )}
                 </div>
             </CardContent>

@@ -22,9 +22,9 @@ export default function PreauthorizationApprove() {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        post(`/insurance/preauthorizations/${preauth.id}/approve`, {
+        post(`/billing/preauthorizations/${preauth.id}/approve`, {
             onSuccess: () => {
-                window.location.href = '/insurance/preauthorizations';
+                window.location.href = '/billing/preauthorizations';
             },
         });
     };
@@ -50,7 +50,7 @@ export default function PreauthorizationApprove() {
             <div className="flex h-full flex-1 flex-col gap-6 p-4 md:p-6">
                 <div className="flex items-center gap-4">
                     <Button variant="ghost" size="icon" asChild>
-                        <a href="/insurance/preauthorizations">
+                        <a href="/billing/preauthorizations">
                             <ArrowLeft className="h-4 w-4" />
                         </a>
                     </Button>
@@ -138,7 +138,7 @@ export default function PreauthorizationApprove() {
 
                             <div className="flex justify-end gap-2">
                                 <Button type="button" variant="outline" asChild>
-                                    <a href="/insurance/preauthorizations">Cancel</a>
+                                    <a href="/billing/preauthorizations">Cancel</a>
                                 </Button>
                                 <Button
                                     type="submit"

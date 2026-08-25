@@ -104,16 +104,17 @@ export type Preauthorization = {
     insurance_scheme_id: number;
     request_date: string;
     authorization_number: string | null;
-    service_type: string;
-    service_description: string;
-    estimated_cost: number;
+    requested_services: string;
+    diagnosis: string;
     authorized_amount: number | null;
-    status: 'pending' | 'approved' | 'rejected' | 'expired';
-    decision_date: string | null;
+    used_amount: number | null;
+    status: 'pending' | 'approved' | 'rejected' | 'expired' | 'used';
+    approval_date: string | null;
+    expiry_date: string | null;
     rejection_reason: string | null;
     notes: string | null;
-    requested_by: number | null;
-    authorized_by: number | null;
+    created_by: number | null;
+    updated_by: number | null;
     patient?: {
         id: number;
         first_name: string;

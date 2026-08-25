@@ -378,8 +378,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->middleware('can:billing.create');
         Route::post('/', [BillingController::class, 'store'])->name('billing.store')
             ->middleware('can:billing.create');
-        Route::get('/{invoice}', [BillingController::class, 'show'])->name('billing.show')
-            ->middleware('can:billing.view');
 
         Route::prefix('claims')->group(function () {
             Route::get('/', [InsuranceController::class, 'claimsIndex'])->name('billing.claims.index')
@@ -401,9 +399,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 ->middleware('can:insurance.view');
             Route::get('/create', [InsuranceController::class, 'preauthorizationsCreate'])->name('billing.preauthorizations.create')
                 ->middleware('can:insurance.create');
+            Route::post('/', [InsuranceController::class, 'preauthorizationsStore'])->name('billing.preauthorizations.store')
+                ->middleware('can:insurance.create');
+            Route::get('/{preauth}/approve', [InsuranceController::class, 'preauthorizationsApprovePage'])->name('billing.preauthorizations.approve.page')
+                ->middleware('can:insurance.update');
             Route::post('/{preauth}/approve', [InsuranceController::class, 'preauthorizationsApprove'])->name('billing.preauthorizations.approve')
                 ->middleware('can:insurance.update');
         });
+
+        Route::get('/{invoice}', [BillingController::class, 'show'])->name('billing.show')
+            ->middleware('can:billing.view');
     });
 
     Route::prefix('payments')->group(function () {

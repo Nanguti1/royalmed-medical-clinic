@@ -50,9 +50,9 @@ export default function ClaimCreate() {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        post(`/insurance/claims/create/${invoice.id}`, {
+        post(`/billing/claims/create/${invoice.id}`, {
             onSuccess: () => {
-                window.location.href = '/insurance/claims';
+                window.location.href = '/billing/claims';
             },
         });
     };

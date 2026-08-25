@@ -1,5 +1,5 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
-import { Search, Upload, FileText, Clock, Shield, AlertTriangle } from 'lucide-react';
+import { Search, Upload, FileText, Shield, AlertTriangle } from 'lucide-react';
 import { EmptyState } from '@/components/empty-state';
 import { LoadingState } from '@/components/loading-state';
 import { Button } from '@/components/ui/button';
@@ -24,8 +24,8 @@ type PageProps = {
 export default function DocumentsIndex() {
     const { documents, filters } = usePage<PageProps>().props;
     const { data, setData, get, processing } = useForm({
-        search: filters.search,
-        category: filters.category,
+        search: filters.search || '',
+        category: filters.category || '',
     });
 
     const handleSearch = (e: React.FormEvent) => {
@@ -34,33 +34,6 @@ export default function DocumentsIndex() {
             preserveState: true,
             preserveScroll: true,
         });
-    };
-
-    const getCategoryColor = (category: string) => {
-        switch (category) {
-            case 'medical':
-                return 'bg-blue-100 text-blue-800 border-blue-200';
-            case 'lab':
-                return 'bg-purple-100 text-purple-800 border-purple-200';
-            case 'radiology':
-                return 'bg-cyan-100 text-cyan-800 border-cyan-200';
-            case 'consent':
-                return 'bg-green-100 text-green-800 border-green-200';
-            case 'insurance':
-                return 'bg-orange-100 text-orange-800 border-orange-200';
-            case 'legal':
-                return 'bg-red-100 text-red-800 border-red-200';
-            default:
-                return 'bg-gray-100 text-gray-800 border-gray-200';
-        }
-    };
-
-    const formatFileSize = (bytes: number) => {
-        if (bytes === 0) return '0 Bytes';
-        const k = 1024;
-        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
     };
 
     return (
@@ -138,9 +111,9 @@ export default function DocumentsIndex() {
                     />
                 ) : (
                     <>
-                        <div className="grid gap-4">
+                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                             {documents.data.map((doc) => (
-                                <DocumentCard key={doc.id} document={doc} getCategoryColor={getCategoryColor} formatFileSize={formatFileSize} />
+                                <DocumentCard key={doc.id} document={doc} />
                             ))}
                         </div>
                         {documents.links && documents.links.length > 3 && (
@@ -166,15 +139,39 @@ export default function DocumentsIndex() {
     );
 }
 
-function DocumentCard({ document, getCategoryColor, formatFileSize }: { document: Document; getCategoryColor: (category: string) => string; formatFileSize: (bytes: number) => string }) {
+function DocumentCard({ document }: { document: Document }) {
+    const getCategoryColor = () => {
+        switch (document.category) {
+            case 'medical':
+                return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+            case 'lab':
+                return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
+            case 'radiology':
+                return 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200';
+            case 'consent':
+                return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+            case 'insurance':
+                return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200';
+            case 'legal':
+                return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
+            default:
+                return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
+        }
+    };
+
+    const formatFileSize = (bytes: number) => {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+    };
+
     return (
         <Card className="hover:bg-accent/50 transition-colors cursor-pointer" onClick={() => (window.location.href = `/documents/${document.id}`)}>
             <CardHeader>
                 <div className="flex items-start justify-between">
-                    <div>
-                        <CardTitle className="text-lg">{document.title}</CardTitle>
-                        <p className="text-sm text-muted-foreground">{document.file_name}</p>
-                    </div>
+                    <CardTitle className="text-lg">{document.title}</CardTitle>
                     <div className="flex gap-2">
                         {document.is_sensitive && (
                             <Badge variant="destructive">
@@ -190,24 +187,17 @@ function DocumentCard({ document, getCategoryColor, formatFileSize }: { document
                         )}
                     </div>
                 </div>
+                <p className="text-sm text-muted-foreground">Document #{document.id}</p>
             </CardHeader>
             <CardContent>
-                <div className="space-y-2 text-sm">
-                    <div className="flex items-center gap-2">
-                        <Badge className={getCategoryColor(document.category)}>
-                            {document.category}
-                        </Badge>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <Clock className="h-4 w-4 text-muted-foreground" />
-                        <span>Uploaded: {new Date(document.uploaded_at).toLocaleDateString()}</span>
-                    </div>
-                    <p className="text-muted-foreground">Size: {formatFileSize(document.file_size)}</p>
+                <div className="space-y-1 text-sm">
+                    <Badge className={getCategoryColor()}>
+                        {document.category}
+                    </Badge>
+                    <p className="text-muted-foreground">{document.uploaded_at ? new Date(document.uploaded_at).toLocaleDateString() : 'N/A'}</p>
+                    <p className="text-muted-foreground">{formatFileSize(document.file_size)}</p>
                     {document.patient && (
-                        <p className="text-muted-foreground">Patient: {document.patient.first_name} {document.patient.last_name}</p>
-                    )}
-                    {document.expires_at && (
-                        <p className="text-muted-foreground">Expires: {new Date(document.expires_at).toLocaleDateString()}</p>
+                        <p className="text-muted-foreground">{document.patient.first_name} {document.patient.last_name}</p>
                     )}
                 </div>
             </CardContent>

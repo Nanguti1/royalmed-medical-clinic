@@ -32,7 +32,7 @@ export default function ClaimsIndex() {
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
-        get('/insurance/claims', {
+        get('/billing/claims', {
             preserveState: true,
             preserveScroll: true,
         });
@@ -70,12 +70,12 @@ export default function ClaimsIndex() {
                     </div>
                     <div className="flex gap-2">
                         <Button variant="outline" asChild>
-                            <a href="/insurance/claims/aging-report">
+                            <a href="/billing/claims/aging-report">
                                 Aging Report
                             </a>
                         </Button>
                         <Button asChild>
-                            <a href="/insurance/preauthorizations">
+                            <a href="/billing/preauthorizations">
                                 Preauthorizations
                             </a>
                         </Button>
@@ -159,7 +159,7 @@ export default function ClaimsIndex() {
 
 function ClaimCard({ claim, getStatusColor }: { claim: InsuranceClaim; getStatusColor: (status: string) => string }) {
     return (
-        <Card className="hover:bg-accent/50 transition-colors cursor-pointer" onClick={() => (window.location.href = `/insurance/claims/${claim.id}`)}>
+        <Card className="hover:bg-accent/50 transition-colors cursor-pointer" onClick={() => (window.location.href = `/billing/claims/${claim.id}`)}>
             <CardHeader>
                 <div className="flex items-start justify-between">
                     <div>

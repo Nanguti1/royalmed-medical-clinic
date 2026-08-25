@@ -20,9 +20,9 @@ export default function ClaimEdit() {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        put(`/insurance/claims/${claim.id}`, {
+        put(`/billing/claims/${claim.id}`, {
             onSuccess: () => {
-                window.location.href = `/insurance/claims/${claim.id}`;
+                window.location.href = `/billing/claims/${claim.id}`;
             },
         });
     };
@@ -33,7 +33,7 @@ export default function ClaimEdit() {
             <div className="flex h-full flex-1 flex-col gap-6 p-4 md:p-6">
                 <div className="flex items-center gap-4">
                     <Button variant="ghost" size="icon" asChild>
-                        <a href={`/insurance/claims/${claim.id}`}>
+                        <a href={`/billing/claims/${claim.id}`}>
                             <ArrowLeft className="h-4 w-4" />
                         </a>
                     </Button>
@@ -84,7 +84,7 @@ export default function ClaimEdit() {
 
                             <div className="flex justify-end gap-2">
                                 <Button type="button" variant="outline" asChild>
-                                    <a href={`/insurance/claims/${claim.id}`}>Cancel</a>
+                                    <a href={`/billing/claims/${claim.id}`}>Cancel</a>
                                 </Button>
                                 <Button type="submit" disabled={processing}>
                                     <Save className="mr-2 h-4 w-4" />

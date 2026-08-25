@@ -21,8 +21,8 @@ class InsuranceController extends Controller
     public function __construct(InsuranceService $service)
     {
         $this->service = $service;
-        $this->middleware('can:insurance.view')->only(['insurersIndex', 'insurersEdit', 'schemesIndex', 'schemesEdit', 'patientCoverage', 'claimsIndex', 'claimsShow', 'claimsEdit', 'preauthorizationsIndex', 'claimsAgingReport']);
-        $this->middleware('can:insurance.create')->only(['insurersCreate', 'insurersStore', 'schemesCreate', 'schemesStore', 'patientCoverageCreate', 'claimsCreate', 'preauthorizationsCreate']);
+        $this->middleware('can:insurance.view')->only(['insurersIndex', 'insurersEdit', 'schemesIndex', 'schemesEdit', 'patientCoverage', 'claimsIndex', 'claimsShow', 'claimsEdit', 'preauthorizationsIndex', 'preauthorizationsApprovePage', 'claimsAgingReport']);
+        $this->middleware('can:insurance.create')->only(['insurersCreate', 'insurersStore', 'schemesCreate', 'schemesStore', 'patientCoverageCreate', 'claimsCreate', 'preauthorizationsCreate', 'preauthorizationsStore']);
         $this->middleware('can:insurance.update')->only(['insurersEdit', 'insurersUpdate', 'schemesEdit', 'schemesUpdate', 'claimsEdit', 'claimsResubmit', 'preauthorizationsApprove']);
         $this->middleware('can:insurance.delete')->only(['insurersDestroy', 'schemesDestroy']);
     }
@@ -332,6 +332,46 @@ class InsuranceController extends Controller
         return Inertia::render('billing/preauthorizations/create', [
             'patients' => $patients,
             'schemes' => $schemes,
+        ]);
+    }
+
+    public function preauthorizationsStore(Request $request)
+    {
+        $validated = $request->validate([
+            'patient_id' => 'required|exists:patients,id',
+            'insurance_scheme_id' => 'required|exists:insurance_schemes,id',
+            'requested_amount' => 'required|numeric|min:0',
+            'diagnosis' => 'required|string',
+            'proposed_treatment' => 'required|string',
+            'service_code' => 'nullable|string',
+            'urgency' => 'required|in:routine,urgent,emergency',
+            'notes' => 'nullable|string',
+        ]);
+
+        // Map form fields to model fields
+        $data = [
+            'patient_id' => $validated['patient_id'],
+            'insurance_scheme_id' => $validated['insurance_scheme_id'],
+            'authorized_amount' => $validated['requested_amount'],
+            'diagnosis' => $validated['diagnosis'],
+            'requested_services' => $validated['proposed_treatment'],
+            'notes' => $validated['notes'] ?? null,
+            'status' => 'pending',
+            'created_by' => auth()->id(),
+        ];
+
+        $this->service->createPreauthorization($data);
+
+        return to_route('billing.preauthorizations.index')
+            ->with('success', 'Preauthorization request created successfully.');
+    }
+
+    public function preauthorizationsApprovePage(Preauthorization $preauth): Response
+    {
+        $preauth->load(['patient', 'insurer', 'scheme']);
+
+        return Inertia::render('billing/preauthorizations/approve', [
+            'preauth' => $preauth,
         ]);
     }
 

@@ -1,5 +1,5 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
-import { Search, Plus, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { Search, Plus } from 'lucide-react';
 import { EmptyState } from '@/components/empty-state';
 import { LoadingState } from '@/components/loading-state';
 import { Button } from '@/components/ui/button';
@@ -24,31 +24,16 @@ type PageProps = {
 export default function PreauthorizationsIndex() {
     const { preauthorizations, filters } = usePage<PageProps>().props;
     const { data, setData, get, processing } = useForm({
-        search: filters.search,
-        status: filters.status,
+        search: filters.search || '',
+        status: filters.status || '',
     });
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
-        get('/insurance/preauthorizations', {
+        get('/billing/preauthorizations', {
             preserveState: true,
             preserveScroll: true,
         });
-    };
-
-    const getStatusColor = (status: string) => {
-        switch (status) {
-            case 'pending':
-                return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-            case 'approved':
-                return 'bg-green-100 text-green-800 border-green-200';
-            case 'rejected':
-                return 'bg-red-100 text-red-800 border-red-200';
-            case 'expired':
-                return 'bg-gray-100 text-gray-800 border-gray-200';
-            default:
-                return 'bg-gray-100 text-gray-800 border-gray-200';
-        }
     };
 
     return (
@@ -61,7 +46,7 @@ export default function PreauthorizationsIndex() {
                         <p className="text-muted-foreground">Manage treatment preauthorizations.</p>
                     </div>
                     <Button asChild>
-                        <a href="/insurance/preauthorizations/create">
+                        <a href="/billing/preauthorizations/create">
                             <Plus className="mr-2 h-4 w-4" />
                             New Preauthorization
                         </a>
@@ -94,6 +79,7 @@ export default function PreauthorizationsIndex() {
                                         <SelectItem value="approved">Approved</SelectItem>
                                         <SelectItem value="rejected">Rejected</SelectItem>
                                         <SelectItem value="expired">Expired</SelectItem>
+                                        <SelectItem value="used">Used</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -106,19 +92,19 @@ export default function PreauthorizationsIndex() {
                     <LoadingState count={5} />
                 ) : preauthorizations.data.length === 0 ? (
                     <EmptyState
-                        icon={Clock}
+                        icon={Plus}
                         title="No preauthorizations found"
                         description="Try adjusting your search terms or create a new preauthorization."
                         action={{
                             label: 'New Preauthorization',
-                            onClick: () => (window.location.href = '/insurance/preauthorizations/create'),
+                            onClick: () => (window.location.href = '/billing/preauthorizations/create'),
                         }}
                     />
                 ) : (
                     <>
-                        <div className="grid gap-4">
+                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                             {preauthorizations.data.map((preauth) => (
-                                <PreauthCard key={preauth.id} preauth={preauth} getStatusColor={getStatusColor} />
+                                <PreauthCard key={preauth.id} preauth={preauth} />
                             ))}
                         </div>
                         {preauthorizations.links && preauthorizations.links.length > 3 && (
@@ -144,35 +130,49 @@ export default function PreauthorizationsIndex() {
     );
 }
 
-function PreauthCard({ preauth, getStatusColor }: { preauth: Preauthorization; getStatusColor: (status: string) => string }) {
+function PreauthCard({ preauth }: { preauth: Preauthorization }) {
+    const patientName = preauth.patient
+        ? [preauth.patient.first_name, preauth.patient.last_name].filter(Boolean).join(' ')
+        : 'Unknown Patient';
+
+    const getStatusColor = () => {
+        switch (preauth.status) {
+            case 'pending':
+                return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
+            case 'approved':
+                return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+            case 'rejected':
+                return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
+            case 'expired':
+                return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
+            case 'used':
+                return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+            default:
+                return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
+        }
+    };
+
+    const getStatusText = () => {
+        return preauth.status.replace('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+    };
+
     return (
-        <Card className="hover:bg-accent/50 transition-colors cursor-pointer" onClick={() => (window.location.href = `/insurance/preauthorizations/${preauth.id}/approve`)}>
+        <Card className="hover:bg-accent/50 transition-colors cursor-pointer" onClick={() => (window.location.href = `/billing/preauthorizations/${preauth.id}/approve`)}>
             <CardHeader>
                 <div className="flex items-start justify-between">
-                    <div>
-                        <CardTitle className="text-lg">
-                            {preauth.patient?.first_name} {preauth.patient?.last_name}
-                        </CardTitle>
-                        <p className="text-sm text-muted-foreground">{preauth.patient?.hospital_number}</p>
-                    </div>
-                    <Badge className={getStatusColor(preauth.status)}>
-                        {preauth.status.replace('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
-                    </Badge>
+                    <CardTitle className="text-lg">{patientName}</CardTitle>
+                    <Badge className={getStatusColor()}>{getStatusText()}</Badge>
                 </div>
+                <p className="text-sm text-muted-foreground">Preauth #{preauth.authorization_number || preauth.id}</p>
             </CardHeader>
             <CardContent>
-                <div className="space-y-2 text-sm">
-                    <div className="flex items-center gap-2">
-                        <Clock className="h-4 w-4 text-muted-foreground" />
-                        <span>Request Date: {new Date(preauth.request_date).toLocaleDateString()}</span>
-                    </div>
-                    <p className="text-muted-foreground">Service: {preauth.service_type}</p>
-                    <p className="text-muted-foreground">Estimated Cost: ${preauth.estimated_cost.toLocaleString()}</p>
-                    {preauth.authorized_amount && (
-                        <p className="text-muted-foreground">Authorized: ${preauth.authorized_amount.toLocaleString()}</p>
+                <div className="space-y-1 text-sm">
+                    <p className="text-muted-foreground">{preauth.request_date ? new Date(preauth.request_date).toLocaleDateString() : 'N/A'}</p>
+                    {preauth.patient?.hospital_number && (
+                        <p className="text-muted-foreground">{preauth.patient.hospital_number}</p>
                     )}
                     {preauth.insurer && (
-                        <p className="text-muted-foreground">Insurer: {preauth.insurer.name}</p>
+                        <p className="text-muted-foreground">{preauth.insurer.name}</p>
                     )}
                 </div>
             </CardContent>
