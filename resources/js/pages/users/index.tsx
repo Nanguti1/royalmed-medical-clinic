@@ -158,10 +158,11 @@ export default function UserIndex() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              asChild
-                              method="delete"
-                              as="a"
-                              href={`/users/${user.id}`}
+                              onClick={() => {
+                                if (confirm('Are you sure you want to delete this user?')) {
+                                  window.location.href = `/users/${user.id}`;
+                                }
+                              }}
                             >
                               <Trash2 className="h-4 w-4 text-destructive" />
                             </Button>
