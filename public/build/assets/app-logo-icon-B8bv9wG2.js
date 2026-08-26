@@ -1,0 +1,1 @@
+import{n as e,t}from"./jsx-runtime-CTQSNLil.js";var n=e(),r=t();function i(e){let t=(0,n.c)(2),i;return t[0]===e?i=t[1]:(i=(0,r.jsx)(`img`,{...e,src:`/logo.png`,alt:`Logo`}),t[0]=e,t[1]=i),i}export{i as t};

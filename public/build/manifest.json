@@ -16,6 +16,13 @@
       "_circle-alert-B-ZKJ1xf.js"
     ]
   },
+  "_app-logo-icon-B8bv9wG2.js": {
+    "file": "assets/app-logo-icon-B8bv9wG2.js",
+    "name": "app-logo-icon",
+    "imports": [
+      "_jsx-runtime-CTQSNLil.js"
+    ]
+  },
   "_appearance-B6s7A8vg.js": {
     "file": "assets/appearance-B6s7A8vg.js",
     "name": "appearance",
@@ -804,7 +811,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-D9e-LKt7.css",
+    "file": "assets/app-DYBlozT3.css",
     "name": "app",
     "names": [
       "app.css"
@@ -813,7 +820,7 @@
     "isEntry": true
   },
   "resources/js/app.tsx": {
-    "file": "assets/app-DHmvAUBN.js",
+    "file": "assets/app-D1TSvdYt.js",
     "name": "app",
     "src": "resources/js/app.tsx",
     "isEntry": true,
@@ -848,6 +855,7 @@
       "_separator-D7X2d2NS.js",
       "_dist-D8ha_VA6.js",
       "_skeleton-IA2JWsg3.js",
+      "_app-logo-icon-B8bv9wG2.js",
       "_use-permissions-DTY2slqH.js",
       "_routes-DwVypsAo.js",
       "_profile-uNtLFEsD.js",
@@ -4415,13 +4423,14 @@
     ]
   },
   "resources/js/pages/welcome.tsx": {
-    "file": "assets/welcome-BBKU3eE-.js",
+    "file": "assets/welcome-Ba5Dtjza.js",
     "name": "welcome",
     "src": "resources/js/pages/welcome.tsx",
     "isDynamicEntry": true,
     "imports": [
       "_jsx-runtime-CTQSNLil.js",
       "_dist-BEAKNXc7.js",
+      "_app-logo-icon-B8bv9wG2.js",
       "_routes-DwVypsAo.js"
     ]
   }

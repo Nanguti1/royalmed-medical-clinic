@@ -152,7 +152,9 @@ export function AppHeader({ breadcrumbs = [] }: Props) {
                                 </SheetTitle>
                                 <SheetHeader className="flex justify-start text-left">
                                     <div className="flex items-center space-x-2">
-                                        <AppLogoIcon className="h-6 w-6 fill-current text-white" />
+                                        <div className="flex h-6 w-6 items-center justify-center overflow-hidden">
+                                            <AppLogoIcon className="h-6 w-6 object-contain" />
+                                        </div>
                                         <div className="flex flex-col">
                                             <span className="text-sm font-semibold text-white">{page.props.name || 'Royalmed'}</span>
                                             <span className="text-xs text-sidebar-foreground/70">Medical Clinic</span>
